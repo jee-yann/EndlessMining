@@ -1,5 +1,7 @@
 local shared = game:GetService("ReplicatedStorage").Shared
-local Config, Pattern = require(shared.GameConfig), require(shared.BlockPattern)
+local Config = require(shared.GameConfig)
+local Swing = require(script.Parent.PickSwing)
+local Audio = require(script.Parent.HarborAudio)
 local Tween = game:GetService("TweenService")
 local Debris = game:GetService("Debris")
 local SoundService = game:GetService("SoundService")
@@ -8,16 +10,15 @@ Effects.__index = Effects
 local rng = Random.new()
 function Effects.new()
 	local self = setmetatable({ activeChips = 0, lastBurst = 0, markers = {} }, Effects)
-	local preview = Instance.new("Folder")
-	preview.Name, preview.Parent = "MiningSelection", workspace
+	local preview = Instance.new("ScreenGui")
+	preview.Name, preview.ResetOnSpawn = "MiningSelection", false
+	preview.ScreenInsets, preview.DisplayOrder = Enum.ScreenInsets.None, -1
+	preview.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
 	self.preview = preview
 	local impact = Instance.new("Sound")
 	impact.Name, impact.SoundId, impact.Volume, impact.Parent =
 		"Rock impact", "rbxasset://sounds/action_jump_land.mp3", 0.19, SoundService
-	local coin = Instance.new("Sound")
-	coin.Name, coin.SoundId, coin.Volume, coin.Parent =
-		"Quarry reward", "rbxasset://sounds/volume_slider.ogg", 0.21, SoundService
-	self.impact, self.coin = impact, coin
+	self.impact = impact
 	local sparkOrigin = Instance.new("Attachment")
 	sparkOrigin.Name, sparkOrigin.Parent = "Quarry discovery", workspace.Terrain
 	local glints = Instance.new("ParticleEmitter")
@@ -29,46 +30,81 @@ function Effects.new()
 	return self
 end
 function Effects:chime(pitch)
-	self.coin.PlaybackSpeed = pitch
-	SoundService:PlayLocalSound(self.coin)
+	Audio.reward(pitch)
 end
 function Effects:swing(miner)
 	local character = miner and miner.Character
-	local model = character and character:FindFirstChild("Harbor pick")
-	local handle = model and model.PrimaryPart
-	local motor = handle and handle:FindFirstChild("Grip")
-	local rest = handle and handle:GetAttribute("Rest")
-	if motor and rest then
-		motor.C0 = rest * CFrame.Angles(math.rad(-62), 0, 0)
-		Tween:Create(motor, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { C0 = rest }):Play()
+	local rig = Swing.new(character)
+	if not rig then
+		return
+	end
+	task.spawn(function()
+		local start = os.clock()
+		while character.Parent and os.clock() - start < 0.17 do
+			rig:pose(math.min((os.clock() - start) / 0.17, 1))
+			game:GetService("RunService").Heartbeat:Wait()
+		end
+		rig:reset()
+	end)
+end
+-- Project the eight real cell corners so even buried edges are visible.
+local corners, edges = {}, {}
+local half = Config.Cell * 0.5 - 0.04
+for index = 0, 7 do
+	local x, y, z = bit32.band(index, 1), bit32.band(index, 2), bit32.band(index, 4)
+	corners[index + 1] =
+		Vector3.new(if x == 0 then -half else half, if y == 0 then -half else half, if z == 0 then -half else half)
+	for _, bit in { 1, 2, 4 } do
+		if bit32.band(index, bit) == 0 then
+			table.insert(edges, { index + 1, index + bit + 1 })
+		end
 	end
 end
-function Effects:aim(cells, normal)
+
+local function newMarker(parent)
+	local group = Instance.new("Folder")
+	group.Name, group.Parent = "Selected block", parent
+	local lines = {}
+	for i = 1, #edges do
+		local line = Instance.new("Frame")
+		line.Name, line.AnchorPoint = "Edge", Vector2.new(0.5, 0.5)
+		line.BackgroundColor3 = Color3.fromRGB(127, 255, 227)
+		line.BorderSizePixel = 1
+		line.BorderColor3 = Color3.fromRGB(21, 78, 93)
+		line.Parent = group
+		lines[i] = line
+	end
+	return { group = group, lines = lines, points = {} }
+end
+
+function Effects:aim(cells)
 	local count = if cells then #cells else 0
-	for i, marker in self.markers do
-		if i > count then
-			marker.Parent = nil
-		end
+	for i = count + 1, #self.markers do
+		self.markers[i].group.Parent = nil
 	end
 	if count == 0 then
 		return
 	end
-	local across, up = Pattern.axes(normal)
+	local camera = workspace.CurrentCamera
+	local thickness = math.clamp(math.round(camera.ViewportSize.Y / 360), 2, 4)
 	for i, center in cells do
-		local marker = self.markers[i]
-		if not marker then
-			marker = Instance.new("Part")
-			marker.Name, marker.Anchored, marker.CastShadow = "Selected face", true, false
-			marker.CanCollide, marker.CanTouch, marker.CanQuery = false, false, false
-			marker.Size = Vector3.new(Config.Cell - 0.10, Config.Cell - 0.10, 0.045)
-			marker.Color, marker.Material, marker.Transparency = Color3.fromRGB(94, 255, 218), Enum.Material.Neon, 0.77
-			local outline = Instance.new("SelectionBox")
-			outline.Adornee, outline.Color3, outline.LineThickness = marker, Color3.fromRGB(156, 255, 233), 0.048
-			outline.SurfaceTransparency, outline.Parent = 1, marker
-			self.markers[i] = marker
+		local marker = self.markers[i] or newMarker(self.preview)
+		self.markers[i] = marker
+		marker.group.Parent = self.preview
+		for k, corner in corners do
+			marker.points[k] = camera:WorldToViewportPoint(center + corner)
 		end
-		marker.CFrame = CFrame.fromMatrix(center + normal * (Config.Cell / 2 + 0.045), across, up, normal)
-		marker.Parent = self.preview
+		for k, pair in edges do
+			local a, b = marker.points[pair[1]], marker.points[pair[2]]
+			local line = marker.lines[k]
+			line.Visible = a.Z > 0.1 and b.Z > 0.1
+			if line.Visible then
+				local delta = Vector2.new(b.X - a.X, b.Y - a.Y)
+				line.Position = UDim2.fromOffset((a.X + b.X) * 0.5, (a.Y + b.Y) * 0.5)
+				line.Size = UDim2.fromOffset(delta.Magnitude, thickness)
+				line.Rotation = math.deg(math.atan2(delta.Y, delta.X))
+			end
+		end
 	end
 end
 function Effects:burst(point, spread, ore, quiet)

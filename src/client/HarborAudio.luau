@@ -44,23 +44,35 @@ function Audio.toggleMusic()
 	return enabled
 end
 
-local bell = "rbxasset://sounds/volume_slider.ogg"
-local tap = "rbxasset://sounds/action_jump_land.mp3"
+local pop = "rbxassetid://15675055424" -- Roblox UI Cute Pop
 local voices = {
-	Hover = sound("Cursor tick", bell, 0.055, 2.45),
-	Open = sound("Menu pop", bell, 0.19, 1.38),
-	Close = sound("Close pop", bell, 0.15, 0.84),
-	Buy = sound("Workshop tap", tap, 0.24, 2.2),
-	Job = sound("Job stamp", tap, 0.22, 1.8),
-	Lift = sound("Lift bell", bell, 0.17, 0.99),
-	Sell = sound("Coin click", bell, 0.19, 1.80),
-	Mine = sound("Pick grip", tap, 0.12, 1.6),
-	Select = sound("Switch", bell, 0.16, 1.17),
+	Hover = sound("Hover pip", pop, 0.055, 1.52),
+	Open = sound("Menu bubble", pop, 0.19, 1.13),
+	Close = sound("Close bubble", "rbxassetid://15675081158", 0.15, 1.1),
+	Buy = sound("Workshop pop", pop, 0.17, 1.18),
+	Job = sound("Job pop", pop, 0.16, 1.31),
+	Lift = sound("Lift pop", pop, 0.16, 0.97),
+	Mine = sound("Grip pop", pop, 0.09, 0.78),
+	Select = sound("Switch pop", pop, 0.15, 1.21),
+	Reward = sound("Reward bubbles", pop, 0.18, 1.26),
 }
+for _, voice in voices do
+	if voice.SoundId == pop then
+		voice.PlaybackRegionsEnabled = true
+		voice.PlaybackRegion = NumberRange.new(0, 0.24)
+	end
+end
 local function play(key)
 	local voice = voices[key]
 	voice.TimePosition = 0
 	voice:Play()
+end
+function Audio.reward(pitch)
+	play("Open")
+	task.delay(0.10, function()
+		voices.Reward.PlaybackSpeed = pitch
+		play("Reward")
+	end)
 end
 local lastHover = 0
 function Audio.bind(button, cue)

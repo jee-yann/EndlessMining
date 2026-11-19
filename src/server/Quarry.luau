@@ -22,7 +22,7 @@ function Quarry.bind(map, world)
 	return {
 		spawn = map["Sand path and bridge"].Landing,
 		stations = stations,
-		board = harbor.Ranking.Standings.Lettering.List,
+		court = harbor["Miners Court"],
 	}
 end
 

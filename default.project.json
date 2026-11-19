@@ -119,8 +119,8 @@
       "MarketGlow": {
         "$className": "BloomEffect",
         "$properties": {
-          "Intensity": 0.28,
-          "Size": 18,
+          "Intensity": 0.14,
+          "Size": 12,
           "Threshold": 1.45
         }
       }

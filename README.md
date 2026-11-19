@@ -2,13 +2,13 @@
 
 ![Citrine Cove in Roblox Studio](map/CitrineCove-preview.jpg)
 
-Citrine Cove is a multiplayer Roblox mining simulator. Aim at a cave wall or floor to highlight the exact blocks you can take, then hold to mine, sell your ore and upgrade. Each block face measures 4 × 4 studs. The starter tool takes one block per hit. The first Mining area upgrade costs 24 gold and takes two side by side. A starter pack holds 36 ore.
+Citrine Cove is a multiplayer Roblox mining simulator. Aim at a cave wall or floor to highlight the exact blocks you can take, hold through the pickaxe swing, and bring the ore to the harbor. Each block face measures 4 × 4 studs. The starter tool takes one block per hit. The first Mining area upgrade costs 24 gold and takes two side by side. A starter pack holds 36 ore.
 
 ## Play locally
 
 1. Open `EndlessMining.rbxlx` from this folder in Roblox Studio, or use the existing **Endless Mining** Studio place connected to this project's Rojo server.
 2. Press **F5**. The island is already visible in edit mode. Play generates studded plastic bricks behind the cave mouth. Cross the bridge and walk beneath the golden crystal marked **MINE**. Aim at the dark starter seam and hold the left mouse button. On a touch device, aim with the center dot and hold **HOLD MINE**.
-3. After eight blocks, open **Jobs** and claim **First strike** for 25 gold. Open **Gear → Mining area** and spend 24 gold to cut two blocks per hit. **Sell** cashes out the ore in your pack. Both the dock buttons and the harbor counters work.
+3. After eight blocks, open **Jobs** and claim **First strike** for 25 gold. Walk to the cyan **Upgrades** stall, use its prompt and buy **Mining area** for 24 gold to cut two blocks per hit. Use the amber **Sell** counter to empty your pack. Open **Pack** anywhere to see quantities and sale values for each ore.
 4. At 36 lifetime blocks, open **Lift → Ember Foundry → Travel**. Use **↑ Harbor** to return from underground. Press **Shift+F5** to end the session.
 
 ![Player spawn and mining HUD in Roblox Studio](map/Harbor-HUD.jpg)
@@ -25,11 +25,15 @@ For live editing, run `rojo serve default.project.json` here if this project's s
 
 The harbor spans roughly 268 × 229 studs inside a continuous rock rim. The spawn compass opens onto a 95-stud-wide court. Follow the central bridge to the mine, the amber bullion sign to Sell, or the cyan pickaxe to Upgrades. Side paths pass ore wagons, gardens and the stepped waterfall. Three overhead ore carriers shuttle between the ridge towers.
 
-The location card's **Music on** button pauses and resumes the instrumental loop. The action dock, menu controls and touch mining button have local sound effects. The music is Jim Condelli's *Another 8 Bit Game* from APM's Roblox catalog. [Creator Store track](https://create.roblox.com/store/asset/9048374150/Another-8-Bit-Game)
+The location card's **Music on** button pauses and resumes the instrumental loop. The action dock, menu controls and touch mining button use short bubble pops. [Roblox UI Cute Pop](https://create.roblox.com/store/asset/15675055424) · [Roblox UI Cute Goodbye](https://create.roblox.com/store/asset/15675081158) The music is Jim Condelli's *Another 8 Bit Game* from APM's Roblox catalog. [UI Cute Pop](https://create.roblox.com/store/asset/15675055424) � [UI Cute Goodbye](https://create.roblox.com/store/asset/15675081158) � [Music track](https://create.roblox.com/store/asset/9048374150/Another-8-Bit-Game)
 
 ![Workshop menu in Roblox Studio](map/Workshop-preview.jpg)
 
-The harbor has a lift tower, dispatch board, ore museum, pass stall and a board showing the three most productive miners in the current server. Each underground stop has a lit landing, return console and exposed ore seams. The lift unlocks with total blocks mined. The workshop's **Power** upgrade lets the pickaxe cut harder ores.
+The harbor has a lift tower, dispatch board, ore museum, pass stall and a leaderboard court behind spawn. One board ranks the top five miners present by lifetime blocks. The other shows your standing alongside your Roblox friends. In published play it includes friends with saved scores even when they are offline. Local practice sessions use connected miners.
+
+![Friends and Server Miners boards behind spawn](map/Miners-Court.jpg)
+
+Each underground stop has a lit landing, return console and exposed ore seams. The lift unlocks with total blocks mined. The workshop's **Power** upgrade lets the pickaxe cut harder ores.
 
 | Destination | Lifetime blocks | Depth | Featured seams |
 | --- | ---: | ---: | --- |
@@ -38,15 +42,19 @@ The harbor has a lift tower, dispatch board, ore museum, pass stall and a board 
 | Prism Arcade | 150 | 168 studs | Diamond and gold |
 | Emerald Vault | 420 | 280 studs | Emerald and diamond |
 
+The backpack shows occupied slots, each ore count and the gold the Sell counter will pay for it.
+
+![Backpack showing one coal worth five gold](map/Backpack-preview.jpg)
+
 The seven shift jobs award gold once each. The ore index records the seven ore types independently of your pack, so selling a find preserves its entry. Ranks, job claims and lift unlocks use lifetime mining progress.
 
 The 192 × 224 stud mine extends 352 studs below the entrance. Sunstone Hollow gives way to the Iron Shelf, Prism Grotto, and Emerald Deep. Each 32-stud geological region receives a seeded, tilted ore deposit. Minimum and preferred depths control its composition. Some deep regions contain an oversized precious-metal or gem lode around a hollow pocket. A fixed coal seam makes the opening reproducible.
 
 The server keeps one byte per grid cell. Only exposed rock needs physical Parts. Within each 8 × 8 × 8 cell chunk, neighbouring exposed cells of the same shade share anchored plastic bricks. Cutting a block rebuilds the affected chunks and exposes the next layer. Excavations are shared for the lifetime of that server.
 
-Mining area upgrades unlock **1×1, 2×1, 2×2, 3×2, 3×3, 4×3, 4×4, and 5×5** face patterns. Each hit takes one layer. The turquoise outlines and on-screen count account for missing blocks, reach, obstructions, power and space in the pack. An almost-full pack selects the nearest blocks to the aim point first. The server checks the same pattern and intersects it with the squares the player saw. If another player takes one, the hit skips that square. Existing profiles retain their upgrade levels.
+Mining area upgrades unlock **1×1, 2×1, 2×2, 3×2, 3×3, 4×3, 4×4, and 5×5** face patterns. Each hit takes one layer. Every selected block has a twelve-edge outline. Holding a target raises the pick and fills the swing meter at the equipped speed. Releasing early or switching targets cancels the stroke. The outlines and on-screen count account for missing blocks, reach, obstructions, power and space in the pack. An almost-full pack selects the nearest blocks to the aim point first. The server checks the same pattern and intersects it with the squares the player saw. If another player takes one, the hit skips that square. Existing profiles retain their upgrade levels.
 
-![Four highlighted block faces at the starter seam](map/Mining-area-preview.jpg)
+![Aimed block and pickaxe at the starter seam](map/Mining-area-preview.jpg)
 
 | Change | File |
 | --- | --- |
@@ -76,7 +84,7 @@ The two newer lobby captures ending in `1795070093346` and `1795070096049` infor
 
 ## Outfitters and Robux
 
-**Double Gold** doubles ore-sale proceeds. **Prism Trail** equips a cosmetic rainbow trail that returns after respawn. **Store → Try in Studio** previews either perk in an unpublished practice session. A trial ends when the player leaves.
+**Double Gold** doubles ore-sale proceeds. **Prism Trail** equips a cosmetic rainbow trail that returns after respawn. The **Outfitters** counter’s **Try in Studio** button previews either perk in an unpublished practice session. A trial ends when the player leaves.
 
 To turn on real sales after publishing, create two passes for this experience under **Creator Dashboard → Monetization → Passes**, put them on sale, and enter their pass asset IDs in `src/shared/PassCatalog.luau`. Publish the updated build. The shop requests the player's current price from Roblox, and checkout opens after the player selects the price. The server checks ownership on join and grants successful purchases. [Roblox pass setup](https://create.roblox.com/docs/production/monetization/passes) · [Regional pricing](https://create.roblox.com/docs/production/monetization/regional-pricing)
 
@@ -99,6 +107,6 @@ Look for a standalone `QUARRY_TESTS_PASSED` output line. The map checks cover th
 & $studioExe --task RunScript --localPlaceFile $quarryPlace --runScriptFile $playTest --outputFile "$env:TEMP\EndlessMining-play.log" --quitAfterExecution
 ```
 
-The two-client check uses real client-to-server requests. Each miner must open all five menus, fill a pack, sell it, upgrade to a two-block cut, claim a job once, try both Studio passes, travel to the Foundry, and return to the surface. The test also checks that the Vault stays locked, each sound loads, the music pauses and resumes, and an ore carrier moves. Look for `QUARRY_PLAYTEST_RESULT PASS` followed by both clients' results.
+The play check first uses a virtual mouse in a solo session to verify all twelve block edges, a raised hand, the visible swing meter, cancellation and collection. It then uses two clients with real client-to-server requests. Each miner must open all six menus, fill a pack, check its ore counts, visit the Sell counter, upgrade to a two-block cut, claim a job once, try both Studio passes, travel to the Foundry, and return to the surface. The test checks that remote sales and out-of-range upgrades are declined, the Vault stays locked, each sound loads, the music pauses and resumes, and an ore carrier moves. Look for `QUARRY_PLAYTEST_RESULT PASS` followed by both clients' results.
 
 For hands-on checks, choose **Server & Clients** in Studio's Test selector and start two players. Mine the same face, compare balances and verify both players see the same missing bricks. Use the device emulator to check the shop, hold/release control, thumbstick and jump in phone landscape and portrait. A persistence round trip requires a separate published test place with Studio API access enabled. Sell ore, buy an upgrade, stop the session and rejoin to verify the balance and level.

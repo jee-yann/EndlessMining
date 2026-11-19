@@ -18,18 +18,28 @@ local Hud, Effects, W = require(script.Hud), require(script.Effects), require(sc
 local mobile = UIS.PreferredInput == Enum.PreferredInput.Touch
 local hud = Hud.new(player, net, mobile)
 local fx = Effects.new()
-local held, lastSend, firstHaul = nil, 0, false
-local tapPending = false
+local Swing = require(script.PickSwing)
+local held, firstHaul, rig = nil, false, nil
+local target, targetSide, charge, awaiting = nil, nil, 0, 0
 local params = RaycastParams.new()
 params.FilterType = Enum.RaycastFilterType.Exclude
 local origin = net:GetAttribute("Origin")
 local landing = net:GetAttribute("Landing")
 task.spawn(require(script.Tramway), origin)
+local function cancelStroke()
+	if rig and target then
+		rig:reset()
+	end
+	target, targetSide, charge = nil, nil, 0
+	hud.meter.Visible = false
+end
 local function release()
-	held, tapPending = nil, false
+	held = nil
+	cancelStroke()
 end
 local function gotCharacter(character)
 	release()
+	rig, awaiting = nil, 0
 	params.FilterDescendantsInstances = { character }
 	-- Face the mine approach when spawning in an empty place file.
 	local root = character:WaitForChild("HumanoidRootPart", 10)
@@ -56,12 +66,12 @@ UIS.InputBegan:Connect(function(input, processed)
 		return
 	end
 	if input.UserInputType == Enum.UserInputType.MouseButton1 then
-		held, tapPending = input, true
+		held = input
 	end
 end)
 hud.mine.InputBegan:Connect(function(input)
 	if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
-		held, tapPending = input, true
+		held = input
 	end
 end)
 UIS.InputEnded:Connect(function(input)
@@ -73,7 +83,7 @@ UIS.InputEnded:Connect(function(input)
 			and input.UserInputType == held.UserInputType
 		)
 	then
-		held = nil
+		release()
 	end
 end)
 UIS.WindowFocusReleased:Connect(release)
@@ -89,7 +99,7 @@ end)
 net.Feedback.OnClientEvent:Connect(function(kind, a, point, spread)
 	if kind == "loot" then
 		firstHaul = true
-		fx:swing(player)
+		awaiting = 0
 		local best = Ores.byName.Stone
 		local pieces, value, lines = 0, 0, {}
 		for _, ore in Ores.list do
@@ -119,6 +129,16 @@ net.Feedback.OnClientEvent:Connect(function(kind, a, point, spread)
 			if a > 0 then "Ore sold at the exchange" else "Mine a seam to collect ore",
 			W.gold
 		)
+	elseif kind == "away" then
+		hud:setShop(false)
+		hud:notice(
+			"Visit the counter",
+			if a == "Sell"
+				then "Sell under the amber sign"
+				elseif a == "Shop" then "Upgrades under the cyan sign"
+				else "Outfitters at the pink stall",
+			W.gold
+		)
 	elseif kind == "shop" then
 		hud:setShop(true)
 	elseif kind == "page" then
@@ -141,17 +161,45 @@ net.Dust.OnClientEvent:Connect(function(point, spread, ore, miner)
 	fx:burst(point, spread, Ores.byName[ore], true)
 end)
 
+local friendRows, friendNote
+local function drawFriends()
+	local map = workspace:FindFirstChild("CitrineCove")
+	local harbor = map and map:FindFirstChild("Harbor Plaza")
+	local court = harbor and harbor:FindFirstChild("Miners Court")
+	local board = court and court:FindFirstChild("Friends")
+	local screen = board and board:FindFirstChild("Standings")
+	local face = screen and screen:FindFirstChild("Lettering")
+	if not face or not face:FindFirstChild("Row5") or not friendRows then
+		return
+	end
+	for i = 1, 5 do
+		face["Row" .. i].Text = friendRows[i] or ""
+	end
+	face.Title.Text = if friendNote ~= "" then friendNote else "BLOCKS MINED"
+end
+net:WaitForChild("FriendsBoard").OnClientEvent:Connect(function(rows, note)
+	friendRows, friendNote = rows, note
+	drawFriends()
+end)
+workspace.DescendantAdded:Connect(function(obj)
+	if obj.Name == "Row5" then
+		task.defer(drawFriends)
+	end
+end)
+
 local elapsed = 0
 RunService.RenderStepped:Connect(function(dt)
 	elapsed += dt
 	if elapsed < 1 / 30 then
 		return
 	end
+	local step = elapsed
 	elapsed = 0
 	local camera = workspace.CurrentCamera
 	local char = player.Character
 	local head = char and char:FindFirstChild("Head")
 	if not head or not camera then
+		release()
 		fx:aim(nil)
 		return
 	end
@@ -163,6 +211,14 @@ RunService.RenderStepped:Connect(function(dt)
 		else string.upper(Config.layer(depth).name)
 	hud.surface.Visible = depth > 2 or (head.Position - landing).Magnitude > 24
 	if hud.overlay.Visible then
+		local station = if hud.menu.page == "Gear" then "Shop" elseif hud.menu.page == "Store" then "Store" else nil
+		if station then
+			local root = char:FindFirstChild("HumanoidRootPart")
+			local pos = net:GetAttribute(station .. "Position")
+			if not root or not pos or (root.Position - pos).Magnitude > net:GetAttribute(station .. "Range") then
+				hud:setShop(false)
+			end
+		end
 		fx:aim(nil)
 		return
 	end
@@ -192,7 +248,7 @@ RunService.RenderStepped:Connect(function(dt)
 			cells, mask, locked = Pattern.select(origin, center, normal, count, power, space, nil, probe)
 		end
 	end
-	fx:aim(cells, normal)
+	fx:aim(cells)
 	local valid = mask ~= 0
 	hud.reticle.Visible = mobile
 	if mobile then
@@ -201,7 +257,7 @@ RunService.RenderStepped:Connect(function(dt)
 	if not ready then
 		hud:guide("Opening the quarry…", "Preparing your pack and the mine", true)
 	elseif space <= 0 then
-		hud:guide("Backpack full", "Tap SELL to cash in your haul", true)
+		hud:guide("Backpack full", "Bring your haul to the amber Sell counter", true)
 	elseif not valid and locked then
 		hud:guide(locked.name .. " needs Power " .. locked.hardness, "Upgrade Power at the workshop", true)
 	elseif valid or not firstHaul then
@@ -213,9 +269,26 @@ RunService.RenderStepped:Connect(function(dt)
 	else
 		hud:guide("", "", false)
 	end
-	if (held or tapPending) and valid and os.clock() - lastSend >= 0.085 then
-		lastSend = os.clock()
+	if not held or not valid or os.clock() < awaiting then
+		cancelStroke()
+		return
+	end
+	if target ~= center or targetSide ~= normal then
+		cancelStroke()
+		target, targetSide = center, normal
+		step = 0
+	end
+	local duration = Upgrades.items.Speed.values[player:GetAttribute("Speed") or 1]
+	charge = math.min(1, charge + math.min(step, 0.10) / duration)
+	rig = rig or Swing.new(char)
+	if rig then
+		rig:pose(charge)
+	end
+	hud.speech.Visible, hud.meter.Visible = true, true
+	hud.swingFill.Size = UDim2.fromScale(charge, 1)
+	if charge >= 1 then
+		awaiting = os.clock() + 0.48
+		charge = 0
 		net.Mine:FireServer(center, normal, count, mask)
 	end
-	tapPending = false
 end)

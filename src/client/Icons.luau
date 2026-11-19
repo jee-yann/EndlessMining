@@ -55,7 +55,7 @@ function Icons.draw(parent, key, x, y, size, tint)
 		for _, xx in { 7, 17 } do
 			shape("Awning stripe", xx, 6, 5, 8, light, 1)
 		end
-	elseif key == "Capacity" then
+	elseif key == "Capacity" or key == "Pack" then
 		shape("Strap", 11, 3, 10, 8, W.gold, 3, 0, true)
 		shape("Pack", 5, 8, 22, 21, W.orange, 5, 0, true)
 		shape("Fold", 7, 8, 18, 7, W.gold, 3, 0, true)

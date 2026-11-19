@@ -12,6 +12,7 @@ Menu.pages = {
 	Jobs = { name = "Shift jobs", color = W.violet },
 	Book = { name = "Ore index", color = W.green },
 	Store = { name = "Outfitters", color = W.pink },
+	Pack = { name = "My backpack", color = W.gold },
 }
 function Menu.new(root, player, net, close)
 	local self = setmetatable({ player = player, net = net, prices = {}, updates = {} }, Menu)
@@ -145,6 +146,7 @@ function Menu:jobs()
 	return #Expeditions.jobs
 end
 function Menu:book()
+	local pack = self.page == "Pack"
 	for i, ore in Ores.list do
 		local col, row = (i - 1) % 2, math.floor((i - 1) / 2)
 		local card = W.frame(self.list, ore.name, 1 + col * 226, 1 + row * 69, 219, 62, W.card, 11)
@@ -153,8 +155,16 @@ function Menu:book()
 		Icons.draw(tile, "Crystal", 5, 5, 33, ore.color:Lerp(W.white, 0.14))
 		W.title(card, ore.name, 59, 3, 153, 25, 19, W.white, true)
 		local state = W.text(card, "", 60, 26, 151, 16, 13, W.muted, true)
-		W.text(card, ore.value .. " G  ·  Power " .. ore.hardness, 60, 43, 152, 15, 12, W.muted, true)
+		local worth = W.text(card, ore.value .. " G  ·  Power " .. ore.hardness, 60, 43, 152, 15, 12, W.muted, true)
 		table.insert(self.updates, function()
+			if pack then
+				local held = self.player:GetAttribute("Held" .. ore.name) or 0
+				local multiplier = if self.player:GetAttribute("DoubleGold") then 2 else 1
+				state.Text = string.format("×%d in pack", held)
+				state.TextColor3 = if held > 0 then W.white else W.muted
+				worth.Text = W.number(held * ore.value * multiplier) .. " G at Sell"
+				return
+			end
 			local found = bit32.btest(self.player:GetAttribute("OreIndex") or 0, 2 ^ (i - 1))
 			state.Text, state.TextColor3 =
 				if found then ore.rarity .. "  ✓" else "Undiscovered", if found then W.green else W.muted
@@ -174,10 +184,7 @@ function Menu:store()
 			if trial then
 				self.net.Action:FireServer("PreviewPass", item.key)
 			elseif type(self.prices[item.key]) == "number" then
-				local ok = pcall(Market.PromptGamePassPurchase, Market, self.player, item.id)
-				if not ok then
-					self.status.Text = "Roblox could not open checkout. Try again."
-				end
+				self.net.Action:FireServer("Pass", item.key)
 			end
 		end)
 		table.insert(self.updates, function()
@@ -212,7 +219,8 @@ function Menu:store()
 	end
 	return #Catalog
 end
-local builders = { Gear = Menu.gear, Lift = Menu.lift, Jobs = Menu.jobs, Book = Menu.book, Store = Menu.store }
+local builders =
+	{ Gear = Menu.gear, Lift = Menu.lift, Jobs = Menu.jobs, Book = Menu.book, Pack = Menu.book, Store = Menu.store }
 function Menu:open(key)
 	local page = Menu.pages[key]
 	if not page then
@@ -230,6 +238,7 @@ function Menu:open(key)
 			and RunService:IsStudio()
 			and game.GameId == 0
 		then "Studio trials last for this session."
+		elseif key == "Pack" then "Take your haul to the amber Sell counter."
 		elseif key == "Jobs" then "Claim each job in order to collect its gold."
 		elseif key == "Lift" then "Mine blocks anywhere to unlock more stops."
 		elseif key == "Book" then "Mine each ore once to add it to your collection."
@@ -246,7 +255,11 @@ function Menu:refresh()
 	end
 	local p = self.player
 	local n = p:GetAttribute("Mined") or 0
-	if self.page == "Gear" then
+	if self.page == "Pack" then
+		local cap = Upgrades.items.Capacity.values[p:GetAttribute("Capacity") or 1]
+		local value = (p:GetAttribute("BagValue") or 0) * (if p:GetAttribute("DoubleGold") then 2 else 1)
+		self.sub.Text = string.format("%d / %d slots   ·   %s G", p:GetAttribute("Used") or 0, cap, W.number(value))
+	elseif self.page == "Gear" then
 		self.sub.Text = W.number(p:GetAttribute("Gold") or 0) .. " gold available"
 	elseif self.page == "Jobs" then
 		self.sub.Text = (p:GetAttribute("Jobs") or 0) .. " / " .. #Expeditions.jobs .. " jobs collected"

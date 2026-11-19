@@ -69,6 +69,17 @@ function Passes.preview(player, key)
 		end
 	end
 end
+function Passes.prompt(player, key)
+	for _, item in Catalog do
+		if item.key == key and item.id > 0 and not player:GetAttribute(item.key) then
+			local ok = pcall(Market.PromptGamePassPurchase, Market, player, item.id)
+			if not ok then
+				game.ReplicatedStorage.EndlessMiningNet.Feedback:FireClient(player, "hint", "Checkout is unavailable")
+			end
+			return
+		end
+	end
+end
 Market.PromptGamePassPurchaseFinished:Connect(function(player, id, bought)
 	if not bought then
 		return

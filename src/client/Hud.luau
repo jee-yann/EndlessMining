@@ -79,12 +79,12 @@ function Hud.new(player, net, mobile)
 		local on = Audio.toggleMusic()
 		music.Text, music.BackgroundColor3 = if on then "Music on" else "Music off", if on then W.aqua else W.muted
 	end)
-	local dock = W.frame(root, "Action dock", 0, 0, 441, 64, W.ink)
+	local dock = W.frame(root, "Action dock", 0, 0, 291, 64, W.ink)
 	dock.BackgroundTransparency = 1
 	self.nav = {}
-	local cues = { Lift = "Lift", Gear = "Buy", Jobs = "Job", Book = "Open", Store = "Select", Sell = "Sell" }
-	for i, key in { "Lift", "Gear", "Jobs", "Book", "Store", "Sell" } do
-		local tint = if key == "Sell" then W.gold else Menu.pages[key].color
+	local cues = { Lift = "Lift", Jobs = "Job", Book = "Open", Pack = "Select" }
+	for i, key in { "Pack", "Lift", "Jobs", "Book" } do
+		local tint = Menu.pages[key].color
 		local b = W.button(dock, key, (i - 1) * 74, 0, 69, 61, tint, "", cues[key])
 		local badge = W.frame(b, "Medallion", 15, -6, 39, 39, tint:Lerp(W.white, 0.62), 13)
 		W.stroke(badge, W.ink, 2)
@@ -98,11 +98,7 @@ function Hud.new(player, net, mobile)
 			W.title(self.jobBadge, "!", 0, 0, 20, 20, 15, W.ink)
 		end
 		b.Activated:Connect(function()
-			if key == "Sell" then
-				net.Action:FireServer("Sell")
-			else
-				self:openPage(key)
-			end
+			self:openPage(key)
 		end)
 	end
 	self.mine = W.button(root, "Mine", 0, 0, 98, 46, W.aqua, "Hold mine", "Mine")
@@ -112,6 +108,12 @@ function Hud.new(player, net, mobile)
 	self.message = W.title(speech, "", 5, 1, 310, 25, 18, W.white)
 	self.detail = W.text(speech, "", 5, 25, 310, 18, 13, W.muted)
 	self.speech = speech
+	local meter = W.frame(speech, "Mining progress", 10, -14, 300, 10, W.ink, 5)
+	W.stroke(meter, W.ink, 2)
+	self.swingFill = W.frame(meter, "Charge", 0, 0, 0, 10, W.aqua, 5)
+	W.gradient(self.swingFill, W.white, W.gold, 0)
+	meter.Visible = false
+	self.meter = meter
 	local aimGui = Instance.new("ScreenGui")
 	aimGui.Name, aimGui.ResetOnSpawn, aimGui.ScreenInsets = "QuarryAim", false, Enum.ScreenInsets.None
 	aimGui.Parent = gui.Parent
@@ -139,10 +141,10 @@ function Hud.new(player, net, mobile)
 			return
 		end
 		local s = math.clamp(math.min((width - 28) / 450, height / 510), 0.55, 1.14)
-		local ds = math.min(s, (width - 16) / 441)
+		local ds = math.min(s, (width - 16) / 291)
 		local portrait = self.mobile and width < height
 		if self.mobile and not portrait then
-			ds = math.min(math.max(ds, 0.78), math.max(0.56, (width - 195) / 441))
+			ds = math.min(math.max(ds, 0.78), math.max(0.56, (width - 195) / 291))
 		end
 		walletScale.Scale, taskScale.Scale, locScale.Scale = s, s, s
 		dockScale.Scale, speechScale.Scale, mineScale.Scale = ds, math.min(s, (width - 20) / 320), math.max(0.88, s)
@@ -192,9 +194,6 @@ function Hud:refresh()
 		self.lastUsed, self.lastCap = used, cap
 		W.tween(self.fill, 0.15, { Size = UDim2.fromScale(used / cap, 1) })
 	end
-	local value = (p:GetAttribute("BagValue") or 0) * (if p:GetAttribute("DoubleGold") then 2 else 1)
-	self.nav.Sell.Text = if used > 0 then "Sell " .. W.number(value) else "Sell"
-	self.nav.Sell.TextSize = if #self.nav.Sell.Text > 7 then 13 else 17
 	local status = p:GetAttribute("SaveStatus")
 	self.status.Text = if status == "Saving enabled" then "" else status or "Opening pack…"
 	local mined, done = p:GetAttribute("Mined") or 0, p:GetAttribute("Jobs") or 0

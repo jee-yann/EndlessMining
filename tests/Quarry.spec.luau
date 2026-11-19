@@ -143,7 +143,26 @@ for _, name in { "Jobs", "Book", "Store", "Lift" } do
 	local pad = site.stations[name].Parent.Position - world.origin
 	assert(floorAt(pad.X, pad.Z), name)
 end
-assert(site.board:IsA("TextLabel"))
+for _, key in { "Server", "Friends" } do
+	local panel = site.court[key].Standings
+	assert(panel.Position.Z > site.spawn.Position.Z + 20)
+	assert(panel.Lettering.Row5:IsA("TextLabel"))
+end
+local ranks = require(Server.Standings).top({
+	[8] = { name = "Later", score = 40 },
+	[1] = { name = "Earlier", score = 40 },
+	[3] = { name = "Deep", score = 90 },
+})
+assert(#ranks == 3 and ranks[1]:find("Deep") and ranks[2]:find("Earlier"))
+for _, pair in { { "Sell", "Exchange lights" }, { "Shop", "Workshop lights" } } do
+	local group = site.stations[pair[1]].Parent.Parent
+	assert(group["Name tag"]:FindFirstChildOfClass("BillboardGui"))
+	assert(highlands[pair[2]]:FindFirstChildWhichIsA("PointLight", true).Brightness < 0.5)
+end
+for _, key in { "Lift", "Jobs", "Store", "Book" } do
+	local stall = site.stations[key].Parent.Parent
+	assert(stall:FindFirstChildWhichIsA("BillboardGui", true) and stall:FindFirstChildWhichIsA("PointLight", true))
+end
 for _, stop in require(Shared.Expeditions).stops do
 	if stop.floor then
 		local base = world.origin + stop.floor

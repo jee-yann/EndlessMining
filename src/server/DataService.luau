@@ -25,6 +25,15 @@ local function copy(p)
 	}
 end
 
+-- Public lifetime score only. Reading a leaderboard must never claim a save lease.
+function Data.readMined(userId)
+	local record = getStore():GetAsync("miner_" .. userId)
+	if type(record) == "table" and type(record.profile) == "table" and type(record.profile.mined) == "number" then
+		return record.profile.mined
+	end
+	return nil
+end
+
 function Data.claim(old, token, now)
 	if old ~= nil then
 		if type(old) ~= "table" or not Profile.valid(old.profile) then

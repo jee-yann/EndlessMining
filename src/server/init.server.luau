@@ -16,7 +16,7 @@ net.Name = "EndlessMiningNet"
 net:SetAttribute("Origin", world.origin)
 net:SetAttribute("Landing", landing)
 net:SetAttribute("Ready", false)
-for _, name in { "Mine", "Action", "Feedback", "Dust" } do
+for _, name in { "Mine", "Action", "Feedback", "Dust", "FriendsBoard" } do
 	local event = Instance.new(if name == "Dust" then "UnreliableRemoteEvent" else "RemoteEvent")
 	event.Name, event.Parent = name, net
 end
@@ -32,6 +32,7 @@ local function sync(player, p)
 	player:SetAttribute("Jobs", p.jobs)
 	local found = 0
 	for i, ore in Ores.list do
+		player:SetAttribute("Held" .. ore.name, p.bag[ore.name] or 0)
 		if p.discoveries[ore.name] then
 			found = bit32.bor(found, bit32.lshift(1, i - 1))
 		end
@@ -100,6 +101,17 @@ local function leave(player)
 	closing[player] = nil
 end
 
+local function atCounter(player, prompt)
+	local char = player.Character
+	local root = char and char:FindFirstChild("HumanoidRootPart")
+	local humanoid = char and char:FindFirstChildOfClass("Humanoid")
+	return root
+		and humanoid
+		and humanoid.Health > 0
+		and (root.Position - prompt.Parent.Position).Magnitude <= prompt.MaxActivationDistance + 1
+end
+
+local counterFor = { Sell = "Sell", Buy = "Shop", PreviewPass = "Store", Pass = "Store" }
 local function action(player, key, option)
 	local s = sessions[player]
 	if not s or type(key) ~= "string" then
@@ -113,6 +125,7 @@ local function action(player, key, option)
 		and key ~= "Travel"
 		and key ~= "Job"
 		and key ~= "PreviewPass"
+		and key ~= "Pass"
 	then
 		return
 	end
@@ -125,11 +138,15 @@ local function action(player, key, option)
 		return
 	end
 	times[key] = now + 0.18
+	local station = counterFor[key]
+	if station and not atCounter(player, site.stations[station]) then
+		net.Feedback:FireClient(player, "away", station)
+		return
+	end
 	local p = s.profile
 	if key == "Surface" then
 		toSurface(player, player.Character)
 	elseif key == "Sell" then
-		-- The HUD calls the exchange from any depth, just like the physical counter.
 		local gold = Profile.sell(p, if player:GetAttribute("DoubleGold") then 2 else 1)
 		sync(player, p)
 		net.Feedback:FireClient(player, "sale", gold)
@@ -145,6 +162,8 @@ local function action(player, key, option)
 		end
 	elseif key == "PreviewPass" then
 		Passes.preview(player, option)
+	elseif key == "Pass" then
+		Passes.prompt(player, option)
 	elseif key == "Travel" and type(option) == "string" then
 		local stop = Expeditions.byKey[option]
 		local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
@@ -170,9 +189,12 @@ local function action(player, key, option)
 end
 net.Action.OnServerEvent:Connect(action)
 for name, prompt in site.stations do
+	if name == "Shop" or name == "Store" then
+		net:SetAttribute(name .. "Position", prompt.Parent.Position)
+		net:SetAttribute(name .. "Range", prompt.MaxActivationDistance + 1)
+	end
 	prompt.Triggered:Connect(function(player)
-		local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-		if not root or (root.Position - prompt.Parent.Position).Magnitude > prompt.MaxActivationDistance + 4 then
+		if not atCounter(player, prompt) then
 			return
 		end
 		if name == "Sell" then
@@ -185,22 +207,7 @@ for name, prompt in site.stations do
 	end)
 end
 Mining.start(world, net, sessions, sync)
-task.spawn(function()
-	while task.wait(4) do
-		local rows = {}
-		for player, s in sessions do
-			table.insert(rows, { name = player.DisplayName, score = s.profile.mined })
-		end
-		table.sort(rows, function(a, b)
-			return a.score > b.score or (a.score == b.score and a.name < b.name)
-		end)
-		local lines = {}
-		for i = 1, math.min(#rows, 3) do
-			table.insert(lines, string.format("%d.   %s    ·    %d", i, rows[i].name, rows[i].score))
-		end
-		site.board.Text = if #lines > 0 then table.concat(lines, "\n") else "Waiting for miners"
-	end
-end)
+require(script.Standings).start(site.court, net.FriendsBoard)
 Players.PlayerAdded:Connect(join)
 Players.PlayerRemoving:Connect(leave)
 for _, player in Players:GetPlayers() do
