@@ -6,10 +6,10 @@ Citrine Cove is a multiplayer Roblox mining simulator. Aim at a cave wall or flo
 
 ## Play locally
 
-1. Open `EndlessMining.rbxlx` from this folder in Roblox Studio, or use the existing **Endless Mining** Studio place connected to this project's Rojo server.
-2. Press **F5**. The island is already visible in edit mode. Play generates studded plastic bricks behind the cave mouth. Cross the bridge and walk beneath the golden crystal marked **MINE**. Aim at the dark starter seam and hold the left mouse button. On a touch device, aim with the center dot and hold **HOLD MINE**.
+1. Open `build/EndlessMining.rbxlx` in Roblox Studio, or use the existing **Endless Mining** Studio place connected to this project's Rojo server. To create the build from a fresh checkout, use the commands below.
+2. Press **F5**. The island is already visible in edit mode. Play generates studded plastic bricks behind the cave mouth. Cross the bridge and walk beneath the golden crystal marked **MINE**. Aim at an exposed studded block and hold the left mouse button. On a touch device, aim with the center dot and hold **HOLD MINE**.
 3. After eight blocks, open **Jobs** and claim **First strike** for 25 gold. Walk to the cyan **Upgrades** stall, use its prompt and buy **Capacity** for 24 gold to carry 80 blocks. Use the amber **Sell** counter to empty your pack. The side panel lists carried materials, rarest first, along with quantities and sale value. Select it to inspect the full pack.
-4. Dig through the walls and floor to reach deeper regions. The location card shows your X, Y and Z in blocks from the mine entrance. Y drops by one for each full block you descend. At Y −27 you enter Iron Shelf. **Index** lists the vein chances at each depth. **↑ Surface** brings you to the path outside the mine. The screen fades to black during the trip, with a longer return from deeper levels. Open **Settings** from the dock to adjust music, sound effects or menu animations.
+4. Dig through the walls and floor to reach deeper regions. The location card shows your X, Y and Z in blocks from the mine entrance. Y drops by one for each full block you descend. At Y −27 you enter Iron Shelf. **Index** lists the per-block ore chances at each depth. **↑ Surface** brings you to the path outside the mine. The screen fades to black during the trip, with a longer return from deeper levels. Open **Settings** from the dock to adjust music, sound effects or menu animations.
 
 The place uses each player’s equipped Roblox avatar. If Studio Output reports an authentication error for a missing head or clothing texture, refresh the Studio sign-in and start another play session.
 
@@ -18,7 +18,8 @@ The place uses each player’s equipped Roblox avatar. If Studio Output reports 
 To rebuild the local place after editing, run the following command in the project directory.
 
 ```powershell
-rojo build default.project.json -o EndlessMining.rbxlx
+New-Item -ItemType Directory -Force build | Out-Null
+rojo build default.project.json -o build/EndlessMining.rbxlx
 ```
 
 For live editing, run `rojo serve default.project.json` here if this project's server is stopped. In Studio, use **Plugins → Rojo → Connect** and select **EndlessMining** at `localhost:34872`. A built place can be played directly without connecting the plugin.
@@ -37,30 +38,30 @@ Music and effects have separate sliders in **Settings**. Volume and menu-motion 
 
 ![The haul panel and gold balance at the mine entrance](map/Harbor-HUD.jpg)
 
-The harbor has a dispatch board, a covered Ore Index with eight labeled samples, a pass stall and a leaderboard court behind spawn. One board ranks the top five miners present by lifetime blocks. The other shows your standing alongside your Roblox friends. In published play it includes friends with saved scores even when they are offline. Local practice sessions use connected miners.
+The harbor has a dispatch board, a covered Ore Index with eight labeled samples, a pass stall and a leaderboard court behind spawn. One board ranks the top five miners present by deepest descent in blocks. The other ranks your Roblox friends by depth. Each board has three podiums with waving miners. In published play it includes friends with saved scores even when they are offline. Local practice sessions use connected miners.
 
 ![Friends and Server Miners boards behind spawn](map/Miners-Court.jpg)
 
-Digging opens a shared route through four regions. The percentages below describe the chance that a new vein in each region contains that ore. Between veins, smaller ore finds are mixed into the host rock.
+Digging opens a shared route through four regions. Each eligible block independently rolls against its region’s percentages.
 
 | Region | Depth in blocks | Coal | Copper | Iron | Gold | Diamond | Emerald |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| Sunstone Hollow | 0–26 | 72% | 28% | – | – | – | – |
-| Iron Shelf | 27–89 | 23% | 27% | 44% | 6% | – | – |
-| Prism Grotto | 90–184 | 10% | 15% | 36% | 27% | 12% | – |
-| Emerald Deep | 185–288 | 6% | 9% | 26% | 28% | 23% | 8% |
+| Sunstone Hollow | 0–26 | 25% | 9% | – | – | – | – |
+| Iron Shelf | 27–89 | 9% | 12% | 15% | 2% | – | – |
+| Prism Grotto | 90–184 | 4% | 7% | 15% | 11% | 4% | – |
+| Emerald Deep | 185–288 | 3% | 4% | 11% | 12% | 10% | 3% |
 
 The backpack shows occupied slots, each ore count and the gold the Sell counter will pay for it.
 
 ![Backpack showing one coal worth five gold](map/Backpack-preview.jpg)
 
-The seven shift jobs award gold once each. The index records discoveries even after you sell them. Ranks and job claims use lifetime mining progress.
+The seven shift jobs award gold once each for lifetime mining milestones. The index keeps discoveries after a sale. Workshop upgrades advance the title above each miner from Lamp Tender to Prism Keeper. Capacity grows the worn field pack, Power changes the pick head and its arc, and Speed shortens every cut.
 
-The mine is 48 blocks wide, 56 blocks long and 288 blocks deep. Sunstone Hollow gives way to the Iron Shelf, Prism Grotto, and Emerald Deep. Each eight-block geological chunk receives a seeded, tilted ore deposit. The region’s vein weights determine its composition. Orange-brown dirt lies close to the turf and extends at most three blocks below entrance level. Grey stone fills the deeper mine. Some deep regions contain an oversized precious-metal or gem lode around a hollow pocket. A fixed coal seam makes the opening reproducible. The green roof is permanent turf.
+The mine is 48 blocks wide, 56 blocks long and 288 blocks deep. Sunstone Hollow gives way to the Iron Shelf, Prism Grotto, and Emerald Deep. The entrance leads through a packed-earth collar into the full field beneath the island. Smooth brown walls mark its limits. Orange-brown dirt occurs only near the surface. Each server privately seeds a fresh field, gives a 20-second warning after 2,400 cuts, and brings miners outside before renewing the rock. Players keep their haul and upgrades.
 
-The server keeps one byte per grid cell. Only exposed rock needs physical Parts. Within each 8 × 8 × 8 cell chunk, neighbouring exposed cells of the same shade share anchored plastic bricks. Cutting a block rebuilds the affected chunks and exposes the next layer. Excavations are shared for the lifetime of that server.
+The server keeps one byte per grid cell and sends only exposed rock to players. Within each 8 × 8 × 8 cell chunk, neighbouring exposed cells of the same material and shade can share a Part. Cutting a block exposes the next layer. The entrance light gives way to the miner’s headlamp underground, where diamond and emerald glow. Excavations are shared until that field renews.
 
-Each completed cut removes the highlighted block. A mint border follows its exposed faces. A pick cursor marks a valid target, a red symbol marks ore above the current Power level, and cracks spread across the block during a cut. Releasing early or switching targets cancels the swing. The server checks reach, sight, power, and space before awarding a block. Returning players receive a one-time gold refund for retired mining-area purchases.
+Each completed cut removes the highlighted block. A mint border follows its exposed faces. A pick cursor marks a valid target, a red symbol marks ore above the current Power level, and cracks reach the edges of the face as the pick swings. At the same Speed level, diamond takes 2.5 times as long to cut as stone and emerald takes three times as long. Releasing early or switching targets cancels the swing. The server checks elapsed cutting time, reach, sight, power, and space before awarding a block. Returning players receive a one-time gold refund for retired mining-area purchases.
 
 ![Block borders in three Studio views, exposed, flush with the wall, and covered by another rock](map/Mining-area-preview.jpg)
 
@@ -71,10 +72,10 @@ Each completed cut removes the highlighted block. A mint border follows its expo
 | Upgrade values, level caps and cost curves | `src/shared/Upgrades.luau` |
 | Jobs and ranks | `src/shared/Expeditions.luau` |
 | Game pass IDs and perks | `src/shared/PassCatalog.luau`, `src/server/Passes.luau` |
-| Vein shapes, rich pockets and the starter seam | `src/server/Geology.luau` |
+| Independent ore rolls and the mine boundary | `src/server/Geology.luau` |
 | Editable island, signed stations, spawn and bridge | `map/CitrineCove.rbxmx` |
 | Studded brick geometry and visible targets | `src/server/MineBlocks.luau`, `src/shared/BlockPattern.luau` |
-| Region depths and vein weights | `src/shared/GameConfig.luau` |
+| Region depths and ore percentages | `src/shared/GameConfig.luau` |
 | Station binding | `src/server/MineSite.luau` |
 | Starting editor camera and lighting | `default.project.json` |
 | Music and button sounds | `src/client/HarborAudio.luau` |
@@ -99,21 +100,20 @@ To turn on real sales after publishing, create two passes for this experience un
 
 ## Reproduce the checks
 
-The two test scripts live outside the Rojo tree. Use a fresh local build. Studio's **RunScript** command runs the checks in a disposable session. With Studio open, these PowerShell commands select its installed executable.
+The tests live outside the game’s Rojo tree. Use a fresh local build for the map check. With Studio open, these PowerShell commands select its installed executable.
 
 ```powershell
 $studioExe = (Get-Process RobloxStudioBeta | Select-Object -First 1).Path
-$miningPlace = (Resolve-Path '.\EndlessMining.rbxlx').Path
+$miningPlace = (Resolve-Path '.\build\EndlessMining.rbxlx').Path
 $terrainTest = (Resolve-Path '.\tests\Mine.spec.luau').Path
-$playTest = (Resolve-Path '.\tests\Play.spec.luau').Path
 
 & $studioExe --task RunScript --localPlaceFile $miningPlace --runScriptFile $terrainTest --outputFile "$env:TEMP\EndlessMining-terrain.log" --quitAfterExecution
 ```
 
-Look for a standalone `MINING_TESTS_PASSED` output line. The map checks cover the walk from spawn, both market counters, their lights, the outer paths and 360 directions around the rock rim. The mining checks cover save ownership, profile validation, economy, three seeds, shared depletion, server reach and obstructions, single-block selection, ore density and cuts across chunk boundaries. Then run the two-client check in a signed-in Studio session.
+Look for a standalone `MINING_TESTS_PASSED` output line. The map checks cover the walk from spawn, both market counters, their lights, the outer paths, 360 directions around the rock rim and every diggable cell in the upper gallery. The mining checks cover save ownership, profile validation, economy, three seeds, shared depletion, server reach and obstructions, independent ore rolls and cuts across chunk boundaries. Run the input and two-client checks with Python 3 and a signed-in Studio session. The runner builds two temporary places with the test players and music mute already configured.
 
 ```powershell
-& $studioExe --task RunScript --localPlaceFile $miningPlace --runScriptFile $playTest --outputFile "$env:TEMP\EndlessMining-play.log" --quitAfterExecution
+python tests/run_play.py "$studioExe"
 ```
 
 The play check first uses a virtual mouse in a solo session to verify depth-tested face borders, the pickaxe grip through repeated swings, the visible cut meter, cancellation and collection. It then uses two clients with real client-to-server requests. Each miner must open all six menus, fill a pack, check its ore counts, visit the Sell counter, upgrade pack capacity, claim a job once, try both Studio passes, and return to the surface. The test checks that remote sales and out-of-range upgrades are declined, ore finds appear at the mined block, effects load and respond to their slider, the soundtrack stays muted during automated playtests, and an ore carrier moves. Look for `MINING_PLAYTEST_RESULT PASS` followed by both clients' results.

@@ -1,5 +1,7 @@
 local Config = {
-	Seed = 73129,
+	LandscapeSeed = 73129,
+	ResetAfter = 2400,
+	ResetWarning = 20,
 	-- Grid coordinates are relative to the entrance. One voxel is four studs.
 	Cell = 4,
 	Chunk = 8,
@@ -25,28 +27,28 @@ Config.Layers = {
 	{
 		depthBlocks = 0,
 		name = "Sunstone Hollow",
-		veinWeights = { Coal = 72, Copper = 28 },
+		oreChances = { Coal = 25, Copper = 9 },
 		material = Enum.Material.Concrete,
 		color = Color3.fromRGB(151, 153, 158),
 	},
 	{
 		depthBlocks = 27,
 		name = "Iron Shelf",
-		veinWeights = { Coal = 23, Copper = 27, Iron = 44, Gold = 6 },
+		oreChances = { Coal = 9, Copper = 12, Iron = 15, Gold = 2 },
 		material = Enum.Material.Rock,
 		color = Color3.fromRGB(132, 136, 143),
 	},
 	{
 		depthBlocks = 90,
 		name = "Prism Grotto",
-		veinWeights = { Coal = 10, Copper = 15, Iron = 36, Gold = 27, Diamond = 12 },
+		oreChances = { Coal = 4, Copper = 7, Iron = 15, Gold = 11, Diamond = 4 },
 		material = Enum.Material.Slate,
 		color = Color3.fromRGB(115, 119, 127),
 	},
 	{
 		depthBlocks = 185,
 		name = "Emerald Deep",
-		veinWeights = { Coal = 6, Copper = 9, Iron = 26, Gold = 28, Diamond = 23, Emerald = 8 },
+		oreChances = { Coal = 3, Copper = 4, Iron = 11, Gold = 12, Diamond = 10, Emerald = 3 },
 		material = Enum.Material.Basalt,
 		color = Color3.fromRGB(96, 100, 108),
 	},
@@ -103,5 +105,8 @@ function Config.inside(p)
 		and p.Y < Config.Max.Y
 		and p.Z >= Config.Min.Z
 		and p.Z < Config.Max.Z
+end
+function Config.inMine(p)
+	return Config.inside(p) and (p.Y < -8 or (math.abs(p.X) <= 8.5 and p.Z >= -48 and p.Y < 12))
 end
 return Config

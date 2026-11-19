@@ -4,16 +4,28 @@ local Players = game:GetService("Players")
 local Rep = game:GetService("ReplicatedStorage")
 local Lighting = game:GetService("Lighting")
 local Run = game:GetService("RunService")
-local Tween = game:GetService("TweenService")
+local Actions = game:GetService("ContextActionService")
 local player = Players.LocalPlayer
 local parent = player:WaitForChild("PlayerGui")
 local gui = Instance.new("ScreenGui")
 gui.Name, gui.DisplayOrder, gui.ResetOnSpawn, gui.ScreenInsets = "MiningLoading", 100, false, Enum.ScreenInsets.None
-local cover = Instance.new("CanvasGroup")
+gui.ClipToDeviceSafeArea = false
+local cover = Instance.new("Frame")
 cover.Name, cover.BackgroundColor3, cover.BorderSizePixel = "Cover", Color3.fromRGB(27, 43, 63), 0
 cover.Size, cover.Active, cover.Parent = UDim2.fromScale(1, 1), true, gui
--- Keep the 3D view drawing while the loading card covers it.
-cover.BackgroundTransparency = 0.01
+cover.BackgroundTransparency = 0
+local function blockMovement()
+	return Enum.ContextActionResult.Sink
+end
+Actions:BindActionAtPriority("MiningLoadLock", blockMovement, false, 10000, unpack(Enum.PlayerActions:GetEnumItems()))
+Run:BindToRenderStep("MiningLoadLock", Enum.RenderPriority.Input.Value + 1, function()
+	local char = player.Character
+	local humanoid = char and char:FindFirstChildOfClass("Humanoid")
+	if humanoid then
+		humanoid:Move(Vector3.zero, false)
+		humanoid.Jump = false
+	end
+end)
 local function line(text, y, size, tint)
 	local label = Instance.new("TextLabel")
 	label.Text, label.Font, label.TextSize, label.TextColor3 = text, Enum.Font.FredokaOne, size, tint
@@ -120,7 +132,11 @@ repeat
 	local interval = renderInterval()
 	renderedTime = if visualsReady then renderedTime + interval else 0
 until os.clock() >= deadline
-local fade = Tween:Create(cover, TweenInfo.new(0.28), { GroupTransparency = 1 })
-fade:Play()
-fade.Completed:Wait()
 gui:Destroy()
+local net = Rep:FindFirstChild("EndlessMiningNet")
+local action = net and net:FindFirstChild("Action")
+if action then
+	action:FireServer("Entered")
+end
+Run:UnbindFromRenderStep("MiningLoadLock")
+Actions:UnbindAction("MiningLoadLock")

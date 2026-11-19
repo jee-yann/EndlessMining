@@ -5,7 +5,9 @@
     "$ignoreUnknownInstances": true,
     "ReplicatedFirst": {
       "$ignoreUnknownInstances": true,
-      "MiningLoading": { "$path": "src/first/MiningLoading.client.luau" }
+      "MiningLoading": {
+        "$path": "src/first/MiningLoading.client.luau"
+      }
     },
     "ReplicatedStorage": {
       "$ignoreUnknownInstances": true,
@@ -88,22 +90,22 @@
       "$ignoreUnknownInstances": true,
       "$properties": {
         "Ambient": [
-          0.4,
-          0.4,
-          0.49
+          0.18,
+          0.17,
+          0.22
         ],
-        "Brightness": 2.1,
+        "Brightness": 1.55,
         "GlobalShadows": true,
         "Outlines": false,
         "Technology": "ShadowMap",
         "ClockTime": 15.55,
         "OutdoorAmbient": [
-          0.57,
-          0.61,
-          0.7
+          0.42,
+          0.45,
+          0.51
         ],
         "GeographicLatitude": 24,
-        "ExposureCompensation": 0
+        "ExposureCompensation": -0.24
       },
       "SeaAir": {
         "$className": "Atmosphere",

@@ -162,14 +162,11 @@ function Menu:book()
 			W.title(row, layer.name, 12, 3, 273, 23, 18, W.white, true)
 			local depth = W.text(row, layer.depthBlocks .. " blocks", 294, 4, 143, 21, 15, W.aqua)
 			depth.Name = "Depth"
-			local chances, total = {}, 0
-			for _, weight in layer.veinWeights do
-				total += weight
-			end
+			local chances = {}
 			for _, ore in Ores.list do
-				local weight = layer.veinWeights[ore.name]
+				local weight = layer.oreChances[ore.name]
 				if weight then
-					table.insert(chances, string.format("%s %g%%", ore.name, math.round(weight / total * 100)))
+					table.insert(chances, string.format("%s %g%%", ore.name, weight))
 				end
 			end
 			local odds = W.text(row, table.concat(chances, "  ·  "), 12, 25, 420, 34, 13, W.muted, true)
@@ -256,7 +253,7 @@ function Menu:open(key)
 		elseif key == "Pack" then "Take your haul to the amber Sell counter."
 		elseif key == "Jobs" then "Claim each job in order to collect its gold."
 		elseif key == "Settings" then "Changes take effect immediately."
-		elseif key == "Book" then "Scroll down for each region’s vein chances."
+		elseif key == "Book" then "Scroll down for each region’s block chances."
 		elseif key == "Store" then "Permanent passes for this experience."
 		else "Upgrades stay equipped between visits."
 	local rows = builders[key](self)

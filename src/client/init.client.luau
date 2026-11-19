@@ -22,7 +22,8 @@ local fx = Effects.new()
 local Swing = require(script.PickSwing)
 local held, firstHaul, rig = nil, false, nil
 local target, targetSide, strokeStart
-local aimPoint, aimSide, aimCells
+local finishedCell, retryAt
+local aimPoint, aimSide, aimCells, aimOre
 local swinging = false
 local params = RaycastParams.new()
 params.FilterType = Enum.RaycastFilterType.Exclude
@@ -32,19 +33,23 @@ local entrance = net:GetAttribute("Entrance")
 local passage = require(script.Passage).new(player, net)
 local receipt = require(script.SaleReceipt).new(hud)
 task.spawn(require(script.Tramway), origin)
+require(script.MineView).start(player, origin)
 local function cancelStroke()
+	if rig then
+		rig:stop()
+	end
 	if swinging then
-		if rig then
-			rig:stop()
-		end
 		net.Swing:FireServer(false)
 		swinging = false
 	end
 	target, targetSide, strokeStart = nil, nil, nil
 	hud.meter.Visible = false
-	fx:damage(nil)
+	fx:linger()
 end
 local function release()
+	if held and not swinging then
+		net.Swing:FireServer(false)
+	end
 	held = nil
 	cancelStroke()
 end
@@ -77,7 +82,7 @@ if player.Character then
 end
 
 UIS.InputBegan:Connect(function(input, processed)
-	if processed or hud.overlay.Visible or passage.active then
+	if processed or player.PlayerGui:FindFirstChild("MiningLoading") or hud.overlay.Visible or passage.active then
 		return
 	end
 	if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -85,7 +90,10 @@ UIS.InputBegan:Connect(function(input, processed)
 	end
 end)
 hud.mine.InputBegan:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+	if
+		not player.PlayerGui:FindFirstChild("MiningLoading")
+		and (input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1)
+	then
 		held = input
 	end
 end)
@@ -157,9 +165,13 @@ net.Feedback.OnClientEvent:Connect(function(kind, a, point, spread, finds, norma
 	elseif kind == "job" then
 		fx:chime(1.65)
 		hud:notice("+" .. W.number(point) .. " gold", a .. " completed", W.gold)
+	elseif kind == "resetSoon" then
+		hud:milestone("MINE RENEWAL", "New ore in " .. a .. " seconds", W.aqua)
+		hud:notice("Mine renews in " .. a .. " seconds", "Your haul returns to the entrance with you", W.aqua)
 	elseif kind == "upgrade" then
 		fx:chime(1.55)
-		hud:notice(a, "Workshop upgrade fitted", W.green)
+		hud:workshop(point, spread)
+		hud:notice(a, Upgrades.describe(point, spread), W.green)
 	else
 		hud:notice(a, "", W.gold)
 	end
@@ -169,6 +181,7 @@ net.Dust.OnClientEvent:Connect(function(point, spread, ore, finds, normal, loot)
 	fx:burst(point, spread, Ores.byName[ore], true)
 end)
 
+local podiums = require(script.Podiums).new(player)
 local friendRows, friendNote
 local function drawFriends()
 	local map = workspace:FindFirstChild("CitrineCove")
@@ -183,10 +196,11 @@ local function drawFriends()
 	for i = 1, 5 do
 		face["Row" .. i].Text = friendRows[i] or ""
 	end
-	face.Title.Text = if friendNote ~= "" then friendNote else "BLOCKS MINED"
+	face.Title.Text = if friendNote ~= "" then friendNote else "DEEPEST DESCENT"
 end
-net:WaitForChild("FriendsBoard").OnClientEvent:Connect(function(rows, note)
+net:WaitForChild("FriendsBoard").OnClientEvent:Connect(function(rows, note, winners)
 	friendRows, friendNote = rows, note
+	podiums.friends = winners or {}
 	drawFriends()
 end)
 workspace.DescendantAdded:Connect(function(obj)
@@ -228,7 +242,7 @@ local function sampleAim()
 	hud.surface.Visible = not passage.active
 		and (localPos.Y < -2 or localPos.Z < 0)
 		and (root.Position - entrance).Magnitude > 7
-	if hud.overlay.Visible or passage.active then
+	if hud.overlay.Visible or passage.active or player.PlayerGui:FindFirstChild("MiningLoading") then
 		hud:aimAt(nil)
 		local station = if hud.menu.page == "Gear" then "Shop" elseif hud.menu.page == "Store" then "Store" else nil
 		if station then
@@ -280,7 +294,7 @@ local function sampleAim()
 		hud:guide("", "", false)
 	end
 	if valid then
-		aimPoint, aimSide, aimCells = center, normal, cells
+		aimPoint, aimSide, aimCells, aimOre = center, normal, cells, Ores.byName[hit.Instance.Name]
 	end
 end
 
@@ -292,20 +306,24 @@ RunService.RenderStepped:Connect(function(dt)
 		sampleAim()
 	end
 	if not held or not aimPoint or hud.overlay.Visible then
-		if strokeStart then
+		if strokeStart or (rig and rig.playing) then
 			cancelStroke()
 		end
 		return
 	end
 	local now = os.clock()
-	if aimPoint ~= target or targetSide ~= aimSide then
-		target, targetSide, strokeStart = aimPoint, aimSide, now
+	if finishedCell == aimPoint and now < retryAt then
+		return
 	end
-	local duration = Upgrades.items.Speed.values[player:GetAttribute("Speed") or 1]
-	if not swinging then
-		net.Swing:FireServer(true, target)
+	if not swinging or aimPoint ~= target or targetSide ~= aimSide then
+		if strokeStart and target ~= aimPoint then
+			fx:linger()
+		end
+		target, targetSide, strokeStart = aimPoint, aimSide, now
+		net.Swing:FireServer(true, target, targetSide)
 		swinging = true
 	end
+	local duration = Ores.cutTime(Upgrades.items.Speed.values[player:GetAttribute("Speed") or 1], aimOre)
 	if rig and not rig.shoulder:IsDescendantOf(workspace) then
 		rig:destroy()
 		rig = nil
@@ -322,8 +340,11 @@ RunService.RenderStepped:Connect(function(dt)
 	fx:damage(aimCells, aimSide, progress)
 	if progress == 1 then
 		net.Mine:FireServer(target, targetSide, 1, 1)
-		fx:damage(nil)
-		strokeStart = now
+		fx:linger()
+		finishedCell, retryAt = target, now + 0.5
+		hud.meter.Visible = false
+		swinging = false
+		strokeStart = nil
 	end
 end)
 

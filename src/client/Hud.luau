@@ -88,7 +88,7 @@ function Hud.new(player, net, mobile)
 	jobTap.Activated:Connect(function()
 		self:openPage("Jobs")
 	end)
-	local loc = card(root, "Location", 0, 0, 211, 93, Color3.fromRGB(19, 142, 153), Color3.fromRGB(24, 68, 119))
+	local loc = card(root, "Location", 0, 0, 211, 108, Color3.fromRGB(19, 142, 153), Color3.fromRGB(24, 68, 119))
 	self.layer = W.text(loc, "CITRINE COVE", 10, 3, 186, 19, 13, W.aqua, true)
 	self.layer.Name = "Region"
 	self.depth = W.title(loc, "Surface", 10, 22, 99, 26, 18, W.white, true)
@@ -100,7 +100,8 @@ function Hud.new(player, net, mobile)
 	end)
 	self.coordinates = W.text(loc, "", 10, 50, 191, 20, 15, W.white, true)
 	self.coordinates.Name = "Coordinates"
-	self.stats = W.text(loc, "", 10, 71, 194, 18, 12, W.muted, true)
+	self.toolTitle = W.title(loc, "Field Pick", 10, 70, 191, 17, 14, W.gold, true)
+	self.stats = W.text(loc, "", 10, 87, 194, 16, 12, W.muted, true)
 	local dock = W.frame(root, "Action dock", 0, 0, 217, 64, W.ink)
 	dock.BackgroundTransparency = 1
 	self.nav = {}
@@ -188,8 +189,20 @@ function Hud.new(player, net, mobile)
 		self.menu:layout(width, height, self.mobile)
 		W.anchor(taskCard, 1, 0, UDim2.new(1, -10, 0, 9))
 		W.anchor(haul, 1, 0, UDim2.new(1, -10, 0, if showJob then 16 + 86 * s else 9))
-		W.anchor(wallet, 0, 1, UDim2.new(0, 10, 1, -shelf))
-		W.anchor(loc, 0, 1, UDim2.new(0, 10, 1, -shelf - 86 * s))
+		if self.mobile then
+			-- Stack below chat and reserve the lower-left quadrant for the thumbstick.
+			local chat = game:GetService("TextChatService"):FindFirstChildOfClass("ChatWindowConfiguration")
+			local chatSize = if chat and chat.Enabled then chat.AbsoluteSize else Vector2.zero
+			local top = math.min(math.max(18, chatSize.Y + 12), height * 0.39)
+			local colScale = math.min(s, (height * 0.72 - top - 30) / 180, (width * 0.49 - 14) / 224)
+			colScale = math.clamp(colScale, 0.49, s)
+			locScale.Scale, walletScale.Scale = colScale, colScale
+			W.anchor(loc, 0, 0, UDim2.fromOffset(10, top))
+			W.anchor(wallet, 0, 0, UDim2.fromOffset(10, top + 108 * colScale + 22))
+		else
+			W.anchor(wallet, 0, 1, UDim2.new(0, 10, 1, -shelf))
+			W.anchor(loc, 0, 1, UDim2.new(0, 10, 1, -shelf - 86 * s))
+		end
 		if compact then
 			W.anchor(dock, 1, 1, UDim2.new(1, -10, 1, -shelf))
 		else
@@ -201,12 +214,33 @@ function Hud.new(player, net, mobile)
 		else
 			W.anchor(speech, 0.5, 1, UDim2.new(0.5, 0, 1, -shelf - 78 * s))
 		end
-		W.anchor(
-			self.mine,
-			1,
-			1,
-			UDim2.new(1, -12, 1, if compact then -shelf - 78 * s - 52 * speechScale.Scale else -shelf)
-		)
+		local touchGui = gui.Parent:FindFirstChild("TouchGui")
+		local jump = touchGui and touchGui:FindFirstChild("JumpButton", true)
+		local bottom = if jump
+				and jump:IsA("GuiObject")
+				and jump.AbsoluteSize.Y > 0
+			then math.max(12, root.AbsolutePosition.Y + height - jump.AbsolutePosition.Y + 16)
+			else (if width >= 700 then 180 else 137)
+		W.anchor(self.mine, 1, 1, UDim2.new(1, -16, 1, -bottom))
+	end
+	local function watchJump(button)
+		if button.Name == "JumpButton" and button:IsA("GuiObject") then
+			button:GetPropertyChangedSignal("AbsolutePosition"):Connect(self.layout)
+			button:GetPropertyChangedSignal("AbsoluteSize"):Connect(self.layout)
+			task.defer(self.layout)
+		end
+	end
+	gui.Parent.DescendantAdded:Connect(watchJump)
+	local touch = gui.Parent:FindFirstChild("TouchGui")
+	if touch then
+		local jump = touch:FindFirstChild("JumpButton", true)
+		if jump then
+			watchJump(jump)
+		end
+	end
+	local chat = game:GetService("TextChatService"):FindFirstChildOfClass("ChatWindowConfiguration")
+	if chat then
+		chat:GetPropertyChangedSignal("AbsoluteSize"):Connect(self.layout)
 	end
 	root:GetPropertyChangedSignal("AbsoluteSize"):Connect(self.layout)
 	self.layout()
@@ -280,7 +314,7 @@ function Hud:refresh()
 	local status = p:GetAttribute("SaveStatus")
 	self.status.Text = if status == "Saving enabled" then "" else status or "Opening pack…"
 	local mined, done = p:GetAttribute("Mined") or 0, p:GetAttribute("Jobs") or 0
-	local _, rank = Expeditions.rank(mined)
+	local _, rank = Expeditions.rank(level("Power"), level("Speed"), level("Capacity"))
 	local job = Expeditions.jobs[done + 1]
 	self.jobFill.Size = UDim2.fromScale(if job then math.clamp(mined / job.goal, 0, 1) else 1, 1)
 	self.job.Text = if job then job.title else rank.name
@@ -291,12 +325,9 @@ function Hud:refresh()
 		else W.number(mined) .. " blocks mined"
 	self.jobCount.TextColor3 = if job and mined >= job.goal then W.green else W.muted
 	self.jobBadge.Visible = job ~= nil and mined >= job.goal
-	self.stats.Text = string.format(
-		"%s  ·  Power %d  ·  %.2fs",
-		rank.name,
-		level("Power"),
-		Upgrades.items.Speed.values[level("Speed")]
-	)
+	self.toolTitle.Text = Upgrades.pickNames[level("Power")]
+	self.stats.Text =
+		string.format("Power %d   ·   Speed %d   ·   Pack %d", level("Power"), level("Speed"), level("Capacity"))
 	self.menu:refresh()
 end
 function Hud:aimAt(screen, valid, locked)
@@ -322,6 +353,33 @@ function Hud:milestone(kind, name, color)
 	task.delay(3.4, function()
 		if self.ribbonSerial == serial then
 			self.ribbon.Visible = false
+		end
+	end)
+end
+function Hud:workshop(key, level)
+	local tint = Upgrades.items[key].color
+	if self.workshopCard then
+		self.workshopCard:Destroy()
+	end
+	local panel = card(self.root, "Upgrade fitted", 0, 0, 278, 68, tint:Lerp(W.ink, 0.32), W.panel)
+	panel.ZIndex = 30
+	W.anchor(panel, 0.5, 0, UDim2.new(0.5, 0, 0, 9))
+	local headline = if key == "Power"
+		then Upgrades.pickNames[level]
+		elseif key == "Capacity" then "Field pack expanded"
+		else "Faster pick swing"
+	W.title(panel, headline, 8, 7, 262, 29, 22, W.white)
+	W.text(panel, key .. "  Lv " .. level .. "   ·   " .. Upgrades.describe(key, level), 8, 37, 262, 22, 15, W.gold)
+	self.workshopCard = panel
+	if self.player:GetAttribute("MenuMotion") ~= false then
+		local scale = W.scale(panel)
+		scale.Scale = 0.78
+		W.tween(scale, 0.21, { Scale = 1 })
+	end
+	task.delay(2.4, function()
+		if self.workshopCard == panel then
+			panel:Destroy()
+			self.workshopCard = nil
 		end
 	end)
 end

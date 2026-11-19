@@ -14,7 +14,7 @@ local function index(x, y, z)
 end
 Blocks.size, Blocks.index = size, index
 
--- Geology material IDs describe ore distribution. Each physical brick is Plastic.
+-- Geology material IDs identify ore independently of each brick's visible finish.
 local codes, kinds = {}, {}
 local function register(material, name, color, ore)
 	local id = codes[material] or (#kinds + 1)
@@ -35,8 +35,8 @@ end
 for _, layer in Config.Layers do
 	register(layer.material, "Stone", layer.color, Ores.byName.Stone)
 end
-register(Enum.Material.Grass, "Turf", Color3.fromRGB(124, 204, 84), nil)
-register(Enum.Material.Cobblestone, "Caprock", Color3.fromRGB(173, 151, 130), nil)
+register(Enum.Material.Grass, "Turf", Color3.fromRGB(111, 175, 79), nil)
+register(Enum.Material.Cobblestone, "Packed earth", Color3.fromRGB(116, 78, 61), nil)
 codes[Enum.Material.Air] = 0
 Blocks.codes, Blocks.kinds = codes, kinds
 
@@ -80,10 +80,6 @@ end
 local function newBrick()
 	local p = Instance.new("Part")
 	p.Anchored, p.CanTouch = true, false
-	p.Material = Enum.Material.Plastic
-	p.TopSurface, p.BottomSurface = Enum.SurfaceType.Studs, Enum.SurfaceType.Smooth
-	p.FrontSurface, p.BackSurface = Enum.SurfaceType.Studs, Enum.SurfaceType.Studs
-	p.LeftSurface, p.RightSurface = Enum.SurfaceType.Studs, Enum.SurfaceType.Studs
 	return p
 end
 
@@ -117,7 +113,7 @@ function Blocks:rebuild(cx, cy, cz)
 					local gx = x0 + x
 					local shade = 0
 					-- Offset courses on cave faces. The outer bedrock can merge into large slabs.
-					if gx > 0 and gx < size.X - 1 and gy > 0 and gz > 0 and gz < size.Z - 1 then
+					if kinds[id].ore and gx > 0 and gx < size.X - 1 and gy > 0 and gz > 0 and gz < size.Z - 1 then
 						if Config.Min.Y + gy * cell < -64 then
 							-- Broad strata let long underground passage walls share a brick.
 							shade = (cx + cz + math.floor(gy / 4)) % 3
@@ -166,6 +162,14 @@ function Blocks:rebuild(cx, cy, cz)
 				local p = parts[used] or newBrick()
 				local kind = kinds[math.floor(style / 3)]
 				p.Name, p.Color = kind.name, kind.colors[style % 3 + 1]
+				local face = if kind.ore then Enum.SurfaceType.Studs else Enum.SurfaceType.Smooth
+				p.BottomSurface = face
+				p.TopSurface, p.FrontSurface, p.BackSurface, p.LeftSurface, p.RightSurface =
+					face, face, face, face, face
+				p.Material = if not kind.ore
+					then Enum.Material.SmoothPlastic
+					elseif kind.ore.hardness >= 5 then Enum.Material.Neon
+					else Enum.Material.Plastic
 				p.Size = Vector3.new(w, h, d) * cell
 				p.Position = self.corner + Vector3.new(x0 + x + w / 2, y0 + y + h / 2, z0 + z + d / 2) * cell
 				if not parts[used] then

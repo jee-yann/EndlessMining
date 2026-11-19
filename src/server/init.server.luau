@@ -5,11 +5,14 @@ local World, MineSite = require(script.MineWorld), require(script.MineSite)
 local Ores = require(Rep.Shared.Ores)
 local Preferences = require(Rep.Shared.Preferences)
 local Passes = require(script.Passes)
+local equipKit = require(script.ProspectorKit)
 local Pickaxe = require(script.Pickaxe)
 local Data, Profile, Mining = require(script.DataService), require(script.Profile), require(script.MiningService)
 
 local surface = workspace:WaitForChild("CitrineCove")
-local world = World.new(Config.Seed, surface)
+local seeds = Random.new()
+local studioSeed = if game:GetService("RunService"):IsStudio() then script:GetAttribute("StudioMineSeed") else nil
+local world = World.new(studioSeed or seeds:NextInteger(1, 2147483646), surface)
 local site = MineSite.bind(surface, world)
 local landing = site.spawn.Position + Vector3.yAxis * 4
 local minePath = surface["Sand path and bridge"]["Mine path"]
@@ -51,12 +54,30 @@ local function moveCharacter(character, destination)
 		character:PivotTo(destination)
 	end
 end
+local loadingRoots = {}
+local function enter(player)
+	player:SetAttribute("EnteredMineSite", true)
+	local root = loadingRoots[player]
+	if root and root.Parent then
+		root.Anchored = false
+	end
+	loadingRoots[player] = nil
+end
 local function onCharacter(player, character)
 	local root = character:WaitForChild("HumanoidRootPart", 10)
 	if not root or player.Character ~= character then
 		return
 	end
 	moveCharacter(character, CFrame.new(landing))
+	if not player:GetAttribute("EnteredMineSite") then
+		root.Anchored = true
+		loadingRoots[player] = root
+		task.delay(18, function()
+			if loadingRoots[player] == root and player.Parent == Players then
+				enter(player)
+			end
+		end)
+	end
 	-- Avatar appearance can replace the head after spawn. Keep the light on the rig.
 	if not root:FindFirstChild("Lamp mount") then
 		local mount = Instance.new("Attachment")
@@ -64,9 +85,11 @@ local function onCharacter(player, character)
 		mount.Name = "Lamp mount"
 		mount.Position = if head then root.CFrame:PointToObjectSpace(head.Position) else Vector3.new(0, 1.5, 0)
 		local lamp = Instance.new("PointLight")
-		lamp.Name, lamp.Color, lamp.Range, lamp.Brightness = "Mining lamp", Color3.fromRGB(255, 232, 198), 32, 1.65
+		lamp.Name, lamp.Color, lamp.Range, lamp.Brightness = "Mining lamp", Color3.fromRGB(255, 232, 198), 20, 0.75
+		lamp.Shadows = true
 		lamp.Parent, mount.Parent = mount, root
 	end
+	task.spawn(equipKit, player, character)
 	task.spawn(Pickaxe.equip, player, character)
 end
 local function join(player)
@@ -77,6 +100,7 @@ local function join(player)
 	Passes.join(player)
 	player.RespawnLocation = site.spawn
 	player.CharacterAppearanceLoaded:Connect(function(char)
+		task.spawn(equipKit, player, char)
 		Pickaxe.equip(player, char)
 	end)
 	player.CharacterAdded:Connect(function(char)
@@ -106,6 +130,7 @@ local function join(player)
 	player:SetAttribute("ProfileReady", true)
 end
 local function leave(player)
+	loadingRoots[player] = nil
 	local session = sessions[player]
 	if not session then
 		return
@@ -127,6 +152,10 @@ end
 
 local counterFor = { Sell = "Sell", Buy = "Shop", PreviewPass = "Store", Pass = "Store" }
 local function action(player, key, option, value)
+	if key == "Entered" then
+		enter(player)
+		return
+	end
 	local s = sessions[player]
 	if not s or type(key) ~= "string" then
 		return
@@ -202,7 +231,7 @@ local function action(player, key, option, value)
 	elseif key == "Buy" and type(option) == "string" and Upgrades.items[option] then
 		local ok, msg = Profile.buy(p, option)
 		sync(player, p)
-		net.Feedback:FireClient(player, if ok then "upgrade" else "hint", msg)
+		net.Feedback:FireClient(player, if ok then "upgrade" else "hint", msg, option, p.levels[option])
 	elseif key == "Job" then
 		local job = Profile.claimJob(p, option)
 		if job then
@@ -243,8 +272,28 @@ for _, player in Players:GetPlayers() do
 end
 
 task.spawn(function()
-	world:generate()
-	net:SetAttribute("Ready", true)
+	while true do
+		world:generate()
+		net:SetAttribute("Ready", true)
+		repeat
+			task.wait(1)
+		until world.removed >= Config.ResetAfter
+		net.Feedback:FireAllClients("resetSoon", Config.ResetWarning)
+		task.wait(Config.ResetWarning)
+		world.ready = false
+		net:SetAttribute("Ready", false)
+		for _, player in Players:GetPlayers() do
+			local char = player.Character
+			local root = char and char:FindFirstChild("HumanoidRootPart")
+			if root and Config.inMine(root.Position - world.origin) then
+				moveCharacter(char, CFrame.lookAt(entrance, entrance - Vector3.zAxis))
+			end
+		end
+		local oldSeed = world.seed
+		repeat
+			world.seed = seeds:NextInteger(1, 2147483646)
+		until world.seed ~= oldSeed
+	end
 end)
 task.spawn(function()
 	while task.wait(0.5) do

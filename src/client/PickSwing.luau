@@ -59,17 +59,23 @@ function Swing:play(duration)
 			self:destroy()
 			return
 		end
-		local arc = if self.phase < 0.58 then self.phase / 0.58 else (1 - self.phase) / 0.42
+		-- Lift over the shoulder, snap through contact, then settle into the next swing.
+		local arc = if self.phase < 0.55
+			then self.phase / 0.55
+			elseif self.phase < 0.82 then 1 - (self.phase - 0.55) / 0.27
+			else 0
+		local recoil = if self.phase > 0.82 then math.sin((self.phase - 0.82) / 0.18 * math.pi) else 0
 		local lift = (1 - math.cos(arc * math.pi)) * 0.5
-		local pitch = math.rad(30 + 110 * lift) * self.weight
+		local pitch = math.rad(39 + 94 * lift - 12 * recoil) * self.weight
 		local axes = self.shoulder.C0.Rotation
-		local offset = CFrame.Angles(pitch, 0, math.rad(8 * lift) * self.weight)
+		local offset =
+			CFrame.Angles(pitch, math.rad(-14 * lift + 5 * recoil) * self.weight, math.rad(17 * lift - 5) * self.weight)
 		self.baseShoulder = self.shoulder.Transform
 		self.shoulder.Transform = axes:Inverse() * offset * axes * self.baseShoulder
 		self.lastShoulder = self.shoulder.Transform
 		if self.elbow then
 			self.baseElbow = self.elbow.Transform
-			self.elbow.Transform = self.baseElbow * CFrame.Angles(math.rad(24 * lift) * self.weight, 0, 0)
+			self.elbow.Transform = self.baseElbow * CFrame.Angles(math.rad(36 * lift - 6 * recoil) * self.weight, 0, 0)
 			self.lastElbow = self.elbow.Transform
 		end
 	end)

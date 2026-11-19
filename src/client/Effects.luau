@@ -77,15 +77,32 @@ end
 local fractures = {
 	{ 0, 0, -0.19, 0.22 },
 	{ -0.19, 0.22, -0.10, 0.43 },
-	{ -0.10, 0.43, -0.31, 0.71 },
-	{ -0.19, 0.22, -0.47, 0.29 },
+	{ -0.10, 0.43, -0.31, 1 },
+	{ -0.19, 0.22, -1, 0.36 },
 	{ 0, 0, 0.28, -0.10 },
 	{ 0.28, -0.10, 0.48, -0.02 },
-	{ 0.48, -0.02, 0.76, -0.22 },
+	{ 0.48, -0.02, 1, -0.22 },
 	{ 0, 0, -0.16, -0.36 },
-	{ -0.16, -0.36, -0.06, -0.68 },
+	{ -0.16, -0.36, -0.06, -1 },
 }
 local axes = require(shared.BlockPattern).axes
+function Effects:linger()
+	if not self.fracture or not self.fracture.Parent then
+		return
+	end
+	local fading = self.fracture:Clone()
+	fading.Name = "Fading fractures"
+	fading.Parent = self.preview
+	for _, line in fading:GetChildren() do
+		Tween:Create(
+			line,
+			TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.In, 0, false, 0.10),
+			{ Transparency = 1 }
+		):Play()
+	end
+	Debris:AddItem(fading, 0.30)
+	self:damage(nil)
+end
 function Effects:damage(cells, normal, progress)
 	local stage = if cells then math.clamp(math.ceil(progress * #fractures), 0, #fractures) else 0
 	if stage == 0 then
@@ -119,8 +136,8 @@ function Effects:damage(cells, normal, progress)
 		local front = center + normal * (Config.Cell / 2 + 0.022)
 		for j = 1, stage do
 			local segment = fractures[j]
-			local a = front + (across * segment[1] + up * segment[2]) * 1.95
-			local b = front + (across * segment[3] + up * segment[4]) * 1.95
+			local a = front + (across * segment[1] + up * segment[2]) * (Config.Cell / 2)
+			local b = front + (across * segment[3] + up * segment[4]) * (Config.Cell / 2)
 			used += 1
 			local line = self.lines[used]
 			if not line then

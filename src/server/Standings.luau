@@ -14,9 +14,9 @@ function Standings.top(scores)
 	local lines = {}
 	for i = 1, math.min(5, #rows) do
 		local row = rows[i]
-		lines[i] = string.format("%d.   %s     ·     %d", i, row.name, row.score)
+		lines[i] = string.format("%d.   %s     ·     %d blocks", i, row.name, row.score)
 	end
-	return lines
+	return lines, rows
 end
 
 function Standings.start(court, event)
@@ -68,7 +68,7 @@ function Standings.start(court, event)
 						return
 					end
 					nextRead = os.clock() + 0.25
-					local loaded, score = pcall(Data.readMined, id)
+					local loaded, score = pcall(Data.readDepth, id)
 					if loaded then
 						cache[id] = { score = score, expires = os.clock() + 600 }
 					else
@@ -88,17 +88,29 @@ function Standings.start(court, event)
 			local scores = {}
 			for _, p in Players:GetPlayers() do
 				if p:GetAttribute("ProfileReady") then
-					scores[p.UserId] = { name = p.DisplayName, score = p:GetAttribute("Mined") or 0 }
+					scores[p.UserId] = { name = p.DisplayName, score = p.leaderstats.Depth.Value }
 				end
 			end
-			local lines = Standings.top(scores)
+			local lines, ranked = Standings.top(scores)
+			for rank = 1, 3 do
+				local stand = court.Server["Podium " .. rank]
+				local row = ranked[rank]
+				stand:SetAttribute("StandingName", row and row.name)
+				stand:SetAttribute("StandingDepth", row and row.score)
+				stand:SetAttribute("StandingId", row and row.id)
+			end
 			for i = 1, 5 do
 				court.Server.Standings.Lettering["Row" .. i].Text = lines[i]
 					or (if i == 1 then "Waiting for miners" else "")
 			end
 			for _, player in Players:GetPlayers() do
 				local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-				local near = root and (root.Position - court.Friends.Standings.Position).Magnitude <= 34
+				local near = root
+					and math.min(
+							(root.Position - court.Friends.Standings.Position).Magnitude,
+							(root.Position - court.Server.Standings.Position).Magnitude
+						)
+						<= 34
 				local state = friends[player]
 				if state then
 					state.near = near
@@ -118,7 +130,7 @@ function Standings.start(court, event)
 						personal[id] = { name = display, score = value.score }
 					end
 				end
-				local list = Standings.top(personal)
+				local list, rankedFriends = Standings.top(personal)
 				local note = if not state.complete
 					then "Checking friends…"
 					elseif state.partial then "Some scores unavailable"
@@ -126,9 +138,16 @@ function Standings.start(court, event)
 					elseif #list == 1 then "No other miners ranked yet"
 					else ""
 				local signature = table.concat(list, "\n") .. note
+				for i = 1, math.min(3, #rankedFriends) do
+					signature ..= "/" .. rankedFriends[i].id
+				end
 				if state.last ~= signature then
 					state.last = signature
-					event:FireClient(player, list, note)
+					local winners = {}
+					for i = 1, math.min(3, #rankedFriends) do
+						winners[i] = rankedFriends[i]
+					end
+					event:FireClient(player, list, note, winners)
 				end
 			end
 			for id, record in cache do

@@ -57,6 +57,9 @@ function World.new(seed, surface)
 end
 
 function World:generate()
+	self.ready = false
+	self.removed = 0
+	self.generation = (self.generation or 0) + 1
 	local geology = Geology.new(self.seed)
 	local grid, size = self.grid, Blocks.size
 	for z = 0, size.Z - 1 do
@@ -108,6 +111,9 @@ function World:excavate(selected)
 		end
 	end
 	if next(loot) then
+		for _, amount in loot do
+			self.removed += amount
+		end
 		self.grid:refresh(lower, upper)
 	end
 	return loot, finds

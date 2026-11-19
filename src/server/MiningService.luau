@@ -43,7 +43,7 @@ function Mining.selection(world, character, point, normal, power, space)
 end
 
 function Mining.start(world, net, sessions, sync)
-	local pending, nextPulse, nextInput, lastHint, queue = {}, {}, {}, {}, {}
+	local strokes, pending, nextInput, stagedSwing, nextSwing, lastHint, queue = {}, {}, {}, {}, {}, {}, {}
 	local credit = Config.BurstCells
 	local function hint(player, message, now)
 		if now >= (lastHint[player] or 0) then
@@ -52,53 +52,78 @@ function Mining.start(world, net, sessions, sync)
 		end
 	end
 
-	net.Swing.OnServerEvent:Connect(function(player, active, target)
+	local function beginStroke(player, character, point, normal, now)
+		nextSwing[player] = now + 0.035
+		local session = sessions[player]
+		if not session or not world.ready then
+			return
+		end
+		local p = session.profile
+		local selected = Mining.selection(
+			world,
+			character,
+			point,
+			normal,
+			Profile.stat(p, "Power"),
+			Profile.stat(p, "Capacity") - Profile.used(p)
+		)
+		if #selected ~= 1 then
+			strokes[player] = nil
+			return
+		end
+		local duration = Ores.cutTime(Profile.stat(p, "Speed"), world:oreAt(point))
+		strokes[player] = {
+			point = point,
+			normal = normal,
+			due = now + duration,
+			character = character,
+			generation = world.generation,
+		}
+		character:SetAttribute("MiningSwing", duration)
+	end
+	net.Swing.OnServerEvent:Connect(function(player, active, point, normal)
 		local character = player.Character
 		if not character or type(active) ~= "boolean" then
 			return
 		end
+		strokes[player], stagedSwing[player] = nil, nil
 		if not active then
-			if character:GetAttribute("MiningSwing") then
-				character:SetAttribute("MiningSwing", nil)
-			end
+			character:SetAttribute("MiningSwing", nil)
 			return
 		end
-		local session = sessions[player]
-		local head = character:FindFirstChild("Head")
-		-- This attribute animates nearby avatars. Only the mining request can remove ore.
-		if
-			session
-			and world.ready
-			and head
-			and not character:GetAttribute("MiningSwing")
-			and Mining.validPoint(target)
-			and Config.inside(target - world.origin)
-			and (head.Position - target).Magnitude <= Config.Reach + Config.Cell
-		then
-			character:SetAttribute("MiningSwing", Profile.stat(session.profile, "Speed"))
+		local now = os.clock()
+		if now < (nextSwing[player] or 0) then
+			-- A quick change of aim keeps the most recent face for the next check.
+			stagedSwing[player] = { character = character, point = point, normal = normal }
+		else
+			beginStroke(player, character, point, normal, now)
 		end
 	end)
-
 	net.Mine.OnServerEvent:Connect(function(player, point, normal, count, mask)
 		local now = os.clock()
 		if now < (nextInput[player] or 0) then
 			return
 		end
-		nextInput[player] = now + 0.055
-		if not world.ready or not sessions[player] or not Mining.validPoint(point) then
+		nextInput[player] = now + 0.05
+		local cut = strokes[player]
+		if
+			not cut
+			or not world.ready
+			or count ~= 1
+			or mask ~= 1
+			or pending[player]
+			or cut.character ~= player.Character
+			or cut.generation ~= world.generation
+			or point ~= cut.point
+			or normal ~= cut.normal
+			or now + 0.18 < cut.due
+		then
 			return
 		end
-		if count ~= 1 or mask ~= 1 or typeof(normal) ~= "Vector3" then
-			return
-		end
-		if now + 0.07 < (nextPulse[player] or 0) or pending[player] then
-			return
-		end
-		local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-		if not root or (point - root.Position).Magnitude > Config.Reach + 3 then
-			return
-		end
-		pending[player] = { point = point, normal = normal, time = now }
+		strokes[player] = nil
+		cut.character:SetAttribute("MiningSwing", nil)
+		cut.time = now
+		pending[player] = cut
 		table.insert(queue, player)
 	end)
 
@@ -153,6 +178,15 @@ function Mining.start(world, net, sessions, sync)
 	end
 
 	RunService.Heartbeat:Connect(function(dt)
+		local tickTime = os.clock()
+		for player, swing in stagedSwing do
+			if tickTime >= nextSwing[player] then
+				stagedSwing[player] = nil
+				if swing.character == player.Character then
+					beginStroke(player, swing.character, swing.point, swing.normal, tickTime)
+				end
+			end
+		end
 		credit = math.min(Config.BurstCells, credit + Config.CellBudget * dt)
 		for _ = 1, math.min(2, #queue) do
 			local player = queue[1]
@@ -161,19 +195,26 @@ function Mining.start(world, net, sessions, sync)
 			end
 			local session, request = sessions[player], pending[player]
 			local now = os.clock()
-			if request and now < (nextPulse[player] or 0) then
+			if request and now < request.due then
 				-- Allow a slightly early packet to wait for the same server cooldown.
 				table.remove(queue, 1)
 				table.insert(queue, player)
 				continue
 			end
-			if session and request and now - request.time < 1 then
+			if
+				world.ready
+				and session
+				and request
+				and request.generation == world.generation
+				and request.character == player.Character
+				and now - request.time < 1
+			then
 				local p = session.profile
 				if credit < 1 then
 					break
 				end
 				credit -= 1
-				nextPulse[player] = now + Profile.stat(p, "Speed")
+
 				pulse(player, p, request, now)
 			end
 			pending[player] = nil
@@ -181,7 +222,9 @@ function Mining.start(world, net, sessions, sync)
 		end
 	end)
 	Players.PlayerRemoving:Connect(function(player)
-		pending[player], nextPulse[player], nextInput[player], lastHint[player] = nil, nil, nil, nil
+		stagedSwing[player] = nil
+		pending[player], strokes[player], nextInput[player], nextSwing[player], lastHint[player] =
+			nil, nil, nil, nil, nil
 	end)
 end
 return Mining

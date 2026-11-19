@@ -95,14 +95,33 @@ function Pickaxe.equip(player, char)
 	local added = hand.ChildAdded:Connect(attachmentChanged)
 	local removed = hand.ChildRemoved:Connect(attachmentChanged)
 	model.PrimaryPart, model.Parent = handle, char
+	local tipA, tipB = Instance.new("Attachment"), Instance.new("Attachment")
+	tipA.Position, tipB.Position = Vector3.new(-0.91, 0.76, 0), Vector3.new(0.91, 0.76, 0)
+	tipA.Parent, tipB.Parent = handle, handle
+	local trail = Instance.new("Trail")
+	trail.Name, trail.Attachment0, trail.Attachment1 = "Pick arc", tipA, tipB
+	trail.Lifetime, trail.LightEmission, trail.Transparency = 0.12, 0.65, NumberSequence.new(0.48, 1)
+	trail.Parent = handle
 	local function update()
 		local level = player:GetAttribute("Power") or 1
-		socket.Color = if level == 1 then Color3.fromRGB(255, 201, 72) else Ores.byName[socketOres[level]].color
+		local tint = if level == 1 then pale else Ores.byName[socketOres[level]].color
+		socket.Color = if level == 1 then Color3.fromRGB(237, 181, 82) else tint
+		for _, blade in model:GetChildren() do
+			if blade.Name == "Steel" or blade.Name == "Beak" then
+				blade.Color = tint
+				blade.Material = if level >= 5 then Enum.Material.Neon else Enum.Material.Metal
+			end
+		end
+		trail.Color = ColorSequence.new(tint, tint:Lerp(Color3.new(1, 1, 1), 0.75))
+		trail.Lifetime = 0.09 + level * 0.017
+		trail.Enabled = level >= 3 and char:GetAttribute("MiningSwing") ~= nil
 	end
 	update()
 	local changed = player:GetAttributeChangedSignal("Power"):Connect(update)
+	local swing = char:GetAttributeChangedSignal("MiningSwing"):Connect(update)
 	model.Destroying:Once(function()
 		changed:Disconnect()
+		swing:Disconnect()
 		scaleChanged:Disconnect()
 		added:Disconnect()
 		removed:Disconnect()

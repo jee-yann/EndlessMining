@@ -27,10 +27,10 @@ local function copy(p)
 end
 
 -- Public lifetime score only. Reading a leaderboard must never claim a save lease.
-function Data.readMined(userId)
+function Data.readDepth(userId)
 	local record = getStore():GetAsync("miner_" .. userId)
-	if type(record) == "table" and type(record.profile) == "table" and type(record.profile.mined) == "number" then
-		return record.profile.mined
+	if type(record) == "table" and type(record.profile) == "table" and type(record.profile.bestDepth) == "number" then
+		return Config.depthInBlocks(record.profile.bestDepth)
 	end
 	return nil
 end

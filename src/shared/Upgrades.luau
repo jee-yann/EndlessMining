@@ -22,7 +22,11 @@ local upgrades = {
 		color = rgb(137, 231, 142),
 	},
 }
-local api = { items = upgrades, order = { "Speed", "Power", "Capacity" } }
+local api = {
+	pickNames = { "Field Pick", "Copper Pick", "Iron Pick", "Gilded Pick", "Starfrost Pick", "Prismheart Pick" },
+	items = upgrades,
+	order = { "Speed", "Power", "Capacity" },
+}
 function api.price(key, level)
 	local item = upgrades[key]
 	if level >= #item.values then
@@ -33,7 +37,7 @@ end
 function api.describe(key, level)
 	local v = upgrades[key].values[level]
 	if key == "Speed" then
-		return string.format("%.2fs / block", v)
+		return string.format("%.2fs / stone", v)
 	end
 	if key == "Capacity" then
 		return v .. " ore"

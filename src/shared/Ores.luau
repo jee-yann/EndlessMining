@@ -1,5 +1,5 @@
 local rgb = Color3.fromRGB
--- GameConfig.Layers supplies each region’s vein weights. Hardness gates the pickaxe.
+-- GameConfig.Layers supplies each region’s per-block odds. Hardness gates the pickaxe.
 local list = {
 	{
 		name = "Dirt",
@@ -91,4 +91,9 @@ end
 for _, m in { Enum.Material.Rock, Enum.Material.Slate, Enum.Material.Basalt } do
 	byMaterial[m] = byName.Stone
 end
-return { list = list, byName = byName, byMaterial = byMaterial }
+local effort =
+	{ Dirt = 0.72, Stone = 1, Coal = 1.15, Copper = 1.4, Iron = 1.7, Gold = 2.05, Diamond = 2.5, Emerald = 3 }
+local function cutTime(base, ore)
+	return base * effort[ore.name]
+end
+return { list = list, byName = byName, byMaterial = byMaterial, cutTime = cutTime }

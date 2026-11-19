@@ -75,8 +75,8 @@ local signatures = {
 	{ "Diamond", 9116394545, 0.20, 1.34, 0.70 },
 	{ "Emerald", 9116395089, 0.22, 1.08, 0.85 },
 }
-local dirt = sound("Dirt break", "rbxasset://sounds/action_footsteps_plastic.mp3", 0.15, 0.82)
-dirt.PlaybackRegionsEnabled, dirt.PlaybackRegion = true, NumberRange.new(0, 0.21)
+local dirt = sound("Dirt break", "rbxassetid://15675081158", 0.46, 0.68)
+
 local oreVoices = {}
 for _, cue in signatures do
 	local s = sound(cue[1] .. " break", "rbxassetid://" .. cue[2], cue[3], cue[4])

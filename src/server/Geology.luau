@@ -1,109 +1,77 @@
 local Shared = game:GetService("ReplicatedStorage").Shared
-local Config = require(Shared.GameConfig)
-local Ores = require(Shared.Ores)
+local Config, Ores = require(Shared.GameConfig), require(Shared.Ores)
 local Geology = {}
 Geology.__index = Geology
-local air = Enum.Material.Air
-
-function Geology.new(seed)
-	return setmetatable({ seed = seed, veins = {} }, Geology)
-end
-
--- One seeded, tilted vein per 32-stud region. A few deeper regions grow a
--- wider gem lode with a hollow pocket through its centre.
-function Geology:vein(a, b, c)
-	local key = (a + 16) * 4096 + (b + 32) * 64 + c + 16
-	if self.veins[key] then
-		return self.veins[key]
-	end
-	local rng = Random.new((self.seed + a * 73856093 + b * 19349663 + c * 83492791) % 2147483647)
-	local x, y, z = a * 32 + rng:NextNumber(10, 22), b * 32 + rng:NextNumber(10, 22), c * 32 + rng:NextNumber(10, 22)
-	local depth = math.max(0, -y)
-	local layer = Config.layer(depth)
-	local total, ore = 0, nil
-	-- Iterate the catalog in order so generation is reproducible for a seed.
-	for _, candidate in Ores.list do
-		local weight = layer.veinWeights[candidate.name]
-		if weight and weight > 0 then
-			total += weight
-			if rng:NextNumber() * total < weight then
-				ore = candidate
-			end
+local earth, air = Enum.Material.Cobblestone, Enum.Material.Air
+local thresholds = {}
+for _, layer in Config.Layers do
+	local list, total = {}, 0
+	for _, ore in Ores.list do
+		local chance = layer.oreChances[ore.name]
+		if chance then
+			total += chance
+			table.insert(list, { limit = total, material = ore.material })
 		end
 	end
-	local lode = ore ~= nil and ore.hardness >= 4 and rng:NextNumber() < 0.15
-	local v = {
-		x = x,
-		y = y,
-		z = z,
-		ore = ore,
-		lode = lode,
-		tilt = rng:NextNumber(-0.45, 0.45),
-		rx = if lode then 17 else rng:NextNumber(11, 15),
-		ry = if lode then 15 else rng:NextNumber(8, 12),
-		rz = if lode then 18 else rng:NextNumber(11, 15),
-	}
-	self.veins[key] = v
-	return v
+	thresholds[layer] = list
+end
+
+function Geology.new(seed)
+	return setmetatable({ seed = seed }, Geology)
+end
+
+-- Two rounds of integer mixing avalanche each cell's coordinates independently.
+-- The ore key is generated on the server and never replicated to players.
+local function roll(seed, x, y, z)
+	local n = bit32.bxor(seed, x * 73856093, y * 19349663, z * 83492791)
+	n = bit32.bxor(n, bit32.rshift(n, 16))
+	-- Products stay below 2^53, preserving all low bits in Luau numbers.
+	n = bit32.band(n * 1664525, 0xffffffff)
+	n = bit32.bxor(n, bit32.rshift(n, 15))
+	n = bit32.band(n * 1597333, 0xffffffff)
+	return bit32.bxor(n, bit32.rshift(n, 16)) % 100
 end
 
 function Geology:sample(x, y, z)
-	local top = Config.ridgeHeight(self.seed, x, z)
-	-- The portal has its own stone roof. Keep generated turf behind its back edge.
-	if math.abs(x) < 12 and z > -8 and y > 12 then
-		return air, 0
-	end
-	if y > top then
-		return air, 0
-	end
-	-- Scallop the face beyond the tram entrance and expose a darker rock band.
-	local shoulder = math.clamp((math.abs(x) - 15) / 16, 0, 1)
-	local face = -shoulder * (4 + math.sin(x / 9) * 2 + math.max(0, y) * 0.14)
-	if y >= 0 and z > face then
-		return air, 0
-	end
-	if y >= 0 and z > -23 and (x / 13) ^ 2 + (y / 15) ^ 2 < 1 then
-		return air, 0
-	end
-	if y + Config.Cell > top then
-		if math.abs(x) <= 36 and z >= -56 then
-			return Enum.Material.Cobblestone, 1
-		end
-		return Enum.Material.Grass, math.clamp((top + 2 - y) / 4, 0.3, 1)
-	end
-	if shoulder > 0.4 and z > face - 8 and math.abs(y - 12 - math.sin(x / 14) * 3) < 2 then
-		return Enum.Material.Rock, 1
-	end
-
-	-- A visible, accessible coal seam and copper pocket at the first face.
-	if ((x + 1) / 8) ^ 2 + ((y - 6) / 4.5) ^ 2 + ((z + 25) / 7) ^ 2 < 1 then
-		return Ores.byName.Coal.material, 1
-	end
-	if ((x - 9) / 5) ^ 2 + ((y - 5) / 5) ^ 2 + ((z + 28) / 6) ^ 2 < 1 then
-		return Ores.byName.Copper.material, 1
-	end
-
-	local v = self:vein(math.floor(x / 32), math.floor(y / 32), math.floor(z / 32))
-	local dx, dz = x - v.x, z - v.z
-	local d = (dx / v.rx) ^ 2 + ((y - v.y - dx * v.tilt) / v.ry) ^ 2 + (dz / v.rz) ^ 2
-	local layer = Config.layer(-y)
-	if d < 1 and v.ore and layer.veinWeights[v.ore.name] then
-		if v.lode and d < 0.20 then
+	local cell = Config.Cell
+	-- Only the narrow portal crosses authored surface scenery. Below the island
+	-- foundation the full field opens out, with one sealed cell on every edge.
+	if y >= -24 then
+		local top = Config.ridgeHeight(Config.LandscapeSeed, x, z)
+		if y > top or (math.abs(x) < 12 and z > -8 and y > 12) then
 			return air, 0
 		end
-		return v.ore.material, 1
+		if y >= 0 and z > -24 and math.abs(x) < 8 and y < 12 then
+			return air, 0
+		end
+		local gallery = math.abs(x) < 8 and z >= -48 and y < 12 and (y < 8 or z > -24)
+		if y <= -8 and math.abs(x) < 40 and z >= -104 and z < -4 then
+			gallery = true
+		end
+		if not gallery or y + cell > top or (z > -4 and y < 0) then
+			if (math.abs(x) > 44 or z < -108) and y + cell > top and y >= -12 then
+				return Enum.Material.Grass, 1
+			end
+			return earth, 1
+		end
 	end
-	-- Loose ore between veins gives single-block miners regular discoveries.
-	local hash = bit32.bxor(
-		math.floor(x / Config.Cell) * 73856093,
-		math.floor(y / Config.Cell) * 19349663,
-		math.floor(z / Config.Cell) * 83492791,
-		self.seed
-	)
-	if bit32.bxor(hash, bit32.rshift(hash, 13)) % 100 < 13 then
-		return if v.ore and layer.veinWeights[v.ore.name] then v.ore.material else Ores.byName.Coal.material, 1
+	if
+		x < Config.Min.X + cell
+		or x >= Config.Max.X - cell
+		or z < Config.Min.Z + cell
+		or (z >= Config.Max.Z - cell and y < 0)
+		or y < Config.Min.Y + cell
+	then
+		return earth, 1
 	end
-	if y >= -Config.DirtMaxDepth and y + Config.DirtThickness + Config.Cell > top then
+	local layer = Config.layer(-y)
+	local value = roll(self.seed, math.floor(x / cell), math.floor(y / cell), math.floor(z / cell))
+	for _, entry in thresholds[layer] do
+		if value < entry.limit then
+			return entry.material, 1
+		end
+	end
+	if y >= -Config.DirtMaxDepth and value >= 72 then
 		return Ores.byName.Dirt.material, 1
 	end
 	return layer.material, 1
