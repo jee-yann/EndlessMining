@@ -27,13 +27,34 @@ report.OnServerEvent:Connect(function(player, stage, detail)
 		char:PivotTo(CFrame.new(n:GetAttribute("Origin") + Vector3.new(0, 3, 2)))
 	elseif stage == "position" then
 		local char = player.Character
-		local x = if player.UserId % 2 == 0 then -3.25 else 1.5
-		char:PivotTo(CFrame.new(n:GetAttribute("Origin") + Vector3.new(x, -46.5, -12)))
+		local x = if inputTest then 0 elseif player.UserId % 2 == 0 then -4 else 5
+		char:PivotTo(CFrame.new(n:GetAttribute("Origin") + Vector3.new(x, 2.5, -12.5)))
 		char.HumanoidRootPart.Anchored = true
 	elseif stage == "depthSample" then
 		local root = player.Character.HumanoidRootPart
 		root.Anchored = true
-		root.CFrame = CFrame.new(n:GetAttribute("Origin") + Vector3.new(-1, -46.5, -18))
+		root.CFrame = CFrame.new(n:GetAttribute("Origin") + Vector3.new(-1, 2.5, -18))
+	elseif stage == "minedShaft" then
+		local config = require(rep.Shared.GameConfig)
+		local origin = n:GetAttribute("Origin")
+		local params = RaycastParams.new()
+		params.FilterType = Enum.RaycastFilterType.Include
+		params.FilterDescendantsInstances = { workspace.CitrineCove.MineBlocks }
+		local lowest
+		for x = -2, 1 do
+			for z = -5, -2 do
+				local start = origin + Vector3.new((x + 0.5) * config.Cell, 2, (z + 0.5) * config.Cell)
+				local hit = workspace:Raycast(start, -Vector3.yAxis * 65, params)
+				if hit and (not lowest or hit.Position.Y < lowest.Y) then
+					lowest = hit.Position
+				end
+			end
+		end
+		if lowest then
+			local at = lowest + Vector3.yAxis * 2.5
+			player.Character:PivotTo(CFrame.new(at))
+			player:SetAttribute("TestShaftDepth", config.depthInBlocks(origin.Y - at.Y))
+		end
 	elseif stage == "walk" then
 		player.Character.HumanoidRootPart.Anchored = false
 	elseif stage == "openPage" then

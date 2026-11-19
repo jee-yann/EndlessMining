@@ -155,7 +155,7 @@ local function test()
 			assert(p:GetAttribute("EquippedTitle") == 1)
 		end
 		if page == "Book" then
-			assert(menu.Listings["Iron Shelf"].Depth.Text == "27 blocks", "index depth in blocks")
+			assert(menu.Listings["Iron Shelf"].Depth.Text == "27–89 blocks", "index depth in blocks")
 			assert(menu.Listings:FindFirstChild("Rock hardness"), "index depth and Power guide")
 		end
 		task.wait(0.26)
@@ -175,11 +175,11 @@ local function test()
 		r:FireServer("depthSample")
 		local location = gui.SafeArea.Location
 		waitFor(function()
-			return location.Coordinates.Text == "X -1    Y -2    Z -4"
-				and location.Depth.Text == "2 blocks"
+			return location.Coordinates.Text == "X -1    Y 0    Z -4"
+				and location.Depth.Text == "0 blocks"
 				and location.Region.Text == "SUNSTONE HOLLOW"
-				and p.leaderstats.Depth.Value >= 2
-		end, 8, "block coordinates, region and personal best at the lower bench")
+				and p.leaderstats.Depth.Value == 0
+		end, 8, "block coordinates and region on the hut floor")
 		assert(location.Coordinates.TextFits and location.Depth.TextFits, "location readout clipped")
 	end
 	if r:GetAttribute("CheckSwing") then
@@ -189,16 +189,17 @@ local function test()
 		waitFor(function()
 			return (p.Character.HumanoidRootPart.Position - origin - Vector3.new(0, 3, 2)).Magnitude < 5
 		end, 5, "approach")
-		p.Character.Humanoid:MoveTo(origin + Vector3.new(0, 0, -6))
+		p.Character.Humanoid:MoveTo(origin + Vector3.new(0, 0, -12))
 		waitFor(function()
-			return p.Character.HumanoidRootPart.Position.Y < origin.Y - 35
+			local at = p.Character.HumanoidRootPart.Position - origin
+			return at.Z < -8 and at.Y > 0 and at.Y < 5
 		end, 5, "walk through the narrow gate")
 	end
 	r:FireServer("position")
 	local origin = n:GetAttribute("Origin")
 	waitFor(function()
 		local pos = p.Character.Head.Position - origin
-		return pos.Z < 0 and math.abs(pos.Y + 45) < 4
+		return pos.Z < 0 and math.abs(pos.Y - 4) < 3
 	end, 8, "placement at starter seam")
 	local first = os.clock()
 	local discovered
@@ -307,6 +308,20 @@ local function test()
 				end
 			end
 		end
+		-- Drill the two starter shafts through the real cut protocol before aiming at ore.
+		for _, x in { -2.5, 2.5 } do
+			for _, y in { -2.5, -7.5 } do
+				local at = origin + Vector3.new(x, y, -12.5)
+				local used = p:GetAttribute("Used")
+				n.Swing:FireServer(true, at, Vector3.yAxis)
+				task.wait(ores.cutTime(0.8, ores.byName.Dirt) + 0.18)
+				n.Mine:FireServer(at, Vector3.yAxis, 1, 1)
+				waitFor(function()
+					return p:GetAttribute("Used") == used + 1
+				end, 3, "floor dirt awarded")
+			end
+		end
+		local startingHaul = p:GetAttribute("Used")
 		local aim, aimNormal = visibleOre("Coal")
 		assert(aim, "expected visible coal in the test field")
 		camera.CameraType = Enum.CameraType.Scriptable
@@ -366,7 +381,7 @@ local function test()
 		waitFor(function()
 			return not meter.Visible and math.abs(hand.Position.Y - defaultY) < 0.48
 		end, 3, "cancelled swing")
-		assert(p:GetAttribute("Used") == 0, "early release spent a block")
+		assert(p:GetAttribute("Used") == startingHaul, "early release spent a block")
 		input:SendMouseButton(xy, Enum.UserInputType.MouseButton1, true)
 		local peaks, high, maxGap, replicated = 0, false, 0, false
 		local deadline = os.clock() + 3
@@ -381,9 +396,9 @@ local function test()
 			elseif high and rise < 0.5 then
 				high = false
 			end
-		until p:GetAttribute("Used") >= 1 or os.clock() > deadline
+		until p:GetAttribute("Used") > startingHaul or os.clock() > deadline
 		input:SendMouseButton(xy, Enum.UserInputType.MouseButton1, false)
-		assert(p:GetAttribute("Used") == 1, "completed cut")
+		assert(p:GetAttribute("Used") == startingHaul + 1, "completed cut")
 		assert(not workspace.CitrineCove.MineBlocks:FindFirstChild("Fractures", true), "completed cracks lingered")
 		assert(peaks >= 2, "expected repeated swings during the first cut, saw " .. peaks)
 		assert(maxGap < 0.035, "grip drift: " .. maxGap)
@@ -419,27 +434,18 @@ local function test()
 				and not workspace.CitrineCove.MineBlocks:FindFirstChild("Fractures", true),
 			"locked ore started a cut"
 		)
-		local blocks = workspace.CitrineCove.MineBlocks
-		local target
-		for _, part in blocks:GetChildren() do
-			local offset = part.Position - origin
-			local ore = ores.byName[part.Name]
-			if math.abs(offset.X) < 10 and offset.Y == -47.5 and offset.Z == -27.5 and ore and ore.hardness == 1 then
-				target = part
-				break
-			end
-		end
-		assert(target, "starter wall needs an accessible ground-level cut")
+		local at = aim - Vector3.zAxis * config.Cell
 		r:FireServer("walk")
-		local root = p.Character.HumanoidRootPart
 		waitFor(function()
 			return not root.Anchored
 		end, 3, "walking enabled")
-		local at = target.Position
-		p.Character.Humanoid:MoveTo(at + Vector3.zAxis * 6)
+		p.Character.Humanoid:MoveTo(aim)
 		waitFor(function()
-			return (root.Position - at - Vector3.zAxis * 6).Magnitude < 2
-		end, 5, "at workface")
+			return (root.Position - aim).Magnitude < 1.8
+		end, 6, "enter the shaft mined from above")
+		local hit = workspace:Raycast(head.Position, at - head.Position, params)
+		assert(hit and hit.Instance.Position == at and hit.Instance.Name == "Stone", "underground workface")
+		local target = hit.Instance
 		n.Swing:FireServer(true, at, Vector3.zAxis)
 		task.wait(ores.cutTime(0.8, ores.byName[target.Name]) + 0.15)
 		n.Mine:FireServer(at, Vector3.zAxis, 1, 1)
@@ -592,10 +598,13 @@ local function test()
 	waitFor(function()
 		return p.Character.HumanoidRootPart:FindFirstChild("Prism Ribbon")
 	end, 5, "equipped trail")
-	r:FireServer("depthSample")
+	r:FireServer("minedShaft")
 	waitFor(function()
-		return gui.SafeArea.Location.Depth.Text == "2 blocks"
-	end, 4, "return starting depth")
+		local blocks = p:GetAttribute("TestShaftDepth")
+		return blocks
+			and blocks >= 1
+			and gui.SafeArea.Location.Depth.Text == (if blocks == 1 then "1 block" else blocks .. " blocks")
+	end, 4, "return starts inside the mined shaft")
 	n.Action:FireServer("Surface")
 	local passage = p.PlayerGui.SurfaceReturn
 	waitFor(function()

@@ -46,6 +46,7 @@ function World.new(seed, surface)
 				seed = seed,
 				ready = false,
 				grid = Blocks.new(origin, surface or workspace),
+				preview = surface and surface:FindFirstChild("EditFace"),
 			}, World)
 		end
 		origin += Vector3.new(512, 0, 0)
@@ -59,6 +60,10 @@ function World:generate()
 	self.generation = (self.generation or 0) + 1
 	self.grid:reset(self.seed)
 	self.grid:openHall()
+	if self.preview then
+		self.preview:Destroy()
+		self.preview = nil
+	end
 	self.ready = true
 end
 function World:oreAt(point)

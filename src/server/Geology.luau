@@ -66,7 +66,11 @@ function Geology:material(p)
 		return Enum.Material.Cobblestone
 	end
 	if -p.Y <= Config.DirtLayers then
-		return Ores.byName.Dirt.material
+		-- The island foundation encloses the shallow dirt. Below it, headings
+		-- can run under any part of the island without opening its surface.
+		return if Config.inHall((p + Vector3.one * 0.5) * Config.Cell)
+			then Ores.byName.Dirt.material
+			else Enum.Material.Cobblestone
 	end
 	if self:isCave(p) then
 		return Enum.Material.Air

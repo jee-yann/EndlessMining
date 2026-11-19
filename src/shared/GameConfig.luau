@@ -5,12 +5,11 @@ local Config = {
 	-- Grid coordinates are relative to the entrance. Mining blocks are five studs.
 	Cell = 5,
 	Chunk = 8,
-	FloorY = -35,
+	FloorY = 0,
 	DirtLayers = 2,
 	HallHalfWidth = 10,
-	HallFront = 0,
+	HallFront = -5,
 	HallBack = -25,
-	BenchRows = 3,
 	MineBlockTag = "EndlessMiningBlockFolder",
 	SiteMin = Vector3.new(-96, -112, -168),
 	SiteMax = Vector3.new(96, 40, 0),
@@ -78,11 +77,11 @@ function Config.depthInBlocks(depthStuds)
 end
 function Config.blockCoordinates(localPos)
 	-- Count rows down from the dig floor so Y = -27 exactly where Iron Shelf begins.
-	return Vector3.new(
-		math.floor(localPos.X / Config.Cell),
-		-Config.depthInBlocks(Config.FloorY - localPos.Y),
-		math.floor(localPos.Z / Config.Cell)
-	)
+	local y = -Config.depthInBlocks(Config.FloorY - localPos.Y)
+	if Config.inHall(localPos) and Config.inMine(localPos) then
+		y = math.min(y, 0)
+	end
+	return Vector3.new(math.floor(localPos.X / Config.Cell), y, math.floor(localPos.Z / Config.Cell))
 end
 function Config.layer(depthStuds)
 	local depthBlocks = Config.depthInBlocks(depthStuds)
@@ -113,6 +112,6 @@ function Config.inHall(p)
 	return math.abs(p.X) < Config.HallHalfWidth and p.Z >= Config.HallBack and p.Z < Config.HallFront
 end
 function Config.inMine(p)
-	return p.Y < Config.FloorY + 1
+	return p.Y < Config.FloorY - Config.Cell * Config.DirtLayers or (Config.inHall(p) and p.Y < Config.FloorY + 12)
 end
 return Config

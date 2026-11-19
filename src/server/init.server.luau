@@ -23,6 +23,7 @@ net.Name = "EndlessMiningNet"
 net:SetAttribute("Origin", world.origin)
 net:SetAttribute("Landing", landing)
 net:SetAttribute("Entrance", entrance)
+net:SetAttribute("DigFloor", world.origin + Vector3.new(0, Config.FloorY, (Config.HallFront + Config.HallBack) / 2))
 net:SetAttribute("Ready", false)
 for _, name in { "Mine", "Action", "Feedback", "Dust", "FriendsBoard", "Swing" } do
 	local event = Instance.new(if name == "Dust" then "UnreliableRemoteEvent" else "RemoteEvent")
@@ -112,23 +113,6 @@ local function mineFit(char, inside)
 		char:SetAttribute("SurfaceScale", nil)
 	end
 end
-site.down.Touched:Connect(function(hit)
-	local char = hit:FindFirstAncestorOfClass("Model")
-	local player = char and Players:GetPlayerFromCharacter(char)
-	local session = player and sessions[player]
-	if not session or not world.ready or os.clock() < (session.doorAt or 0) then
-		return
-	end
-	local root = char:FindFirstChild("HumanoidRootPart")
-	if not root or (root.Position - site.down.Position).Magnitude > 12 then
-		return
-	end
-	session.doorAt = os.clock() + 0.6
-	mineFit(char, true)
-	local at = world.origin + Vector3.new(0, Config.FloorY - Config.BenchRows * Config.Cell + 3, -8)
-	moveCharacter(char, CFrame.lookAt(at, at - Vector3.zAxis))
-	applySkills(player, session.profile)
-end)
 local function onCharacter(player, character)
 	local root = character:WaitForChild("HumanoidRootPart", 10)
 	if not root or player.Character ~= character then
@@ -429,8 +413,12 @@ task.spawn(function()
 			if mining and localPos.Y < Config.FloorY then
 				local cell = world.grid:cellAt(root.Position)
 				local chunk, index = world.grid:slot(cell, false)
-				mining = (chunk ~= nil and chunk[index] ~= nil)
-					or Config.inHall(localPos) and localPos.Y >= Config.FloorY - Config.BenchRows * Config.Cell
+				mining = chunk ~= nil and chunk[index] ~= nil
+			end
+			local char = player.Character
+			if mining ~= (char:GetAttribute("SurfaceScale") ~= nil) then
+				mineFit(char, mining)
+				applySkills(player, s.profile)
 			end
 			if mining then
 				local depthStuds = math.floor(Config.FloorY - localPos.Y)

@@ -30,7 +30,7 @@ def make_project(folder, mode):
     tree["ReplicatedStorage"].setdefault("$attributes", {}).update(
         MuteTestMusic=True, MiningTestMode=mode, MiningTestRun=folder.name
     )
-    tree["ServerScriptService"]["Server"].setdefault("$attributes", {})["StudioMineSeed"] = 73131
+    tree["ServerScriptService"]["Server"].setdefault("$attributes", {})["StudioMineSeed"] = 74109
     tree["ServerScriptService"]["MiningPlaytest"] = {
         "$path": str(TESTS / "play" / "Driver.server.luau")
     }

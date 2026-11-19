@@ -46,17 +46,10 @@ function Blocks:slot(p, create)
 	local i = p - key * edge
 	return chunk, 1 + i.X + edge * (i.Z + edge * i.Y)
 end
-local function inGallery(p)
-	local x, z = (p.X + 0.5) * cell, (p.Z + 0.5) * cell
-	return math.abs(x) < Config.HallHalfWidth
-		and z >= Config.HallBack
-		and z < Config.HallFront
-		and p.Y >= -Config.BenchRows
-end
 function Blocks:oreAt(p)
 	local chunk, index = self:slot(p, false)
 	local value = chunk and chunk[index]
-	if value == false or inGallery(p) then
+	if value == false or p.Y >= 0 then
 		return nil
 	end
 	if value then
@@ -89,7 +82,7 @@ local function brick(self, p, material)
 	return part
 end
 function Blocks:expose(p, face, open)
-	if inGallery(p) then
+	if p.Y >= 0 then
 		return
 	end
 	local chunk, i = self:slot(p, true)
@@ -127,14 +120,9 @@ function Blocks:openHall()
 	local open = {}
 	for x = -Config.HallHalfWidth / cell, Config.HallHalfWidth / cell - 1 do
 		for z = Config.HallBack / cell, Config.HallFront / cell - 1 do
-			local rows = Config.BenchRows
-			self:expose(Vector3.new(x, -rows - 1, z), Enum.NormalId.Top.Value, open)
-			for y = -rows, -1 do
-				table.insert(open, Vector3.new(x, y, z))
-			end
+			self:expose(Vector3.new(x, -1, z), Enum.NormalId.Top.Value, open)
 		end
 	end
-	self:openNeighbours(open)
 end
 function Blocks:take(p)
 	local chunk, i = self:slot(p, false)

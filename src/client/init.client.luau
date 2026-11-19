@@ -268,9 +268,7 @@ local function sampleAim()
 		hud.layer.Text =
 			string.upper(if inHarbor then Config.SurfaceName else Config.layer(Config.FloorY - localPos.Y).name)
 	end
-	hud.surface.Visible = not passage.active
-		and (localPos.Y < -2 or localPos.Z < 0)
-		and (root.Position - entrance).Magnitude > 7
+	hud.surface.Visible = not passage.active and Config.inMine(localPos) and (root.Position - entrance).Magnitude > 7
 	if hud.overlay.Visible or passage.active or player.PlayerGui:FindFirstChild("MiningLoading") then
 		hud:aimAt(nil)
 		local station = if hud.menu.page == "Gear" then "Shop" elseif hud.menu.page == "Store" then "Store" else nil

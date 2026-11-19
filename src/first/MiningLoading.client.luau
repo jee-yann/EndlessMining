@@ -108,15 +108,15 @@ local overlap = OverlapParams.new()
 overlap.FilterType = Enum.RaycastFilterType.Include
 local requestedEntrance = false
 local function entranceBrickCount(net)
-	local origin = net:GetAttribute("Origin")
-	if not origin then
+	local floor = net:GetAttribute("DigFloor")
+	if not floor then
 		return 0
 	end
 	if workspace.StreamingEnabled and not requestedEntrance then
 		requestedEntrance = true
 		task.spawn(function()
 			pcall(function()
-				player:RequestStreamAroundAsync(origin + Vector3.new(0, -48, -12), 2)
+				player:RequestStreamAroundAsync(floor, 2)
 			end)
 		end)
 	end
@@ -128,11 +128,7 @@ local function entranceBrickCount(net)
 		return 0
 	end
 	overlap.FilterDescendantsInstances = { grid }
-	return #workspace:GetPartBoundsInBox(
-		CFrame.new(origin + Vector3.new(0, -49, -12)),
-		Vector3.new(25, 12, 22),
-		overlap
-	)
+	return #workspace:GetPartBoundsInBox(CFrame.new(floor - Vector3.yAxis * 2.5), Vector3.new(19, 5, 19), overlap)
 end
 
 -- The entrance lights can already be replicated while the renderer still shows
