@@ -23,28 +23,28 @@ local Config = {
 }
 Config.Layers = {
 	{
-		depth = 0,
+		depthBlocks = 0,
 		name = "Sunstone Hollow",
 		veinWeights = { Coal = 72, Copper = 28 },
 		material = Enum.Material.Concrete,
 		color = Color3.fromRGB(151, 153, 158),
 	},
 	{
-		depth = 108,
+		depthBlocks = 27,
 		name = "Iron Shelf",
 		veinWeights = { Coal = 23, Copper = 27, Iron = 44, Gold = 6 },
 		material = Enum.Material.Rock,
 		color = Color3.fromRGB(132, 136, 143),
 	},
 	{
-		depth = 360,
+		depthBlocks = 90,
 		name = "Prism Grotto",
 		veinWeights = { Coal = 10, Copper = 15, Iron = 36, Gold = 27, Diamond = 12 },
 		material = Enum.Material.Slate,
 		color = Color3.fromRGB(115, 119, 127),
 	},
 	{
-		depth = 740,
+		depthBlocks = 185,
 		name = "Emerald Deep",
 		veinWeights = { Coal = 6, Copper = 9, Iron = 26, Gold = 28, Diamond = 23, Emerald = 8 },
 		material = Enum.Material.Basalt,
@@ -58,9 +58,21 @@ function Config.ridgeHeight(seed, x, z)
 	local shore = math.max(math.clamp((math.abs(x) - 69) / 23, 0, 1), math.clamp((-z - 37) / 48, 0, 1))
 	return ridge + (-9 - ridge) * shore
 end
-function Config.layer(depth)
+function Config.depthInBlocks(depthStuds)
+	return math.floor(depthStuds / Config.Cell)
+end
+function Config.blockCoordinates(localPos)
+	-- Count rows down from the entrance so Y = -27 exactly where Iron Shelf begins.
+	return Vector3.new(
+		math.floor(localPos.X / Config.Cell),
+		-Config.depthInBlocks(-localPos.Y),
+		math.floor(localPos.Z / Config.Cell)
+	)
+end
+function Config.layer(depthStuds)
+	local depthBlocks = Config.depthInBlocks(depthStuds)
 	for i = #Config.Layers, 1, -1 do
-		if depth >= Config.Layers[i].depth then
+		if depthBlocks >= Config.Layers[i].depthBlocks then
 			return Config.Layers[i]
 		end
 	end

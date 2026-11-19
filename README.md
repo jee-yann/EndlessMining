@@ -9,7 +9,7 @@ Citrine Cove is a multiplayer Roblox mining simulator. Aim at a cave wall or flo
 1. Open `EndlessMining.rbxlx` from this folder in Roblox Studio, or use the existing **Endless Mining** Studio place connected to this project's Rojo server.
 2. Press **F5**. The island is already visible in edit mode. Play generates studded plastic bricks behind the cave mouth. Cross the bridge and walk beneath the golden crystal marked **MINE**. Aim at the dark starter seam and hold the left mouse button. On a touch device, aim with the center dot and hold **HOLD MINE**.
 3. After eight blocks, open **Jobs** and claim **First strike** for 25 gold. Walk to the cyan **Upgrades** stall, use its prompt and buy **Mining area** for 24 gold to cut two blocks per hit. Use the amber **Sell** counter to empty your pack. Open **Pack** anywhere to see quantities and sale values for each ore.
-4. Dig through the walls and floor to reach deeper regions. **Index** lists the vein chances at each depth. **↑ Harbor** brings you back to the surface to sell. Open **Settings** from the dock to adjust music, sound effects or menu animations.
+4. Dig through the walls and floor to reach deeper regions. The location card shows your X, Y and Z in blocks from the mine entrance. Y drops by one for each full block you descend. At Y −27 you enter Iron Shelf. **Index** lists the vein chances at each depth. **↑ Harbor** brings you back to the surface to sell. Open **Settings** from the dock to adjust music, sound effects or menu animations.
 
 The place uses each player’s equipped Roblox avatar. If Studio Output reports an authentication error for a missing head or clothing texture, refresh the Studio sign-in and start another play session.
 
@@ -22,6 +22,12 @@ rojo build default.project.json -o EndlessMining.rbxlx
 ```
 
 For live editing, run `rojo serve default.project.json` here if this project's server is stopped. In Studio, use **Plugins → Rojo → Connect** and select **EndlessMining** at `localhost:34872`. A built place can be played directly without connecting the plugin.
+
+## Saving your work
+
+- **On your PC** press **Ctrl+S** in VS Code to save a script. If you edit the island directly in Studio, stop Play before editing and save the `Workspace.CitrineCove` model to `map/CitrineCove.rbxmx`. The build command above bundles those files into a place you can reopen.
+- **On GitHub** commit your saved source files, then push your feature branch. In VS Code these actions are under **Source Control**. A pull request lets you merge the work into `main`.
+- **On Roblox** open the built place in Studio and choose **File → Publish**. A new experience starts private. Open the published experience in the Roblox app to keep your miner’s gold, inventory, upgrades and best depth. The game autosaves every 45 seconds and on exit. A local playtest labeled **Practice session** resets when you stop it. [Roblox publishing guide](https://create.roblox.com/docs/production/publishing/publish-games-and-places)
 
 ## World and balance
 
@@ -37,12 +43,12 @@ The harbor has a core sample table, dispatch board, ore museum, pass stall and a
 
 Digging opens a shared route through four regions. The percentages below describe the chance that a new vein in each region contains that ore. Host blocks fill the space between veins.
 
-| Region | Depth in studs | Coal | Copper | Iron | Gold | Diamond | Emerald |
+| Region | Depth in blocks | Coal | Copper | Iron | Gold | Diamond | Emerald |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| Sunstone Hollow | 0–107 | 72% | 28% | – | – | – | – |
-| Iron Shelf | 108–359 | 23% | 27% | 44% | 6% | – | – |
-| Prism Grotto | 360–739 | 10% | 15% | 36% | 27% | 12% | – |
-| Emerald Deep | 740–1,152 | 6% | 9% | 26% | 28% | 23% | 8% |
+| Sunstone Hollow | 0–26 | 72% | 28% | – | – | – | – |
+| Iron Shelf | 27–89 | 23% | 27% | 44% | 6% | – | – |
+| Prism Grotto | 90–184 | 10% | 15% | 36% | 27% | 12% | – |
+| Emerald Deep | 185–288 | 6% | 9% | 26% | 28% | 23% | 8% |
 
 The backpack shows occupied slots, each ore count and the gold the Sell counter will pay for it.
 
@@ -50,7 +56,7 @@ The backpack shows occupied slots, each ore count and the gold the Sell counter 
 
 The seven shift jobs award gold once each. The index records discoveries even after you sell them. Ranks and job claims use lifetime mining progress.
 
-The 192 × 224 stud mine extends 1,152 studs below the entrance. Sunstone Hollow gives way to the Iron Shelf, Prism Grotto, and Emerald Deep. Each 32-stud geological region receives a seeded, tilted ore deposit. The region’s vein weights determine its composition. Orange-brown dirt lies close to the turf and extends at most 12 studs below entrance level. Grey stone fills the deeper mine. Some deep regions contain an oversized precious-metal or gem lode around a hollow pocket. A fixed coal seam makes the opening reproducible. The green roof is permanent turf.
+The mine is 48 blocks wide, 56 blocks long and 288 blocks deep. Sunstone Hollow gives way to the Iron Shelf, Prism Grotto, and Emerald Deep. Each eight-block geological chunk receives a seeded, tilted ore deposit. The region’s vein weights determine its composition. Orange-brown dirt lies close to the turf and extends at most three blocks below entrance level. Grey stone fills the deeper mine. Some deep regions contain an oversized precious-metal or gem lode around a hollow pocket. A fixed coal seam makes the opening reproducible. The green roof is permanent turf.
 
 The server keeps one byte per grid cell. Only exposed rock needs physical Parts. Within each 8 × 8 × 8 cell chunk, neighbouring exposed cells of the same shade share anchored plastic bricks. Cutting a block rebuilds the affected chunks and exposes the next layer. Excavations are shared for the lifetime of that server.
 

@@ -160,7 +160,8 @@ function Menu:book()
 			local row = W.frame(self.list, layer.name, 1, 1 + (rows + i - 1) * 69, 447, 62, W.card, 10)
 			W.frame(row, "Stratum", 0, 8, 5, 46, layer.color, 3)
 			W.title(row, layer.name, 12, 3, 273, 23, 18, W.white, true)
-			W.text(row, layer.depth .. " studs", 294, 4, 143, 21, 15, W.aqua)
+			local depth = W.text(row, layer.depthBlocks .. " blocks", 294, 4, 143, 21, 15, W.aqua)
+			depth.Name = "Depth"
 			local chances, total = {}, 0
 			for _, weight in layer.veinWeights do
 				total += weight

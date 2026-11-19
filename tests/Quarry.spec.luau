@@ -35,6 +35,7 @@ print("PASS sale, costs, level caps, upgrade effects, profile capacity validatio
 local legacy = Profile.new()
 legacy.jobs, legacy.discoveries, legacy.bag, legacy.mined = nil, nil, { Coal = 3 }, 36
 legacy.preferences = nil
+legacy.bestDepth = 361
 local upgraded = Data.claim({ profile = legacy }, "harbor", 0).profile
 assert(upgraded.discoveries.Coal and upgraded.jobs == 0)
 assert(not Profile.claimJob(upgraded, 2))
@@ -45,11 +46,21 @@ assert(upgraded.preferences.MusicVolume == 55 and upgraded.preferences.SfxVolume
 upgraded.preferences.MusicVolume, upgraded.preferences.MenuMotion = 0, false
 local snapshot = Data.commit({ owner = "harbor" }, "harbor", upgraded, 100, true)
 local loaded = Data.claim(snapshot, "again", 101).profile
+assert(loaded.bestDepth == 361 and Config.depthInBlocks(loaded.bestDepth) == 90)
 assert(loaded.preferences.MusicVolume == 0 and not loaded.preferences.MenuMotion)
 assert(Profile.valid(loaded) and loaded.jobs == 2 and loaded.discoveries.Coal)
 print("PASS legacy ore collection, job order, duplicate claims, doubled sales and reload")
 
 local hashes = {}
+assert(Config.blockCoordinates(Vector3.zero) == Vector3.zero)
+assert(Config.blockCoordinates(Vector3.new(-0.1, -3.9, 4)) == Vector3.new(-1, 0, 1))
+assert(Config.blockCoordinates(Vector3.new(7.9, -4, -4.1)) == Vector3.new(1, -1, -2))
+for i = 2, #Config.Layers do
+	local layer = Config.Layers[i]
+	local boundary = layer.depthBlocks * Config.Cell
+	assert(Config.layer(boundary - 0.1) == Config.Layers[i - 1] and Config.layer(boundary) == layer)
+	assert(Config.blockCoordinates(Vector3.new(0, -boundary, 0)).Y == -layer.depthBlocks)
+end
 for _, seed in { 11, 73129, 91003, 73129 } do
 	local geo = Geology.new(seed)
 	local hash, seen, lodes = 0, {}, 0
@@ -95,7 +106,7 @@ for _, layer in Config.Layers do
 		local geo = Geology.new(seed)
 		for x = -3, 2 do
 			for z = -7, -1 do
-				local vein = geo:vein(x, math.floor(-(layer.depth + 50) / 32), z)
+				local vein = geo:vein(x, math.floor(-(layer.depthBlocks * Config.Cell + 50) / 32), z)
 				counts[vein.ore.name] = (counts[vein.ore.name] or 0) + 1
 				total += 1
 			end

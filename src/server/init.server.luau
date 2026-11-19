@@ -39,7 +39,7 @@ local function sync(player, p)
 		player:SetAttribute(key, p.levels[key])
 	end
 	player.leaderstats.Gold.Value = p.gold
-	player.leaderstats.Depth.Value = p.bestDepth
+	player.leaderstats.Depth.Value = Config.depthInBlocks(p.bestDepth)
 end
 local function toSurface(player, character)
 	local root = character and character:FindFirstChild("HumanoidRootPart")
@@ -222,10 +222,11 @@ task.spawn(function()
 			then
 				toSurface(player, player.Character)
 			elseif Config.inside(localPos) then
-				local d = math.floor(-localPos.Y)
-				if d > s.profile.bestDepth then
-					s.profile.bestDepth = d
-					player.leaderstats.Depth.Value = d
+				local depthStuds = math.floor(-localPos.Y)
+				if depthStuds > s.profile.bestDepth then
+					-- Existing profiles store this record in studs.
+					s.profile.bestDepth = depthStuds
+					player.leaderstats.Depth.Value = Config.depthInBlocks(depthStuds)
 				end
 			elseif localPos.Y < -35 then
 				toSurface(player, player.Character)

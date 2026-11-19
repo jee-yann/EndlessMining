@@ -64,15 +64,19 @@ function Hud.new(player, net, mobile)
 	jobTap.Activated:Connect(function()
 		self:openPage("Jobs")
 	end)
-	local loc = card(root, "Location", 0, 0, 211, 76, Color3.fromRGB(19, 142, 153), Color3.fromRGB(24, 68, 119))
+	local loc = card(root, "Location", 0, 0, 211, 93, Color3.fromRGB(19, 142, 153), Color3.fromRGB(24, 68, 119))
 	self.layer = W.text(loc, "CITRINE COVE", 10, 3, 186, 19, 13, W.aqua, true)
-	self.depth = W.title(loc, "Surface", 10, 24, 91, 26, 20, W.white, true)
-	self.surface = W.button(loc, "Surface", 105, 22, 92, 27, W.aqua, "↑ Harbor", "Select")
+	self.layer.Name = "Region"
+	self.depth = W.title(loc, "Surface", 10, 22, 99, 26, 18, W.white, true)
+	self.depth.Name = "Depth"
+	self.surface = W.button(loc, "Surface", 113, 22, 85, 27, W.aqua, "↑ Harbor", "Select")
 	self.surface.TextSize = 14
 	self.surface.Activated:Connect(function()
 		net.Action:FireServer("Surface")
 	end)
-	self.stats = W.text(loc, "", 10, 53, 194, 18, 12, W.muted, true)
+	self.coordinates = W.text(loc, "", 10, 50, 191, 20, 15, W.white, true)
+	self.coordinates.Name = "Coordinates"
+	self.stats = W.text(loc, "", 10, 71, 194, 18, 12, W.muted, true)
 	local dock = W.frame(root, "Action dock", 0, 0, 291, 64, W.ink)
 	dock.BackgroundTransparency = 1
 	self.nav = {}

@@ -27,6 +27,10 @@ report.OnServerEvent:Connect(function(player,stage,detail)
 		local x=if player.UserId%2==0 then -3.25 else 1.5
 		char:PivotTo(CFrame.new(n:GetAttribute("Origin")+Vector3.new(x,4,-8)))
 		char.HumanoidRootPart.Anchored=true
+	elseif stage=="depthSample" then
+		local root=player.Character.HumanoidRootPart
+		root.Anchored=true
+		root.CFrame=CFrame.new(n:GetAttribute("Origin")+Vector3.new(-1,-108.5,-9))
 	elseif stage=="openPage" then
 		n.Feedback:FireClient(player,"page",detail)
 	elseif stage=="station" then
@@ -113,6 +117,9 @@ local function test()
 		if counters[page] then visit(page,true) else r:FireServer("openPage",page) end
 		local listing=({Settings="Music volume",Gear="Mining area",Jobs="First strike",Book="Stone",Pack="Stone",Store="Double Gold"})[page]
 		waitFor(function() return overlay.Visible and menu.Listings:FindFirstChild(listing) end,5,"open "..page)
+		if page=="Book" then
+			assert(menu.Listings["Iron Shelf"].Depth.Text=="27 blocks","index depth in blocks")
+		end
 		task.wait(.26)
 		local left,top=menu.AbsolutePosition.X,menu.AbsolutePosition.Y
 		local safe=gui.SafeArea
@@ -121,9 +128,21 @@ local function test()
 	end
 	r:FireServer("closePage")
 	waitFor(function() return not overlay.Visible end,5,"close")
+	if not r:GetAttribute("CheckSwing") then
+		r:FireServer("depthSample")
+		local location=gui.SafeArea.Location
+		waitFor(function()
+			return location.Coordinates.Text=="X -1    Y -27    Z -3" and location.Depth.Text=="27 blocks"
+				and location.Region.Text=="IRON SHELF" and p.leaderstats.Depth.Value==27
+		end,8,"block coordinates, region and personal best at Iron Shelf")
+		assert(location.Coordinates.TextFits and location.Depth.TextFits,"location readout clipped")
+	end
 	r:FireServer("position")
 	local origin=n:GetAttribute("Origin")
-	waitFor(function() return (p.Character.Head.Position-origin).Z<0 end,8,"placement")
+	waitFor(function()
+		local pos=p.Character.Head.Position-origin
+		return pos.Z<0 and math.abs(pos.Y-5)<4
+	end,8,"placement at starter seam")
 	local first=os.clock()
 	local discovered
 	n.Feedback.OnClientEvent:Connect(function(kind,title,name)

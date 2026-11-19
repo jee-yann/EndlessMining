@@ -195,31 +195,36 @@ for _, other in Players:GetPlayers() do
 	end
 end
 
+local lastCoordinates
 local function sampleAim()
 	aimPoint, aimCells = nil, nil
 	local camera = workspace.CurrentCamera
 	local char = player.Character
 	local head = char and char:FindFirstChild("Head")
-	if not head or not camera then
+	local root = char and char:FindFirstChild("HumanoidRootPart")
+	if not head or not root or not camera then
 		hud:aimAt(nil)
 		release()
 		fx:aim(nil)
 		return
 	end
-	local localPos = head.Position - origin
-	local depth = math.max(0, math.floor(-localPos.Y))
-	hud.depth.Text = if depth == 0 then "Surface" else depth .. " studs"
-	hud.layer.Text = if depth == 0 and localPos.Z >= 0
-		then string.upper(Config.SurfaceName)
-		else string.upper(Config.layer(depth).name)
-	hud.surface.Visible = depth > 2 or (head.Position - landing).Magnitude > 24
+	local localPos = root.Position - origin
+	local coords = Config.blockCoordinates(localPos)
+	if coords ~= lastCoordinates then
+		lastCoordinates = coords
+		local depth = math.max(0, -coords.Y)
+		local inHarbor = depth == 0 and coords.Z >= 0
+		hud.coordinates.Text = string.format("X %d    Y %d    Z %d", coords.X, coords.Y, coords.Z)
+		hud.depth.Text = if inHarbor then "Surface" elseif depth == 1 then "1 block" else depth .. " blocks"
+		hud.layer.Text = string.upper(if inHarbor then Config.SurfaceName else Config.layer(-localPos.Y).name)
+	end
+	hud.surface.Visible = localPos.Y < -2 or (root.Position - landing).Magnitude > 24
 	if hud.overlay.Visible then
 		hud:aimAt(nil)
 		local station = if hud.menu.page == "Gear" then "Shop" elseif hud.menu.page == "Store" then "Store" else nil
 		if station then
-			local root = char:FindFirstChild("HumanoidRootPart")
 			local pos = net:GetAttribute(station .. "Position")
-			if not root or not pos or (root.Position - pos).Magnitude > net:GetAttribute(station .. "Range") then
+			if not pos or (root.Position - pos).Magnitude > net:GetAttribute(station .. "Range") then
 				hud:setShop(false)
 			end
 		end
@@ -269,7 +274,7 @@ local function sampleAim()
 		local help = if mobile then "Hold MINE on the highlighted blocks" else "Hold the left mouse button to mine"
 		local title = if valid
 			then string.format("%d block%s selected", #cells, if #cells == 1 then "" else "s")
-			elseif depth > 2 then "Aim at the wall or floor to keep digging"
+			elseif localPos.Y < -2 then "Aim at the wall or floor to keep digging"
 			else "Follow the path to the crystal cave"
 		hud:guide(title, help, true)
 	else
