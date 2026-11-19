@@ -92,6 +92,23 @@ for i = 1, 5 do
 	voice.Name, voice.PlaybackSpeed, voice.Parent = "Discovery note " .. i, 1.15 * 2 ^ ((i * 4) / 12), bus
 	notes[i] = voice
 end
+local unlockNotes = {}
+for i = 1, 4 do
+	local voice = voices.Reward:Clone()
+	voice.Name, voice.Volume, voice.Parent = "Unlock note " .. i, 0.20, bus
+	unlockNotes[i] = voice
+end
+function Audio.unlock(isTitle)
+	local pitches = if isTitle then { 1.05, 1.32, 1.57, 2.10 } else { 0.96, 1.21, 1.44 }
+	for i, pitch in pitches do
+		task.delay((i - 1) * 0.115, function()
+			local note = unlockNotes[i]
+			note.PlaybackSpeed, note.TimePosition = pitch, 0
+			note:Play()
+		end)
+	end
+end
+
 local flourishEnd, flourishRank, flourishSerial = 0, 0, 0
 function Audio.ore(loot)
 	if loot.Dirt then

@@ -115,8 +115,15 @@ local function test()
 			pad.Service:InputHoldEnd()
 		end
 	end
+	local roster = gui.SafeArea["Server leaderboard"]
+	assert(not game.StarterGui:GetCoreGuiEnabled(Enum.CoreGuiType.PlayerList))
+	local me = roster.Miners:WaitForChild(tostring(p.UserId), 3)
+	assert(me and me.Level.Text == "1" and me.Gold.Text == "0" and me.Title.Text == "Noob Miner")
+	assert(gui.SafeArea.Wallet["Level progress"]["XP track"]["XP fill"])
+	assert(gui.SafeArea["Action dock"]:FindFirstChild("Achievements"))
+	assert(not menu["Inventory tabs"]:FindFirstChild("Achievements"))
 	for _, page in
-		{ "Pack", "Settings", "Inventory", "Pets", "Skills", "Achievements", "Crew", "Gear", "Jobs", "Book", "Store" }
+		{ "Pack", "Settings", "Inventory", "Pets", "Skills", "Achievements", "Gear", "Jobs", "Book", "Store" }
 	do
 		if counters[page] then
 			visit(page, true)
@@ -128,8 +135,7 @@ local function test()
 			Inventory = "Prismatic Excavator",
 			Pets = "Pocket Rock",
 			Skills = "Skill map",
-			Achievements = "Second Opinion",
-			Crew = p.DisplayName,
+			Achievements = "Once Is Luck, Twice Is Skill",
 			Gear = "Speed",
 			Jobs = "First strike",
 			Book = "Stone",
@@ -139,6 +145,10 @@ local function test()
 		waitFor(function()
 			return overlay.Visible and menu.Listings:FindFirstChild(listing)
 		end, 5, "open " .. page)
+		if page == "Achievements" then
+			assert(not menu["Inventory tabs"].Visible)
+			assert(menu.Listings:FindFirstChild("Practicing My Scales"))
+		end
 		if page == "Pets" then
 			n.Action:FireServer("Pet", "Rock")
 			waitFor(function()
@@ -573,14 +583,15 @@ local function test()
 	end
 	assert(p:GetAttribute("Used") == 2, "single-block mining after upgrade")
 	assert(p:GetAttribute("Found" .. discovered) and p:GetAttribute("Mined") == 38, "ore discovery and lifetime blocks")
+	n.Action:FireServer("Job", 2)
 	n.Action:FireServer("Job", 1)
 	waitFor(function()
-		return p:GetAttribute("Jobs") == 1
-	end, 5, "first reward")
+		return p:GetAttribute("Jobs") == 2 and p:GetAttribute("ClaimedJobs") == 3
+	end, 5, "two eligible jobs claimed back to back in reverse order")
 	local afterJob = p:GetAttribute("Gold")
-	assert(afterJob == value - 24 + 25)
+	assert(afterJob == value - 24 + 80 + 25)
 	task.wait(0.25)
-	n.Action:FireServer("Job", 1)
+	n.Action:FireServer("Job", 2)
 	task.wait(0.3)
 	assert(p:GetAttribute("Gold") == afterJob, "repeat claim")
 	visit("Store", true)

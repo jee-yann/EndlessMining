@@ -6,6 +6,7 @@ local Settings = require(script.Parent.Settings)
 local Catalog = require(Shared.PassCatalog)
 local W, Icons = require(script.Parent.Widgets), require(script.Parent.Icons)
 local Field = require(script.Parent.FieldPages)
+local Guide = require(Shared.FieldGuide)
 local Menu = {}
 Menu.__index = Menu
 Menu.pages = {
@@ -13,7 +14,6 @@ Menu.pages = {
 	Pets = { name = "Pets", color = W.violet },
 	Skills = { name = "Skill tree", color = W.green },
 	Achievements = { name = "Achievements", color = W.orange },
-	Crew = { name = "Server miners", color = W.aqua },
 	Titles = { name = "Miner titles", color = W.gold },
 	Settings = { name = "Settings", color = Color3.fromRGB(120, 185, 255) },
 	Gear = { name = "Workshop", color = W.aqua },
@@ -65,9 +65,9 @@ function Menu.new(root, player, net, close)
 	self.tabs = tabs
 	self.tabButtons = {}
 	local tabX = 4
-	for _, key in { "Inventory", "Pets", "Skills", "Achievements", "Crew" } do
-		local caption = ({ Inventory = "Titles", Crew = "Miners" })[key] or key
-		local width = if key == "Achievements" then 122 else 78
+	for _, key in { "Inventory", "Pets", "Skills" } do
+		local caption = if key == "Inventory" then "Titles" else key
+		local width = 147
 		local b = W.button(tabs, key, tabX, 2, width, 28, Menu.pages[key].color, caption, "Select")
 		tabX += width + 4
 		self.tabButtons[key] = b
@@ -135,17 +135,14 @@ function Menu:jobs()
 			self.net.Action:FireServer("Job", i)
 		end)
 		table.insert(self.updates, function()
-			local mined, done = self.player:GetAttribute("Mined") or 0, self.player:GetAttribute("Jobs") or 0
-			local ready = done + 1 == i and mined >= job.goal
+			local mined = self.player:GetAttribute("Mined") or 0
+			local claimed = Expeditions.jobClaimed(self.player:GetAttribute("ClaimedJobs") or 0, i)
+			local ready = not claimed and mined >= job.goal
 			detail.Text =
 				string.format("%d / %d mined   •   +%s G", math.min(mined, job.goal), job.goal, W.number(job.reward))
 			setButton(
 				b,
-				if done >= i
-					then "Collected"
-					elseif ready then "Claim gold"
-					elseif i == done + 1 then "In progress"
-					else "Upcoming",
+				if claimed then "Collected" elseif ready then "Claim gold" else "In progress",
 				if ready then W.green else W.muted,
 				ready
 			)
@@ -224,7 +221,6 @@ local builders = {
 	Pets = Field.pets,
 	Skills = Field.skills,
 	Achievements = Field.achievements,
-	Crew = Field.crew,
 	Settings = function(self)
 		return self.preferences:build(self)
 	end,
@@ -263,10 +259,9 @@ function Menu:open(key)
 		elseif key == "Inventory" then "Select an unlocked title to wear it."
 		elseif key == "Pets" then "Equip one companion at a time."
 		elseif key == "Skills" then "Earn one point per level. Follow the connected branches."
-		elseif key == "Achievements" then "Achievements unlock as you mine."
-		elseif key == "Crew" then "Ranked by miner level."
+		elseif key == "Achievements" then "Arrow goals need consecutive cuts. An extra block breaks the run."
 		elseif key == "Pack" then "Take your haul to the amber Sell counter."
-		elseif key == "Jobs" then "Claim each job in order to collect its gold."
+		elseif key == "Jobs" then "Claim any finished job to collect its gold."
 		elseif key == "Settings" then "Changes take effect immediately."
 		elseif key == "Book" then "The first two layers are dirt. Odds apply to solid rock."
 		elseif key == "Store" then "Permanent passes for this experience."
@@ -333,9 +328,13 @@ function Menu:refresh()
 			then "Equipped   ·   " .. (p:GetAttribute("PetName") or "Pebble")
 			else "Your companions"
 	elseif self.page == "Achievements" then
-		self.sub.Text = "Lifetime mining collection"
-	elseif self.page == "Crew" then
-		self.sub.Text = string.format("%d connected", #game.Players:GetPlayers())
+		local earned = 0
+		for _, award in Guide.achievements do
+			if (p:GetAttribute("Award" .. award.id) or 0) >= award.goal then
+				earned += 1
+			end
+		end
+		self.sub.Text = string.format("%d / %d earned", earned, #Guide.achievements)
 	elseif self.page == "Pack" then
 		local cap = Upgrades.items.Capacity.values[p:GetAttribute("Capacity") or 1]
 		local value = (p:GetAttribute("BagValue") or 0) * (if p:GetAttribute("DoubleGold") then 2 else 1)

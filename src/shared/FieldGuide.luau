@@ -17,15 +17,85 @@ for _, node in Guide.skills do
 end
 Guide.petNames = { Pebble = true, Chips = true, Granite = true, Chip = true, Pip = true, Flint = true }
 Guide.achievements = {
-	{ name = "Pocket Change", ore = "Coal", goal = 1 },
-	{ name = "Certified Dirt Person", ore = "Dirt", goal = 1000 },
-	{ name = "Rock Solid", ore = "Stone", goal = 500 },
-	{ name = "Copper Collector", ore = "Copper", goal = 50 },
-	{ name = "Golden Touch", ore = "Gold", goal = 25 },
-	{ name = "Ice in My Pockets", ore = "Diamond", goal = 10 },
-	{ name = "Green With Envy", ore = "Emerald", goal = 5 },
-	{ name = "Second Opinion", ore = "Starfall", goal = 2, secret = true },
+	{ id = "PocketChange", name = "Pocket Change", ore = "Coal", goal = 1 },
+	{ id = "PayDirt", name = "Certified Dirt Person", ore = "Dirt", goal = 1000 },
+	{ id = "RockSolid", name = "Rock Solid", ore = "Stone", goal = 500 },
+	{ id = "CopperCollector", name = "Copper Collector", ore = "Copper", goal = 50 },
+	{ id = "GoldenTouch", name = "Golden Touch", ore = "Gold", goal = 25 },
+	{ id = "Ice", name = "Ice in My Pockets", ore = "Diamond", goal = 10 },
+	{ id = "Envy", name = "Green With Envy", ore = "Emerald", goal = 5 },
+	{
+		id = "LuckAndSkill",
+		name = "Once Is Luck, Twice Is Skill",
+		ore = "Starfall",
+		goal = 2,
+		detail = "Mine Starfall twice across any number of shifts.",
+	},
+	{
+		id = "Scales",
+		name = "Practicing My Scales",
+		sequence = { "Dirt", "Stone", "Coal", "Copper", "Iron", "Gold", "Diamond" },
+	},
+	{ id = "Sandwich", name = "24-Carat Sandwich", sequence = { "Stone", "Gold", "Stone" } },
+	{ id = "Pressure", name = "Under Pressure", sequence = { "Coal", "Coal", "Diamond" } },
+	{ id = "Penny", name = "A Penny for Your Soot", sequence = { "Copper", "Coal", "Copper" } },
+	{ id = "Traffic", name = "Traffic Lights", sequence = { "Copper", "Gold", "Emerald" } },
+	{
+		id = "Variety",
+		name = "Variety Pack",
+		distinct = true,
+		goal = 5,
+		detail = "Mine five different materials in five consecutive cuts.",
+	},
 }
+Guide.cutWindow = 0
+Guide.cutAwards = {}
+for _, award in Guide.achievements do
+	if award.sequence then
+		award.goal = #award.sequence
+		award.detail = table.concat(award.sequence, " → ")
+	end
+	if not award.ore then
+		Guide.cutAwards[award.id] = true
+		Guide.cutWindow = math.max(Guide.cutWindow, award.goal)
+	end
+end
+
+function Guide.progress(p, award)
+	if award.ore then
+		return math.min(p.counts[award.ore] or 0, award.goal)
+	end
+	if p.earned[award.id] then
+		return award.goal
+	end
+	local cuts = p.recentCuts
+	local limit = math.min(#cuts, award.goal)
+	if award.distinct then
+		local seen = {}
+		for length = 1, limit do
+			local ore = cuts[#cuts - length + 1]
+			if seen[ore] then
+				return length - 1
+			end
+			seen[ore] = true
+		end
+		return limit
+	end
+	-- A mismatch can also begin a new run, e.g. Stone, Stone, Gold, Stone.
+	for length = limit, 1, -1 do
+		local matches = true
+		for i = 1, length do
+			if cuts[#cuts - length + i] ~= award.sequence[i] then
+				matches = false
+				break
+			end
+		end
+		if matches then
+			return length
+		end
+	end
+	return 0
+end
 function Guide.points(xp, skills)
 	local spent = 0
 	for _ in skills do

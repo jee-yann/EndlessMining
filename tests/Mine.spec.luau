@@ -38,14 +38,15 @@ assert(Data.claim({ profile = retired }, "migration", 0).profile.gold == 234)
 assert(retired.levels.Radius == nil and Profile.upgradeSave(retired).gold == 234)
 local legacy = Profile.new()
 legacy.jobs, legacy.discoveries, legacy.bag, legacy.mined = nil, nil, { Coal = 3 }, 36
-legacy.preferences = nil
+legacy.preferences, legacy.claimedJobs, legacy.recentCuts, legacy.earned = nil, nil, nil, nil
 legacy.counts = nil
 legacy.bestDepth = 361
 local upgraded = Data.claim({ profile = legacy }, "harbor", 0).profile
 assert(upgraded.discoveries.Coal and upgraded.jobs == 0)
-assert(not Profile.claimJob(upgraded, 2))
+assert(Profile.claimJob(upgraded, 2).reward == 80 and not Profile.claimJob(upgraded, 2))
+assert(not Profile.claimJob(upgraded, 3) and not Profile.claimJob(upgraded, -1))
+assert(not Profile.claimJob(upgraded, 1.5) and not Profile.claimJob(upgraded, "1"))
 assert(Profile.claimJob(upgraded, 1).reward == 25 and not Profile.claimJob(upgraded, 1))
-assert(Profile.claimJob(upgraded, 2).reward == 80 and not Profile.claimJob(upgraded, 3))
 assert(Profile.sell(upgraded, 2) == 30 and upgraded.gold == 135 and upgraded.discoveries.Coal)
 assert(upgraded.preferences.MusicVolume == 55 and upgraded.preferences.SfxVolume == 80)
 upgraded.preferences.MusicVolume, upgraded.preferences.MenuMotion = 0, false
@@ -54,7 +55,12 @@ local loaded = Data.claim(snapshot, "again", 101).profile
 assert(loaded.bestDepth == 450 and Config.depthInBlocks(loaded.bestDepth) == 90)
 assert(loaded.preferences.MusicVolume == 0 and not loaded.preferences.MenuMotion)
 assert(Profile.valid(loaded) and loaded.jobs == 2 and loaded.discoveries.Coal)
-print("PASS legacy ore collection, job order, duplicate claims, doubled sales and reload")
+local ordered = Profile.new()
+ordered.jobs, ordered.claimedJobs, ordered.mined = 3, nil, 260
+Profile.upgradeSave(ordered)
+assert(ordered.claimedJobs == 7 and not Profile.claimJob(ordered, 3))
+assert(Profile.claimJob(ordered, 5) and Profile.claimJob(ordered, 4) and ordered.jobs == 5)
+print("PASS old job claims, independent payouts, duplicate claims, doubled sales and reload")
 
 local titles = require(Shared.Expeditions)
 local oldMiner = Profile.new()
@@ -66,6 +72,39 @@ for i, title in titles.ranks do
 	assert(level == title.level and titles.rank(level) == i)
 end
 local Guide = require(Shared.FieldGuide)
+local challenge = Profile.new()
+local awards = {}
+for _, award in Guide.achievements do
+	awards[award.id] = award
+end
+local scales = awards.Scales
+for _, name in { "Dirt", "Stone", "Stone", "Coal", "Copper", "Iron", "Gold", "Diamond" } do
+	Profile.recordCut(challenge, name)
+end
+assert(not challenge.earned.Scales and Guide.progress(challenge, scales) == 0)
+assert(challenge.earned.Variety)
+for i, name in scales.sequence do
+	local unlocked = Profile.recordCut(challenge, name)
+	assert(Guide.progress(challenge, scales) == i)
+	if i == 3 then
+		local record = Data.commit({ owner = "challenge" }, "challenge", challenge, 20, true)
+		challenge = Data.claim(record, "return", 21).profile
+	elseif i == #scales.sequence then
+		assert(table.find(unlocked, scales.name))
+	end
+end
+for _, name in scales.sequence do
+	assert(not table.find(Profile.recordCut(challenge, name), scales.name))
+end
+local overlap = Profile.new()
+for _, name in { "Stone", "Stone", "Gold", "Stone" } do
+	Profile.recordCut(overlap, name)
+end
+assert(overlap.earned.Sandwich and not overlap.earned.Scales)
+assert(not table.find(Profile.recordCut(overlap, "Starfall"), awards.LuckAndSkill.name))
+assert(table.find(Profile.recordCut(overlap, "Starfall"), awards.LuckAndSkill.name))
+assert(not table.find(Profile.recordCut(overlap, "Starfall"), awards.LuckAndSkill.name))
+print("PASS consecutive single cuts, overlapping starts, reconnect and once-only awards")
 local miner = Profile.new()
 assert(not Profile.learn(miner, "Reach"))
 miner.xp = titles.levelXP(3)

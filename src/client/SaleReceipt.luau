@@ -14,14 +14,17 @@ function Receipt:show(amount, quantity, balance)
 	if self.panel then
 		self.panel:Destroy()
 	end
-	local panel = W.frame(hud.root, "Sale receipt", 0, 0, 248, 72, W.panel, 15)
+	local panel = W.frame(hud.root, "Sale receipt", 0, 0, 264, 88, W.panel)
+	panel.BackgroundTransparency = 1
 	self.panel = panel
 	panel.ZIndex = 4
 	W.anchor(panel, 0.5, 0.5, UDim2.fromScale(0.5, 0.37))
-	W.stroke(panel, W.gold, 2)
-	W.enamel(panel, Color3.fromRGB(133, 76, 43), W.panel)
+	local group = W.fadeGroup(panel, "Receipt face", 264, 88)
+	local face = W.frame(group, "Payout card", 8, 8, 248, 72, W.panel, 15)
+	W.stroke(face, W.gold, 2)
+	W.enamel(face, Color3.fromRGB(133, 76, 43), W.panel)
 	W.text(
-		panel,
+		face,
 		string.format("%d %s sold", quantity, if quantity == 1 then "block" else "blocks"),
 		5,
 		4,
@@ -30,9 +33,10 @@ function Receipt:show(amount, quantity, balance)
 		16,
 		W.white
 	)
-	local payout = W.title(panel, "+" .. W.goldAmount(amount) .. " gold", 5, 25, 238, 40, 31, W.gold)
+	local payout = W.title(face, "+" .. W.goldAmount(amount) .. " gold", 5, 25, 238, 40, 31, W.gold)
 	W.outlineText(payout)
-	if hud.player:GetAttribute("MenuMotion") ~= false then
+	local motion = hud.player:GetAttribute("MenuMotion") ~= false
+	if motion then
 		hud.countingGold = true
 		local before = balance - amount
 		local scale = W.scale(panel)
@@ -40,6 +44,7 @@ function Receipt:show(amount, quantity, balance)
 		W.tween(scale, 0.20, { Scale = 1 })
 		for i = 1, 5 do
 			local coin = W.frame(panel, "Sale coin", 0, 0, 12, 12, W.gold, 8)
+			coin.ZIndex = 2
 			W.stroke(coin, W.orange, 2)
 			coin.AnchorPoint = Vector2.new(0.5, 0.5)
 			coin.Position = UDim2.fromScale((i - 0.5) / 5, 0.8)
@@ -72,10 +77,18 @@ function Receipt:show(amount, quantity, balance)
 		hud:refresh()
 	end
 	task.delay(1.75, function()
-		if self.serial == serial then
-			panel:Destroy()
-			self.panel = nil
+		if self.serial ~= serial then
+			return
 		end
+		if motion then
+			W.tween(panel, 0.38, { Position = panel.Position - UDim2.fromOffset(0, 16) })
+		end
+		W.tween(group, 0.38, { GroupTransparency = 1 }).Completed:Once(function()
+			if self.serial == serial then
+				panel:Destroy()
+				self.panel = nil
+			end
+		end)
 	end)
 end
 return Receipt

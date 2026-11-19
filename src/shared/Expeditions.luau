@@ -9,6 +9,9 @@ E.jobs = {
 	{ title = "Vault breaker", goal = 420, reward = 1200 },
 	{ title = "Cove legend", goal = 750, reward = 2400 },
 }
+function E.jobClaimed(mask, i)
+	return bit32.btest(mask, bit32.lshift(1, i - 1))
+end
 E.ranks = {
 	{ name = "Noob Miner", level = 1 },
 	{ name = "Novice Miner", level = 2 },

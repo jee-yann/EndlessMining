@@ -100,10 +100,8 @@ end
 
 UIS.InputBegan:Connect(function(input, processed)
 	if not processed and input.KeyCode == Enum.KeyCode.Tab and not player.PlayerGui:FindFirstChild("MiningLoading") then
-		if hud.overlay.Visible and hud.menu.page == "Crew" then
-			hud.menu:close()
-		else
-			hud:openPage("Crew")
+		if not hud.overlay.Visible then
+			hud.roster:toggle()
 		end
 		return
 	end
@@ -145,8 +143,8 @@ UIS:GetPropertyChangedSignal("PreferredInput"):Connect(function()
 end)
 
 net.Feedback.OnClientEvent:Connect(function(kind, a, point, spread, finds, normal)
-	if kind == "achievement" then
-		hud:milestone("ACHIEVEMENT", a, W.gold)
+	if kind == "achievement" or kind == "titleUnlocked" then
+		hud.unlocks:show(kind, a)
 	elseif kind == "loot" then
 		firstHaul = true
 		local best = Ores.byName.Dirt

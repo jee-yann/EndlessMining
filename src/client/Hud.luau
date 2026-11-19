@@ -4,6 +4,8 @@ local StarterGui = game:GetService("StarterGui")
 local Upgrades, Expeditions = require(Shared.Upgrades), require(Shared.Expeditions)
 local W, Icons, Menu = require(script.Parent.Widgets), require(script.Parent.Icons), require(script.Parent.HarborMenu)
 local Audio = require(script.Parent.HarborAudio)
+local Roster = require(script.Parent.MinerRoster)
+local Celebration = require(script.Parent.UnlockCelebration)
 local rarityRank = { Common = 1, Uncommon = 2, Rare = 3, Epic = 4, Legendary = 5, Mythic = 6, Celestial = 7 }
 local Hud = {}
 Hud.__index = Hud
@@ -32,7 +34,7 @@ function Hud.new(player, net, mobile)
 	root.Size, root.BackgroundTransparency = UDim2.fromScale(1, 1), 1
 	self.root = root
 	StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.PlayerList, false)
-	local wallet = card(root, "Wallet", 0, 0, 224, 64, Color3.fromRGB(234, 148, 39), Color3.fromRGB(169, 74, 38))
+	local wallet = card(root, "Wallet", 0, 0, 224, 94, Color3.fromRGB(234, 148, 39), Color3.fromRGB(169, 74, 38))
 	self.wallet = wallet
 	Icons.draw(wallet, "Coins", 9, 7, 48)
 	W.text(wallet, "GOLD", 64, 2, 148, 18, 13, W.white, true)
@@ -41,6 +43,13 @@ function Hud.new(player, net, mobile)
 	local goldSize = Instance.new("UITextSizeConstraint")
 	goldSize.MinTextSize, goldSize.MaxTextSize, goldSize.Parent = 14, 38, self.gold
 	W.outlineText(self.gold)
+	local xpStrip = W.frame(wallet, "Level progress", 5, 57, 214, 32, W.ink, 8)
+	self.levelLabel = W.title(xpStrip, "", 7, 1, 68, 18, 14, W.aqua, true)
+	self.xpLabel = W.text(xpStrip, "", 78, 1, 128, 18, 13, W.white)
+	self.xpLabel.TextXAlignment = Enum.TextXAlignment.Right
+	local xpTrack = W.frame(xpStrip, "XP track", 8, 21, 198, 6, W.card, 3)
+	self.xpFill = W.frame(xpTrack, "XP fill", 0, 0, 0, 6, W.aqua, 3)
+	W.gradient(self.xpFill, W.green, W.aqua, 0)
 	self.status = W.text(wallet, "", 0, -18, 224, 16, 12, W.white, true)
 	self.status.TextStrokeTransparency = 0.2
 	local haul = card(root, "Haul", 0, 0, 215, 79, Color3.fromRGB(57, 117, 126), W.panel)
@@ -109,19 +118,23 @@ function Hud.new(player, net, mobile)
 		W.text(chip, if key == "Capacity" then "PACK" else key:upper(), 0, 1, 70, 15, 11, W.ink)
 		self.gearChips[key] = W.title(chip, "Lv 1", 0, 14, 70, 23, 18, W.ink)
 	end
-	local dock = W.frame(root, "Action dock", 0, 0, 291, 64, W.ink)
+	local dockWidth = 389
+	local dock = W.frame(root, "Action dock", 0, 0, dockWidth, 64, W.ink)
 	dock.BackgroundTransparency = 1
 	self.nav = {}
 	local cues = { Settings = "Open", Jobs = "Job", Book = "Open" }
-	for i, key in { "Inventory", "Skills", "Book", "Settings" } do
+	local navX = 0
+	for i, key in { "Inventory", "Skills", "Achievements", "Book", "Settings" } do
 		local tint = Menu.pages[key].color
-		local b = W.button(dock, key, (i - 1) * 74, 0, 69, 61, tint, "", cues[key])
-		local badge = W.frame(b, "Medallion", 15, -6, 39, 39, tint:Lerp(W.white, 0.62), 13)
+		local width = if key == "Achievements" then 93 else 69
+		local b = W.button(dock, key, navX, 0, width, 61, tint, "", cues[key])
+		navX += width + 5
+		local badge = W.frame(b, "Medallion", (width - 39) / 2, -6, 39, 39, tint:Lerp(W.white, 0.62), 13)
 		W.stroke(badge, W.ink, 2)
 		local icon = Icons.draw(badge, if key == "Inventory" then "Pack" else key, 3, 3, 33, tint)
 		icon.Rotation = if i % 2 == 0 then 4 else -4
-		self.nav[key] = W.title(b, if key == "Book" then "Index" else key, 1, 33, 67, 25, 18, W.white)
-		if key == "Inventory" then
+		self.nav[key] = W.title(b, if key == "Book" then "Index" else key, 1, 33, width - 2, 25, 18, W.white)
+		if key == "Inventory" or key == "Achievements" then
 			self.nav[key].TextSize = 14
 		end
 		W.outlineText(self.nav[key])
@@ -162,12 +175,18 @@ function Hud.new(player, net, mobile)
 	self.menu = Menu.new(root, player, net, function()
 		self:setShop(false)
 	end)
+	self.unlocks = Celebration.new(self)
+	self.roster = Roster.new(root, function()
+		if self.layout then
+			self.layout()
+		end
+	end)
 	self.overlay = self.menu.overlay
 	self.overlay:GetPropertyChangedSignal("Visible"):Connect(function()
 		local open = self.overlay.Visible
 		backdrop.Enabled = open
 		self.mine.Visible = self.mobile and not open
-		for _, panel in { wallet, haul, taskCard, loc, dock } do
+		for _, panel in { wallet, haul, taskCard, loc, dock, self.roster.panel } do
 			panel.Visible = not open
 		end
 		self.speech.Visible = false
@@ -191,17 +210,24 @@ function Hud.new(player, net, mobile)
 		local s = math.clamp(math.min((width - 26) / 450, height / 480), 0.52, 1.30)
 		local portrait = self.mobile and width < height
 		local shelf = if portrait then 113 elseif self.mobile then 69 else 12
-		local compact = width < 665 * s + 48
+		local compact = width < (2 * 224 + dockWidth + 36) * s
 		local showJob = height >= 480 or not self.mobile and height >= 400
-		taskCard.Visible = showJob and not self.overlay.Visible
 		walletScale.Scale, taskScale.Scale, haulScale.Scale, locScale.Scale, dockScale.Scale = s, s, s, s, s
 		speechScale.Scale, mineScale.Scale = math.min(s, (width - 20) / 320), math.max(0.82, s)
 		self.menu:layout(width, height, self.mobile)
-		local crowded = width < (260 + 215 * 2 + 40) * s
+		local crowded = width < (260 + 240 * 2 + 40) * s
 		local topInset = if crowded then 85 * s else 9
 		W.anchor(loc, 0.5, 0, UDim2.new(0.5, 0, 0, 3))
-		W.anchor(taskCard, 1, 0, UDim2.new(1, -10, 0, topInset))
-		W.anchor(haul, 1, 0, UDim2.new(1, -10, 0, if showJob then topInset + 92 * s else topInset))
+		local rosterScale = math.min(s, 1.04, (width * 0.49 - 12) / 240)
+		local small = self.mobile or height < 545 or width < 730
+		local bottomInset = if compact then shelf + 72 * s else 10
+		local room = height - topInset - bottomInset - (haul.Size.Y.Offset + (if showJob then 92 else 0)) * s - 7
+		local rosterHeight, browsing = self.roster:layout(rosterScale, topInset, small, room)
+		local rightY = topInset + rosterHeight + 7
+		taskCard.Visible = showJob and not browsing and not self.overlay.Visible
+		haul.Visible = not browsing and not self.overlay.Visible
+		W.anchor(taskCard, 1, 0, UDim2.new(1, -10, 0, rightY))
+		W.anchor(haul, 1, 0, UDim2.new(1, -10, 0, if showJob then rightY + 92 * s else rightY))
 		if self.mobile then
 			-- Stack below chat and reserve the lower-left quadrant for the thumbstick.
 			local chat = game:GetService("TextChatService"):FindFirstChildOfClass("ChatWindowConfiguration")
@@ -216,7 +242,7 @@ function Hud.new(player, net, mobile)
 			W.anchor(wallet, 0, 1, UDim2.new(0, 10, 1, -shelf))
 		end
 		if compact then
-			dockScale.Scale = math.min(s, (width * (if self.mobile then 0.85 else 0.53) - 12) / 291)
+			dockScale.Scale = math.min(s, (width * (if self.mobile then 0.85 else 0.53) - 12) / dockWidth)
 			W.anchor(dock, 1, 1, UDim2.new(1, -10, 1, -shelf))
 		else
 			W.anchor(dock, 0.5, 1, UDim2.new(0.5, 0, 1, -shelf))
@@ -324,18 +350,43 @@ function Hud:refresh()
 	self.haulValue.Text = "Sell value   "
 		.. W.number((p:GetAttribute("BagValue") or 0) * (if p:GetAttribute("DoubleGold") then 2 else 1))
 		.. " G"
-	self.haul.Size = UDim2.fromOffset(215, footerY + 22)
+	if self.haul.Size.Y.Offset ~= footerY + 22 then
+		self.haul.Size = UDim2.fromOffset(215, footerY + 22)
+		self.layout()
+	end
 	local status = p:GetAttribute("SaveStatus")
 	self.status.Text = if status == "Saving enabled" then "" else status or "Opening pack…"
-	local mined, done = p:GetAttribute("Mined") or 0, p:GetAttribute("Jobs") or 0
-	local minerLevel = Expeditions.level(p:GetAttribute("MiningXP") or 0)
-	local tier, rank = Expeditions.rank(minerLevel)
-	self.nav.Inventory.Text = "Inventory"
-	if self.rankTier and tier > self.rankTier and self.player:GetAttribute("ProfileReady") then
-		self:milestone("TITLE UNLOCKED", rank.name, W.gold)
+	local mined = p:GetAttribute("Mined") or 0
+	local xp = p:GetAttribute("MiningXP") or 0
+	local minerLevel = Expeditions.level(xp)
+	local _, rank = Expeditions.rank(minerLevel)
+	if self.lastXP ~= xp then
+		local start = Expeditions.levelXP(minerLevel)
+		local needed = Expeditions.levelXP(minerLevel + 1) - start
+		local amount = xp - start
+		self.levelLabel.Text = "Lv " .. minerLevel
+		self.xpLabel.Text = W.number(amount) .. " / " .. W.number(needed) .. " XP"
+		local size = UDim2.fromScale(amount / needed, 1)
+		if self.xpTween then
+			self.xpTween:Cancel()
+		end
+		if self.lastXP ~= nil and p:GetAttribute("MenuMotion") ~= false then
+			if minerLevel ~= self.lastMinerLevel then
+				self.xpFill.Size = UDim2.fromScale(0, 1)
+			end
+			self.xpTween = W.tween(self.xpFill, 0.25, { Size = size })
+		else
+			self.xpFill.Size = size
+		end
+		self.lastXP, self.lastMinerLevel = xp, minerLevel
 	end
-	self.rankTier = tier
-	local job = Expeditions.jobs[done + 1]
+	local job
+	for i, candidate in Expeditions.jobs do
+		if not Expeditions.jobClaimed(p:GetAttribute("ClaimedJobs") or 0, i) then
+			job = candidate
+			break
+		end
+	end
 	self.jobFill.Size = UDim2.fromScale(if job then math.clamp(mined / job.goal, 0, 1) else 1, 1)
 	self.job.Text = if job then job.title else rank.name
 	self.reward.Text = if job then "+" .. W.number(job.reward) .. " G" else "All done"

@@ -95,61 +95,23 @@ function Pages.skills(menu)
 end
 function Pages.achievements(menu)
 	for i, award in Guide.achievements do
-		local title, detail, b = menu:row(i, award.name, "Achievements", W.orange)
-		b.Interactable = false
+		local tint = if award.ore then W.orange else W.aqua
+		local title, detail, badge = menu:row(i, award.name, "Achievements", tint)
+		title.Size = UDim2.fromOffset(251, 24)
+		title.TextSize = 18
+		detail.Position, detail.Size = UDim2.fromOffset(67, 28), UDim2.fromOffset(247, 32)
+		detail.TextWrapped = true
+		detail.Text = award.detail or string.format("Mine %s %s.", W.number(award.goal), award.ore)
+		badge.Interactable, badge.AutoButtonColor = false, false
 		table.insert(menu.updates, function()
-			local count = menu.player:GetAttribute("Lifetime" .. award.ore) or 0
-			local hidden = award.secret and count == 0
-			title.Text = if hidden then "Secret achievement" else award.name
-			detail.Text = if hidden
-				then "Find a mystery ore twice"
-				else string.format("Mine %d %s", award.goal, award.ore)
-			b.Text = if count >= award.goal then "Earned" else string.format("%d / %d", count, award.goal)
-			b.BackgroundColor3 = if count >= award.goal then W.green else W.muted
+			local progress = menu.player:GetAttribute("Award" .. award.id) or 0
+			badge.Text = if progress >= award.goal then "Earned" else string.format("%d / %d", progress, award.goal)
+			badge.BackgroundColor3 = if progress >= award.goal then W.green else W.muted
 		end)
 	end
 	return #Guide.achievements
 end
-function Pages.crew(menu)
-	local rows = {}
-	local function refresh()
-		local players = game.Players:GetPlayers()
-		table.sort(players, function(a, b)
-			local al, bl = a:GetAttribute("Level") or 1, b:GetAttribute("Level") or 1
-			return al > bl or al == bl and a.UserId < b.UserId
-		end)
-		for i, p in players do
-			if not rows[i] then
-				local title, detail, b = menu:row(i, p.DisplayName, "Crew", W.aqua)
-				b.Interactable = false
-				rows[i] = { title, detail, b }
-			end
-			local row = rows[i]
-			row[1].Parent.Visible = true
-			row[1].Text = string.format("%d.  %s", i, p.DisplayName)
-			row[2].Text = (E.ranks[p:GetAttribute("EquippedTitle") or 1] or E.ranks[1]).name
-			row[3].Text = "Lv " .. (p:GetAttribute("Level") or 1)
-		end
-		for i = #players + 1, #rows do
-			rows[i][1].Parent.Visible = false
-		end
-		menu.list.CanvasSize = UDim2.fromOffset(0, #players * 69)
-		menu.sub.Text = string.format("%d %s in this server", #players, if #players == 1 then "miner" else "miners")
-	end
-	refresh()
-	task.spawn(function()
-		local list = menu.updates
-		while menu.updates == list and menu.page == "Crew" do
-			task.wait(0.65)
-			if menu.updates == list and menu.page == "Crew" and menu.overlay.Visible then
-				refresh()
-			else
-				break
-			end
-		end
-	end)
-	return #rows
-end
+
 function Pages.index(menu)
 	W.title(menu.list, "Collection", 6, 0, 208, 25, 19, W.gold, true)
 	W.title(menu.list, "Depth & ore odds", 228, 0, 213, 25, 19, W.aqua, true)

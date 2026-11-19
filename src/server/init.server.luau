@@ -71,6 +71,10 @@ local function sync(player, p)
 	player:SetAttribute("Mined", p.mined)
 	player:SetAttribute("MiningXP", p.xp)
 	player:SetAttribute("Jobs", p.jobs)
+	player:SetAttribute("ClaimedJobs", p.claimedJobs)
+	for _, award in Guide.achievements do
+		player:SetAttribute("Award" .. award.id, Guide.progress(p, award))
+	end
 	for _, ore in Ores.list do
 		player:SetAttribute("Lifetime" .. ore.name, p.counts[ore.name] or 0)
 		player:SetAttribute("Held" .. ore.name, p.bag[ore.name] or 0)
@@ -255,10 +259,17 @@ local function action(player, key, option, value)
 		times = {}
 		nextAction[player] = times
 	end
-	if now < (times[key] or 0) then
+	local actionKey = key
+	if key == "Job" then
+		if type(option) ~= "number" or option % 1 ~= 0 or not E.jobs[option] then
+			return
+		end
+		actionKey = "Job" .. option
+	end
+	if now < (times[actionKey] or 0) then
 		return
 	end
-	times[key] = now + 0.18
+	times[actionKey] = now + 0.18
 	local station = counterFor[key]
 	if station and not atCounter(player, site.stations[station]) then
 		net.Feedback:FireClient(player, "away", station)

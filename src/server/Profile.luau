@@ -15,11 +15,14 @@ function Profile.new()
 		mined = 0,
 		xp = 0,
 		counts = {},
+		recentCuts = {},
+		earned = {},
 		skills = {},
 		pet = "",
 		petName = "Pebble",
 		bestDepth = 0,
 		jobs = 0,
+		claimedJobs = 0,
 		discoveries = {},
 		preferences = table.clone(Preferences.defaults),
 	}
@@ -86,6 +89,34 @@ function Profile.valid(p)
 			end
 		end
 	end
+	if p.recentCuts ~= nil then
+		if type(p.recentCuts) ~= "table" or #p.recentCuts > Guide.cutWindow then
+			return false
+		end
+		for i, ore in p.recentCuts do
+			if not integer(i, #p.recentCuts) or i < 1 or not Ores.byName[ore] then
+				return false
+			end
+		end
+		for i = 1, #p.recentCuts do
+			if not p.recentCuts[i] then
+				return false
+			end
+		end
+	end
+	if p.earned ~= nil then
+		if type(p.earned) ~= "table" then
+			return false
+		end
+		for id, value in p.earned do
+			if not Guide.cutAwards[id] or value ~= true then
+				return false
+			end
+		end
+	end
+	if p.claimedJobs ~= nil and not integer(p.claimedJobs, 2 ^ #Expeditions.jobs - 1) then
+		return false
+	end
 	if p.skills ~= nil then
 		if type(p.skills) ~= "table" then
 			return false
@@ -148,6 +179,9 @@ function Profile.upgradeSave(p)
 		end
 	end
 	p.jobs = p.jobs or 0
+	p.claimedJobs = p.claimedJobs or (2 ^ p.jobs - 1)
+	p.recentCuts = p.recentCuts or {}
+	p.earned = p.earned or {}
 	p.discoveries = p.discoveries or {}
 	for name, amount in p.bag do
 		if amount > 0 then
@@ -172,13 +206,41 @@ function Profile.equipTitle(p, id)
 	p.title = id
 	return true
 end
-function Profile.claimJob(p, number)
-	local i = p.jobs + 1
-	local job = Expeditions.jobs[i]
-	if number ~= i or not job or p.mined < job.goal then
+function Profile.recordCut(p, name)
+	local ore = Ores.byName[name]
+	p.discoveries[name] = true
+	p.bag[name] = (p.bag[name] or 0) + 1
+	p.counts[name] = (p.counts[name] or 0) + 1
+	p.mined += 1
+	p.xp += ore.xp
+	if #p.recentCuts == Guide.cutWindow then
+		table.remove(p.recentCuts, 1)
+	end
+	table.insert(p.recentCuts, name)
+	local unlocked = {}
+	for _, award in Guide.achievements do
+		if award.ore then
+			if award.ore == name and p.counts[name] == award.goal then
+				table.insert(unlocked, award.name)
+			end
+		elseif not p.earned[award.id] and Guide.progress(p, award) == award.goal then
+			p.earned[award.id] = true
+			table.insert(unlocked, award.name)
+		end
+	end
+	return unlocked
+end
+
+function Profile.claimJob(p, i)
+	if not integer(i, #Expeditions.jobs) or i < 1 then
 		return nil
 	end
-	p.jobs = i
+	local job = Expeditions.jobs[i]
+	if Expeditions.jobClaimed(p.claimedJobs, i) or p.mined < job.goal then
+		return nil
+	end
+	p.claimedJobs = bit32.bor(p.claimedJobs, bit32.lshift(1, i - 1))
+	p.jobs += 1
 	p.gold += job.reward
 	return job
 end

@@ -4,7 +4,7 @@ local Shared = game:GetService("ReplicatedStorage").Shared
 local Config, Ores = require(Shared.GameConfig), require(Shared.Ores)
 local Pattern = require(Shared.BlockPattern)
 local Profile = require(script.Parent.Profile)
-local Guide = require(Shared.FieldGuide)
+local Expeditions = require(Shared.Expeditions)
 local Mining = {}
 
 function Mining.validPoint(v)
@@ -146,46 +146,38 @@ function Mining.start(world, net, sessions, sync)
 			Profile.stat(profile, "Power"),
 			space
 		)
-		if #selected == 0 then
+		if #selected ~= 1 then
 			return
 		end
 		local loot, finds = world:excavate(selected)
-		if not next(loot) then
+		local name = next(loot)
+		if not name then
 			return
 		end
 		local center = selected[1]
-		local spread = math.sqrt(#selected) * Config.Cell
-		local best = Ores.byName.Dirt
-		local discovery
-		for name, count in loot do
-			local ore = Ores.byName[name]
-			if not ore.host and not profile.discoveries[name] and (not discovery or ore.value > discovery.value) then
-				discovery = ore
-			end
-			profile.discoveries[name] = true
-			profile.bag[name] = (profile.bag[name] or 0) + count
-			profile.mined += count
-			profile.xp += count * ore.xp
-			local old = profile.counts[name] or 0
-			profile.counts[name] = old + count
-			for _, award in Guide.achievements do
-				if award.ore == name and old < award.goal and old + count >= award.goal then
-					net.Feedback:FireClient(player, "achievement", award.name)
-				end
-			end
-			if Ores.byName[name].value > best.value then
-				best = Ores.byName[name]
+		local spread = Config.Cell
+		local ore = Ores.byName[name]
+		local discovery = not ore.host and not profile.discoveries[name]
+		local oldLevel = Expeditions.level(profile.xp)
+		local awards = Profile.recordCut(profile, name)
+		sync(player, profile)
+		for _, award in awards do
+			net.Feedback:FireClient(player, "achievement", award)
+		end
+		local level = Expeditions.level(profile.xp)
+		for _, rank in Expeditions.ranks do
+			if oldLevel < rank.level and level >= rank.level then
+				net.Feedback:FireClient(player, "titleUnlocked", rank.name)
 			end
 		end
-		sync(player, profile)
 		net.Feedback:FireClient(player, "loot", loot, center, spread, finds, request.normal)
 		if discovery then
-			net.Feedback:FireClient(player, "milestone", "ORE DISCOVERED", discovery.name, discovery.color)
+			net.Feedback:FireClient(player, "milestone", "ORE DISCOVERED", ore.name, ore.color)
 		end
 		for _, other in Players:GetPlayers() do
 			local root = other.Character and other.Character:FindFirstChild("HumanoidRootPart")
 			if other ~= player and root and (root.Position - center).Magnitude < 72 then
-				net.Dust:FireClient(other, center, spread, best.name, finds, request.normal, loot)
+				net.Dust:FireClient(other, center, spread, ore.name, finds, request.normal, loot)
 			end
 		end
 	end

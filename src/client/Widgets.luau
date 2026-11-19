@@ -31,6 +31,12 @@ function W.frame(parent, name, x, y, w, h, color, r)
 	f.Parent = parent
 	return f
 end
+function W.fadeGroup(parent, name, width, height)
+	local group = Instance.new("CanvasGroup")
+	group.Name, group.Size = name, off(width, height)
+	group.BackgroundTransparency, group.BorderSizePixel, group.Parent = 1, 0, parent
+	return group
+end
 function W.text(parent, value, x, y, w, h, size, color, left)
 	local l = Instance.new("TextLabel")
 	l.BackgroundTransparency, l.Text, l.TextSize, l.Font, l.TextColor3 =
