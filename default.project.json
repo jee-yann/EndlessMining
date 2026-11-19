@@ -46,7 +46,10 @@
       "$ignoreUnknownInstances": true,
       "$properties": {
         "FilteringEnabled": true,
-        "FallenPartsDestroyHeight": -2048
+        "StreamingEnabled": true,
+        "StreamingMinRadius": 128,
+        "StreamingTargetRadius": 384,
+        "FallenPartsDestroyHeight": -50000
       },
       "CitrineCove": {
         "$path": "map/CitrineCove.rbxmx"

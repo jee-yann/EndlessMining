@@ -24,12 +24,12 @@ report.OnServerEvent:Connect(function(player, stage, detail)
 	if stage == "position" then
 		local char = player.Character
 		local x = if player.UserId % 2 == 0 then -3.25 else 1.5
-		char:PivotTo(CFrame.new(n:GetAttribute("Origin") + Vector3.new(x, 4, -8)))
+		char:PivotTo(CFrame.new(n:GetAttribute("Origin") + Vector3.new(x, -60.5, -139)))
 		char.HumanoidRootPart.Anchored = true
 	elseif stage == "depthSample" then
 		local root = player.Character.HumanoidRootPart
 		root.Anchored = true
-		root.CFrame = CFrame.new(n:GetAttribute("Origin") + Vector3.new(-1, -108.5, -9))
+		root.CFrame = CFrame.new(n:GetAttribute("Origin") + Vector3.new(-1, -60.5, -138))
 	elseif stage == "openPage" then
 		n.Feedback:FireClient(player, "page", detail)
 	elseif stage == "station" then

@@ -6,16 +6,6 @@ function Pattern.axes(normal)
 	end
 	return Vector3.yAxis:Cross(normal), Vector3.yAxis
 end
-function Pattern.mineable(p)
-	local c = Config.Cell
-	return Config.inside(p)
-		and p.X >= Config.Min.X + c
-		and p.X < Config.Max.X - c
-		and p.Y >= Config.Min.Y + c
-		and p.Z >= Config.Min.Z + c
-		and (p.Z < Config.Max.Z - c or p.Y >= -c)
-end
-
 -- Both ends trace to the centre of each face, including obstructions and reach.
 function Pattern.visiblePart(eye, center, normal, params)
 	local face = center + normal * (Config.Cell / 2)
@@ -31,11 +21,12 @@ function Pattern.visiblePart(eye, center, normal, params)
 end
 
 function Pattern.select(origin, center, ore, power, space)
-	if space < 1 or not ore or not Pattern.mineable(center - origin) then
+	if space < 1 or not ore or center.Y >= origin.Y + Config.FloorY then
 		return {}, nil
 	end
-	if ore.hardness > power then
-		return {}, ore
+	local required = math.max(ore.hardness, Config.strength(center.Y - origin.Y))
+	if required > power then
+		return {}, ore, required
 	end
 	return { center }, nil
 end

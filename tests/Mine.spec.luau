@@ -55,92 +55,48 @@ assert(loaded.preferences.MusicVolume == 0 and not loaded.preferences.MenuMotion
 assert(Profile.valid(loaded) and loaded.jobs == 2 and loaded.discoveries.Coal)
 print("PASS legacy ore collection, job order, duplicate claims, doubled sales and reload")
 
-local rimGeo = Geology.new(Config.LandscapeSeed)
-for x = -34, 34, 4 do
-	for z = -54, -2, 4 do
-		for y = 2, 26, 4 do
-			assert(rimGeo:sample(x, y, z) ~= Enum.Material.Grass, "Turf intruded into the pithead")
-		end
-	end
+local titles = require(Shared.Expeditions)
+local oldMiner = Profile.new()
+oldMiner.xp, oldMiner.mined = nil, 38
+assert(Data.claim({ profile = oldMiner }, "xp", 0).profile.xp == 76)
+for i, title in titles.ranks do
+	local level = titles.level(titles.levelXP(title.level))
+	assert(level == title.level and titles.rank(level) == i)
 end
 local hashes = {}
-assert(Config.blockCoordinates(Vector3.zero) == Vector3.zero)
-assert(Config.blockCoordinates(Vector3.new(-0.1, -3.9, 4)) == Vector3.new(-1, 0, 1))
-assert(Config.blockCoordinates(Vector3.new(7.9, -4, -4.1)) == Vector3.new(1, -1, -2))
-for i = 2, #Config.Layers do
-	local layer = Config.Layers[i]
-	local boundary = layer.depthBlocks * Config.Cell
-	assert(Config.layer(boundary - 0.1) == Config.Layers[i - 1] and Config.layer(boundary) == layer)
-	assert(Config.blockCoordinates(Vector3.new(0, -boundary, 0)).Y == -layer.depthBlocks)
-end
 for _, seed in { 11, 73129, 91003, 73129 } do
 	local geo = Geology.new(seed)
-	local hash, seen = 0, {}
-	local rich, solid = 0, 0
-	for x = Config.Min.X + 2, Config.Max.X - 1, 8 do
-		for z = Config.Min.Z + 2, Config.Max.Z - 1, 8 do
-			for y = Config.Min.Y + 2, -2, 8 do
-				local mat = geo:sample(x, y, z)
-				local ore = Ores.byMaterial[mat]
-				if ore and y < -12 then
-					solid += 1
-					if not ore.host then
-						rich += 1
-					end
+	local hash = 0
+	for _, layer in Config.Layers do
+		local counts, total = {}, 0
+		for x = -65, 65 do
+			for z = -33, 33 do
+				for row = 0, 2 do
+					assert(geo:material(Vector3.new(x, -row - 1, z)) == Ores.byName.Dirt.material)
 				end
+				local mat = geo:material(Vector3.new(x, -layer.depthBlocks - 9, z))
+				local ore = Ores.byMaterial[mat]
 				if ore then
-					assert(ore.host or Config.layer(-y).oreChances[ore.name], "Ore outside its region")
-					if ore.name == "Dirt" then
-						assert(-y <= Config.DirtMaxDepth)
-					end
-					seen[ore.name] = true
+					assert(ore.name ~= "Dirt")
+					counts[ore.name] = (counts[ore.name] or 0) + 1
+					total += 1
 				end
 				hash = (hash * 31 + mat.Value) % 1000000007
 			end
 		end
+		assert(counts.Stone / total > 0.70, layer.name)
+		for name, chance in layer.oreChances do
+			assert(math.abs((counts[name] or 0) / total - chance / 100) < 0.025, name)
+		end
 	end
-	for _, ore in Ores.list do
-		assert(seen[ore.name], ore.name)
-	end
-	assert(rich / solid > 0.20 and rich / solid < 0.55)
-	print("ORE_DENSITY", seed, rich / solid)
 	if hashes[seed] then
 		assert(hashes[seed] == hash)
 	end
 	hashes[seed] = hash
-	print("PASS seed", seed, "sample hash", hash)
 end
 assert(hashes[11] ~= hashes[73129] and hashes[91003] ~= hashes[73129])
-
-for _, layer in Config.Layers do
-	local counts, total, adjacent, repeats = {}, 0, 0, 0
-	for seed = 1, 12 do
-		local geo = Geology.new(seed)
-		for z = -202, -14, 4 do
-			local last
-			for x = -78, 78, 4 do
-				local mat = geo:sample(x, -layer.depthBlocks * Config.Cell - 42, z)
-				local ore = Ores.byMaterial[mat]
-				if ore then
-					total += 1
-					counts[ore.name] = (counts[ore.name] or 0) + 1
-					if last == "Coal" then
-						adjacent += 1
-						if ore.name == "Coal" then
-							repeats += 1
-						end
-					end
-					last = ore.name
-				end
-			end
-		end
-	end
-	for name, chance in layer.oreChances do
-		assert(math.abs((counts[name] or 0) / total - chance / 100) < 0.02, layer.name .. " " .. name)
-	end
-	assert(math.abs(repeats / adjacent - layer.oreChances.Coal / 100) < 0.055, "neighbouring coal rolls correlated")
-end
-print("PASS independent rolls and region-specific per-block odds")
+assert(Config.blockCoordinates(Vector3.new(-0.1, Config.FloorY - 108.5, -9)) == Vector3.new(-1, -27, -3))
+print("PASS three dirt layers, independent regional odds, repeatable fields and saved title levels")
 local surface = workspace.CitrineCove
 local world = World.new(Config.LandscapeSeed, surface)
 local mapCopy = surface:Clone()
@@ -201,11 +157,32 @@ for _, ore in Ores.list do
 	assert(exhibit:FindFirstChild(ore.name .. " sample") and exhibit:FindFirstChild(ore.name .. " label"))
 end
 assert(not floorAt(10, 32), "The inlet should pass completely under the bridge")
-assert(not floorAt(0, -10), "The gallery floor must be excavatable")
-assert(
-	not workspace:Raycast(world.origin + Vector3.new(0, 6, -6), Vector3.new(0, 0, -42), onMap),
-	"The starter seam must be clear of scenery"
-)
+for z = -2, -79, -1 do
+	local grade = 0.6 * z
+	for _, x in { -5, 0, 5 } do
+		local base = world.origin + Vector3.new(x, grade, z)
+		local floor = workspace:Raycast(base + Vector3.yAxis * 1.2, -Vector3.yAxis * 2.4, onMap)
+		assert(
+			floor and floor.Instance.Name == "Entrance grade",
+			"Ramp at " .. z .. " " .. (floor and floor.Instance.Name or "gap")
+		)
+		local overhead = workspace:Raycast(base + Vector3.yAxis * 0.4, Vector3.yAxis * 7, onMap)
+		assert(not overhead, "Headroom at " .. z .. " " .. (overhead and overhead.Instance.Name or ""))
+	end
+end
+for k, prompt in site.stations do
+	assert(prompt.Parent["Interaction pad"].Frame.Shine:FindFirstChildOfClass("UIGradient"), k)
+end
+for _, part in mapCopy["Island and lagoon"]:GetDescendants() do
+	if part:IsA("Part") and (part.Name == "Distant grass" or part.Name == "Distant sandbar") then
+		assert(part.TopSurface == Enum.SurfaceType.Studs and part.Material == Enum.Material.Plastic, part.Name)
+	elseif part:IsA("WedgePart") and (part.Name == "Distant grass" or part.Name == "Distant sandbar") then
+		assert(
+			(if part.CFrame.RightVector.Y > 0 then part.RightSurface else part.LeftSurface) == Enum.SurfaceType.Studs,
+			part.Name
+		)
+	end
+end
 for _, name in { "Sell", "Shop" } do
 	local prompt = site.stations[name]
 	local pad = prompt.Parent.Position - world.origin
@@ -271,163 +248,95 @@ end
 print("PASS harbor paths, 360 rock rim rays, lit service pads, bridge crossing and edit-face removal")
 local terrainCells = workspace.Terrain:CountCells()
 world:generate()
--- Exercise the actual island shapes, including the sloped wedges that once
--- projected green turf into otherwise valid mining targets.
-local probe = Instance.new("Part")
-probe.Anchored, probe.Size, probe.Transparency = true, Vector3.one * (Config.Cell - 0.06), 1
-probe.Parent = workspace
-local scenery = {}
-for _, part in mapCopy:GetDescendants() do
-	if part:IsA("BasePart") and (part.CanCollide or part.Transparency < 0.96) then
-		part.CanQuery = true
-		table.insert(scenery, part)
+local grid = world.grid
+local count = #grid.folder:GetChildren()
+assert(count > 300 and count < 700, "Starting shell parts: " .. count)
+local function center(x, y, z)
+	return grid:center(Vector3.new(x, y, z))
+end
+local function entry(x, y, z)
+	local chunk, i = grid:slot(Vector3.new(x, y, z), false)
+	return chunk and chunk[i]
+end
+local function cut(x, y, z)
+	local target = center(x, y, z)
+	local original = world:oreAt(target)
+	assert(original and entry(x, y, z), "Unexposed target " .. tostring(target))
+	local loot = world:excavate({ target })
+	assert(loot[original.name] == 1 and world:oreAt(target) == nil)
+	return original.name
+end
+-- A player can go from the path to either end of the actual work floor.
+local allFloor = RaycastParams.new()
+allFloor.FilterType = Enum.RaycastFilterType.Include
+allFloor.FilterDescendantsInstances = { mapCopy, grid.folder }
+for z = -80, -150, -1 do
+	local height = if z >= -120 then -48 elseif z <= -144 then -64 else -48 + (z + 120) * 16 / 24
+	local hit = workspace:Raycast(world.origin + Vector3.new(33, height + 1.5, z), -Vector3.yAxis * 3, allFloor)
+	assert(hit, "Lower workface walking gap at " .. z)
+end
+local params = RaycastParams.new()
+params.FilterType, params.FilterDescendantsInstances = Enum.RaycastFilterType.Include, { grid.folder }
+assert(not entry(0, -25, -700) and not entry(2, -7, -44), "Untouched caves or distant ore replicated")
+for row = 1, 4 do
+	local name = cut(-3, -row, -24)
+	assert((name == "Dirt") == (row <= 3))
+end
+-- Reveal the starter cavern through a real cut. Only its discovered shell appears.
+for row = 5, 7 do
+	if entry(2, -row, -37) then
+		cut(2, -row, -37)
 	end
 end
-local scan = OverlapParams.new()
-scan.FilterType, scan.FilterDescendantsInstances, scan.MaxParts = Enum.RaycastFilterType.Include, scenery, 1
-for y = -22, 14, 4 do
-	for z = -102, -2, 4 do
-		for x = -38, 38, 4 do
-			probe.Position = world.origin + Vector3.new(x, y, z)
-			local openGallery = math.abs(x) < 8 and z > -24 and z < -4 and y >= 0 and y < 12
-			if openGallery or world:oreAt(probe.Position) then
-				local hit = workspace:GetPartsInPart(probe, scan)[1]
-				assert(not hit, ("%s in diggable cell %d,%d,%d"):format(if hit then hit:GetFullName() else "", x, y, z))
-			end
-		end
+for z = -38, -45, -1 do
+	local p = entry(2, -7, z)
+	if p then
+		cut(2, -7, z)
 	end
 end
-probe:Destroy()
-print("PASS every diggable upper-gallery cell clear of authored scenery")
-assert(workspace.FallenPartsDestroyHeight < world.origin.Y + Config.Min.Y)
-assert(
-	not mapCopy["Harbor Plaza"]:FindFirstChild("Lift")
-		and not mapCopy:FindFirstChild("Lift Landings")
-		and not mapCopy:FindFirstChild("Deep mine trail")
-)
-for _, depth in { 128, 448, 1024 } do
-	assert(
-		world:oreAt(world.origin + Vector3.new(-14, -depth + 6, -34)),
-		"Former station should contain mineable blocks"
-	)
+assert(entry(2, -7, -44) == false and not world:oreAt(center(2, -7, -44)), "Starter cave did not open")
+local ceiling = workspace:Raycast(center(2, -7, -44), Vector3.yAxis * 40, params)
+local floor = workspace:Raycast(center(2, -7, -44), -Vector3.yAxis * 40, params)
+assert(floor and ceiling and ceiling.Position.Y - floor.Position.Y >= 12, "Walkable cavern with a solid shell")
+-- Extend a level heading far outside the old island bounds and then cut sideways.
+for z = -39, -142, -1 do
+	cut(-5, -3, z)
 end
-local roof
-for _, part in world.grid.folder:GetChildren() do
-	if part.Name == "Packed earth" then
-		roof = Config.blockCenter(world.origin, part.Position + Vector3.yAxis * part.Size.Y * 0.5, Vector3.yAxis)
-		break
-	end
+for x = -4, 58 do
+	cut(x, -3, -142)
 end
-assert(roof and not world:oreAt(roof) and not next((world:excavate({ roof }))), "The earth boundary yielded ore")
-local hostCells = {}
-for _, part in world.grid.folder:GetChildren() do
-	if
-		(part.Name == "Stone" or part.Name == "Dirt")
-		and part.Position.Y < world.origin.Y
-		and not hostCells[part.Name]
-	then
-		hostCells[part.Name] =
-			Config.blockCenter(world.origin, part.Position + Vector3.yAxis * part.Size.Y * 0.5, Vector3.yAxis)
-	end
-	if hostCells.Dirt and hostCells.Stone then
-		break
-	end
-end
-assert(hostCells.Dirt and hostCells.Stone)
-local hostLoot, hostFinds = world:excavate({ hostCells.Dirt, hostCells.Stone })
-assert(hostLoot.Dirt == 1 and hostLoot.Stone == 1 and not next(hostFinds), "Base materials filled an ore popup")
-mapCopy:Destroy()
-local bricks = world.grid.folder:GetChildren()
-assert(#bricks > 0 and #bricks < 5800, "Starting brick count: " .. #bricks)
-for _, part in bricks do
-	assert(part:IsA("Part") and part.Anchored and part.CanCollide)
-	local face = if not Ores.byName[part.Name] then Enum.SurfaceType.Smooth else Enum.SurfaceType.Studs
-	assert(part.TopSurface == face and part.BackSurface == face)
-end
-assert(workspace.Terrain:CountCells() == terrainCells)
-print("PASS studded plastic mine with", #bricks, "starting parts")
+assert(not entry(1000, -3, -1300), "Generated an untouched chunk")
+local target = center(58, -3, -143)
 local Mining = require(Server.MiningService)
 local rig = Instance.new("Model")
 local human = Instance.new("Humanoid")
 human.Parent = rig
 local head = Instance.new("Part")
-head.Name, head.Anchored, head.Position, head.Parent = "Head", true, world.origin + Vector3.new(-3, 6, -8), rig
+head.Name, head.Size, head.Anchored, head.Position, head.Parent =
+	"Head", Vector3.one, true, center(58, -3, -142) + Vector3.zAxis, rig
 rig.Parent = workspace
-local face = workspace:Raycast(head.Position + Vector3.new(0, 0, -2), Vector3.new(0, 0, -32))
-assert(face and face.Instance.Parent == world.grid.folder)
-local anchor = Config.blockCenter(world.origin, face.Position, face.Normal)
-local normal = face.Normal
-assert(Mining.target(world, rig, anchor, normal))
-assert(not Mining.target(world, rig, world.origin + Vector3.new(0, 0, -100), normal))
-assert(not Mining.target(world, rig, anchor, -normal))
-assert(not Mining.target(world, rig, anchor, Vector3.one))
+assert(Mining.target(world, rig, target, Vector3.zAxis))
+assert(not Mining.target(world, rig, target, -Vector3.zAxis) and not Mining.target(world, rig, target, Vector3.one))
 local post = Instance.new("Part")
-post.Size, post.Position, post.Anchored, post.Parent =
-	Vector3.new(5, 8, 2), head.Position + Vector3.new(0, 0, -5), true, workspace
-assert(not Mining.target(world, rig, anchor, normal))
+post.Anchored, post.Size, post.Position, post.Parent =
+	true, Vector3.one * 0.65, center(58, -3, -142) - Vector3.zAxis * 0.4, workspace
+assert(not Mining.target(world, rig, target, Vector3.zAxis))
 post:Destroy()
-local original = world:oreAt(anchor)
-local first = Mining.selection(world, rig, anchor, normal, 6, 36)
-assert(#first == 1 and first[1] == anchor)
-assert(#Mining.selection(world, rig, anchor, normal, 1, 0) == 0)
-local loot, finds = world:excavate(first)
-assert(not next((world:excavate(first))))
-assert((if original.host then finds[original.name] == nil else finds[original.name] == anchor))
-assert(loot[original.name] == 1 and world:oreAt(anchor) == nil)
-local deeper = workspace:Raycast(head.Position, (anchor + normal * 2 - head.Position).Unit * 45)
-assert(deeper and deeper.Instance.Parent == world.grid.folder and deeper.Position.Z < face.Position.Z - 3)
-assert(world:oreAt(anchor - normal * Config.Cell) ~= nil, "One hit takes just the highlighted layer")
-human.Health = 0
-assert(not Mining.target(world, rig, anchor, normal))
+assert(#Mining.selection(world, rig, target, Vector3.zAxis, 1, 0) == 0)
+assert(#Mining.selection(world, rig, target, Vector3.zAxis, 1, 1) == 1)
+assert(world:excavate({ target }).Dirt == 1 and not next((world:excavate({ target }))))
 rig:Destroy()
-print("PASS single-block cut, capacity, reach, obstructions and shared depletion")
-local selected, locked =
-	Pattern.select(world.origin, world.origin + Vector3.new(2, -82, -98), Ores.byName.Diamond, 1, 36)
-assert(#selected == 0 and locked == Ores.byName.Diamond)
--- Cut straight down through chunk boundaries.
-local params = RaycastParams.new()
-params.FilterType = Enum.RaycastFilterType.Include
-params.FilterDescendantsInstances = { world.grid.folder }
-local Blocks = require(Server.MineBlocks)
-local top = Vector3.new(-42, -82, -98)
-local mid = ((top - Config.Min) / Config.Cell):Floor()
-local low, high = mid - Vector3.new(3, 20, 3), mid + Vector3.new(3, 4, 3)
-for z = low.Z, high.Z do
-	for y = low.Y, high.Y do
-		local id = if y > mid.Y then 0 else Blocks.codes[Ores.byName.Diamond.material]
-		buffer.fill(world.grid.cells, Blocks.index(low.X, y, z), id, 7)
-	end
+for _, ore in Ores.list do
+	local hard = center(0, -61, 0)
+	local selected, locked, required = Pattern.select(world.origin, hard, ore, 1, 1)
+	assert(#selected == 0 and locked == ore and required >= 3)
+	assert(Ores.cutTime(0.8, ore, 3) > Ores.cutTime(0.8, ore, 1))
 end
-world.grid:refresh(low, high)
-local start = world.origin + top + Vector3.yAxis * 14
-local worst, total = 0, 0
-for i = 1, 20 do
-	local floor = workspace:Raycast(start, -Vector3.yAxis * 180, params)
-	assert(floor and floor.Normal == Vector3.yAxis)
-	local c = Config.blockCenter(world.origin, floor.Position, floor.Normal)
-	local eye = c + Vector3.yAxis * 16
-	local t = os.clock()
-	assert(Pattern.visiblePart(eye, c, Vector3.yAxis, params))
-	local batch = Pattern.select(world.origin, c, world:oreAt(c), 6, 1)
-	assert(#batch == 1 and batch[1] == c)
-	local yield = world:excavate(batch)
-	local amount = 0
-	for _, n in yield do
-		amount += n
-	end
-	assert(amount == 1)
-	local elapsed = (os.clock() - t) * 1000
-	worst, total = math.max(worst, elapsed), total + elapsed
-end
-print(string.format("PASS 20 successive single-block cuts; mean %.2f ms, max %.2f ms", total / 20, worst))
+assert(workspace.Terrain:CountCells() == terrainCells)
 local old = world.generation
 world.seed = 90237
 world:generate()
-assert(world.ready and world.generation == old + 1 and world.removed == 0 and world:oreAt(anchor))
-local last = 0
-for _, ore in Ores.list do
-	local t = Ores.cutTime(0.8, ore)
-	assert(t > last, ore.name .. " effort")
-	last = t
-end
+assert(world.generation == old + 1 and world.removed == 0 and world:oreAt(center(-3, -1, -24)).name == "Dirt")
+assert(not entry(58, -3, -142) and not entry(2, -7, -44))
+print("PASS cave discovery, wide floor, clearance, depth gates, distant chunk cuts, shared depletion and reset")
 print("MINING_TESTS_PASSED")

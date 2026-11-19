@@ -19,11 +19,25 @@ local mobile = UIS.PreferredInput == Enum.PreferredInput.Touch
 local hud = Hud.new(player, net, mobile)
 local Audio = require(script.HarborAudio)
 local fx = Effects.new()
+local tags = game:GetService("CollectionService")
+local function shine(gradient)
+	game:GetService("TweenService")
+		:Create(
+			gradient,
+			TweenInfo.new(1.35, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, false, 1.1),
+			{ Offset = Vector2.new(1.3, 0) }
+		)
+		:Play()
+end
+tags:GetInstanceAddedSignal("MiningPadShine"):Connect(shine)
+for _, gradient in tags:GetTagged("MiningPadShine") do
+	shine(gradient)
+end
 local Swing = require(script.PickSwing)
 local held, firstHaul, rig = nil, false, nil
 local target, targetSide, strokeStart
 local finishedCell, retryAt
-local aimPoint, aimSide, aimCells, aimOre
+local aimPoint, aimSide, aimOre, aimPart
 local swinging = false
 local params = RaycastParams.new()
 params.FilterType = Enum.RaycastFilterType.Exclude
@@ -44,7 +58,7 @@ local function cancelStroke()
 	end
 	target, targetSide, strokeStart = nil, nil, nil
 	hud.meter.Visible = false
-	fx:linger()
+	fx:clearDamage()
 end
 local function release()
 	if held and not swinging then
@@ -218,7 +232,7 @@ end
 
 local lastCoordinates
 local function sampleAim()
-	aimPoint, aimCells = nil, nil
+	aimPoint, aimPart = nil, nil
 	local camera = workspace.CurrentCamera
 	local char = player.Character
 	local head = char and char:FindFirstChild("Head")
@@ -234,10 +248,11 @@ local function sampleAim()
 	if coords ~= lastCoordinates then
 		lastCoordinates = coords
 		local depth = math.max(0, -coords.Y)
-		local inHarbor = depth == 0 and coords.Z >= 0
+		local inHarbor = not Config.inMine(localPos)
 		hud.coordinates.Text = string.format("X %d    Y %d    Z %d", coords.X, coords.Y, coords.Z)
 		hud.depth.Text = if inHarbor then "Surface" elseif depth == 1 then "1 block" else depth .. " blocks"
-		hud.layer.Text = string.upper(if inHarbor then Config.SurfaceName else Config.layer(-localPos.Y).name)
+		hud.layer.Text =
+			string.upper(if inHarbor then Config.SurfaceName else Config.layer(Config.FloorY - localPos.Y).name)
 	end
 	hud.surface.Visible = not passage.active
 		and (localPos.Y < -2 or localPos.Z < 0)
@@ -261,13 +276,13 @@ local function sampleAim()
 	local cap = Upgrades.items.Capacity.values[player:GetAttribute("Capacity") or 1]
 	local space = cap - (player:GetAttribute("Used") or 0)
 	local power = Upgrades.items.Power.values[player:GetAttribute("Power") or 1]
-	local center, normal, cells, locked = nil, nil, nil, nil
+	local center, normal, cells, locked, required
 	if ready and space > 0 and hit and hit.Instance.Parent:HasTag(Config.MineBlockTag) then
 		normal = hit.Normal
 		center = Config.blockCenter(origin, hit.Position, normal)
 		local anchorPart = Pattern.visiblePart(head.Position, center, normal, params)
 		if anchorPart and anchorPart.Parent:HasTag(Config.MineBlockTag) then
-			cells, locked = Pattern.select(origin, center, Ores.byName[anchorPart.Name], power, space)
+			cells, locked, required = Pattern.select(origin, center, Ores.byName[anchorPart.Name], power, space)
 		end
 	end
 	fx:aim(cells)
@@ -282,9 +297,12 @@ local function sampleAim()
 	elseif space <= 0 then
 		hud:guide("Backpack full", "Bring your haul to the amber Sell counter", true)
 	elseif not valid and locked then
-		hud:guide(locked.name .. " needs Power " .. locked.hardness, "Upgrade Power at the workshop", true)
+		hud:guide(locked.name .. " needs Power " .. required, "Upgrade Power at the workshop", true)
 	elseif valid or not firstHaul then
 		local help = if mobile then "Hold MINE on the highlighted blocks" else "Hold the left mouse button to mine"
+		if valid then
+			help = "Hold to mine  ·  Rock hardness " .. Config.strength(center.Y - origin.Y)
+		end
 		local title = if valid
 			then "Mine " .. string.lower(hit.Instance.Name)
 			elseif localPos.Y < -2 then "Aim at the wall or floor to keep digging"
@@ -294,7 +312,8 @@ local function sampleAim()
 		hud:guide("", "", false)
 	end
 	if valid then
-		aimPoint, aimSide, aimCells, aimOre = center, normal, cells, Ores.byName[hit.Instance.Name]
+		aimPoint, aimSide, aimOre = center, normal, Ores.byName[hit.Instance.Name]
+		aimPart = hit.Instance
 	end
 end
 
@@ -315,15 +334,19 @@ RunService.RenderStepped:Connect(function(dt)
 	if finishedCell == aimPoint and now < retryAt then
 		return
 	end
-	if not swinging or aimPoint ~= target or targetSide ~= aimSide then
+	if not swinging or aimPoint ~= target then
 		if strokeStart and target ~= aimPoint then
-			fx:linger()
+			fx:clearDamage()
 		end
 		target, targetSide, strokeStart = aimPoint, aimSide, now
 		net.Swing:FireServer(true, target, targetSide)
 		swinging = true
 	end
-	local duration = Ores.cutTime(Upgrades.items.Speed.values[player:GetAttribute("Speed") or 1], aimOre)
+	local duration = Ores.cutTime(
+		Upgrades.items.Speed.values[player:GetAttribute("Speed") or 1],
+		aimOre,
+		Config.strength(target.Y - origin.Y)
+	)
 	if rig and not rig.shoulder:IsDescendantOf(workspace) then
 		rig:destroy()
 		rig = nil
@@ -337,10 +360,9 @@ RunService.RenderStepped:Connect(function(dt)
 	hud.swingFill.Size = UDim2.fromScale(progress, 1)
 	hud.cursorPick.Rotation = -14 + 23 * math.sin(progress * math.pi * 6)
 	hud.cursorEdge.Color = W.gold
-	fx:damage(aimCells, aimSide, progress)
+	fx:damage(aimPart, progress)
 	if progress == 1 then
-		net.Mine:FireServer(target, targetSide, 1, 1)
-		fx:linger()
+		net.Mine:FireServer(target, aimSide, 1, 1)
 		finishedCell, retryAt = target, now + 0.5
 		hud.meter.Visible = false
 		swinging = false

@@ -30,7 +30,7 @@ local function test()
 		return p.Character:FindFirstChild("Harbor pick")
 	end, 8, "equipped pickaxe")
 	local kit = p.Character:FindFirstChild("Prospector kit", true)
-	assert(kit and kit["Miner title"].TextLabel.Text == "Lamp Tender", "starter backpack and title")
+	assert(kit and kit["Miner title"].TextLabel.Text == "Noob Miner", "starter backpack and title")
 	local packSize = kit["Field pack"].Size
 	local harbor = game.SoundService:WaitForChild("Harbor audio", 8)
 	local song = harbor:WaitForChild("Prima Bossa Nova", 5)
@@ -110,7 +110,7 @@ local function test()
 			pad.Service:InputHoldEnd()
 		end
 	end
-	for _, page in { "Pack", "Settings", "Gear", "Jobs", "Book", "Store" } do
+	for _, page in { "Pack", "Settings", "Titles", "Gear", "Jobs", "Book", "Store" } do
 		if counters[page] then
 			visit(page, true)
 		else
@@ -118,6 +118,7 @@ local function test()
 		end
 		local listing = ({
 			Settings = "Music volume",
+			Titles = "Prismatic Excavator",
 			Gear = "Speed",
 			Jobs = "First strike",
 			Book = "Stone",
@@ -129,6 +130,7 @@ local function test()
 		end, 5, "open " .. page)
 		if page == "Book" then
 			assert(menu.Listings["Iron Shelf"].Depth.Text == "27 blocks", "index depth in blocks")
+			assert(menu.Listings:FindFirstChild("Rock hardness"), "index depth and Power guide")
 		end
 		task.wait(0.26)
 		local left, top = menu.AbsolutePosition.X, menu.AbsolutePosition.Y
@@ -147,18 +149,18 @@ local function test()
 		r:FireServer("depthSample")
 		local location = gui.SafeArea.Location
 		waitFor(function()
-			return location.Coordinates.Text == "X -1    Y -27    Z -3"
-				and location.Depth.Text == "27 blocks"
-				and location.Region.Text == "IRON SHELF"
-				and p.leaderstats.Depth.Value == 27
-		end, 8, "block coordinates, region and personal best at Iron Shelf")
+			return location.Coordinates.Text == "X -1    Y -3    Z -35"
+				and location.Depth.Text == "3 blocks"
+				and location.Region.Text == "SUNSTONE HOLLOW"
+				and p.leaderstats.Depth.Value >= 3
+		end, 8, "block coordinates, region and personal best at the lower bench")
 		assert(location.Coordinates.TextFits and location.Depth.TextFits, "location readout clipped")
 	end
 	r:FireServer("position")
 	local origin = n:GetAttribute("Origin")
 	waitFor(function()
 		local pos = p.Character.Head.Position - origin
-		return pos.Z < 0 and math.abs(pos.Y - 5) < 4
+		return pos.Z < 0 and math.abs(pos.Y + 59) < 4
 	end, 8, "placement at starter seam")
 	local first = os.clock()
 	local discovered
@@ -215,6 +217,44 @@ local function test()
 		end, 2, "animated close")
 		local hand = p.Character:FindFirstChild("RightHand") or p.Character:FindFirstChild("Right Arm")
 		local defaultY = hand.Position.Y
+		-- Inspect six surfaces, including an isolated block that can be viewed from every side.
+		local painter = require(p.PlayerScripts.Client.Effects).new()
+		local cube = Instance.new("Part")
+		cube.Anchored, cube.Size, cube.Position, cube.Parent =
+			true, Vector3.one * 4, head.Position + Vector3.yAxis * 48, workspace
+		cube:SetAttribute("OpenFaces", 63)
+		painter:damage(cube, 0.15)
+		local overlays = cube.Fractures:GetChildren()
+		assert(#overlays == 6)
+		for _, surface in overlays do
+			local growing = 0
+			for _, line in surface:GetChildren() do
+				if line.Visible then
+					growing += 1
+				end
+			end
+			assert(
+				growing == 4 and not surface.AlwaysOnTop and surface.ZOffset == 0 and surface.Adornee == cube,
+				"early cracks did not radiate together"
+			)
+		end
+		painter:damage(cube, 1)
+		for _, surface in overlays do
+			local visible = 0
+			for _, line in surface:GetChildren() do
+				if line.Visible then
+					visible += 1
+				end
+			end
+			assert(visible == 16)
+		end
+		cube:Destroy()
+		for _, surface in overlays do
+			assert(not surface.Parent, "orphan crack")
+		end
+		painter:clearDamage()
+		painter.preview:Destroy()
+		painter.sparkOrigin:Destroy()
 		local function visibleOre(name)
 			for _, part in workspace.CitrineCove.MineBlocks:GetChildren() do
 				if part.Name ~= name or (part.Position - head.Position).Magnitude > 36 then
@@ -266,6 +306,10 @@ local function test()
 		local cursor = p.PlayerGui.MiningAim["Mining cursor"]
 		assert(cursor.Visible and not cursor["No entry"].Visible, "mineable cursor")
 		assert(game:GetService("StarterPlayer").LoadCharacterAppearance, "account appearance disabled")
+		assert(
+			not p.PlayerGui:FindFirstChild("Inside rock") and p.Character:FindFirstChild("Head clearance", true),
+			"head collision guard"
+		)
 		local pick = p.Character["Harbor pick"]
 		local palm = hand:FindFirstChild("RightGripAttachment")
 		local function gripError()
@@ -279,11 +323,7 @@ local function test()
 		waitFor(function()
 			return meter.Visible and meter.Charge.Size.X.Scale > 0.1 and hand.Position.Y > defaultY + 0.4
 		end, 3, "raised pick and progress")
-		assert(
-			workspace.MiningSelection:FindFirstChild("Fractures")
-				and #workspace.MiningSelection.Fractures:GetChildren() >= 1,
-			"visible impact cracks"
-		)
+		assert(workspace.CitrineCove.MineBlocks:FindFirstChild("Fractures", true) ~= nil, "visible impact cracks")
 		input:SendMouseButton(xy, Enum.UserInputType.MouseButton1, false)
 		waitFor(function()
 			return not meter.Visible and math.abs(hand.Position.Y - defaultY) < 0.48
@@ -306,6 +346,7 @@ local function test()
 		until p:GetAttribute("Used") >= 1 or os.clock() > deadline
 		input:SendMouseButton(xy, Enum.UserInputType.MouseButton1, false)
 		assert(p:GetAttribute("Used") == 1, "completed cut")
+		assert(not workspace.CitrineCove.MineBlocks:FindFirstChild("Fractures", true), "completed cracks lingered")
 		assert(peaks >= 2, "expected repeated swings during the first cut, saw " .. peaks)
 		assert(maxGap < 0.035, "grip drift: " .. maxGap)
 		assert(replicated, "swing start was not replicated")
@@ -337,7 +378,7 @@ local function test()
 		assert(
 			p:GetAttribute("Used") == collected
 				and not meter.Visible
-				and not workspace.MiningSelection:FindFirstChild("Fractures"),
+				and not workspace.CitrineCove.MineBlocks:FindFirstChild("Fractures", true),
 			"locked ore started a cut"
 		)
 		return string.format(
@@ -396,7 +437,7 @@ local function test()
 	end, 4, "first ore discovery")
 	local value = p:GetAttribute("BagValue")
 	assert(value >= 36, "material valuation")
-	local quantity, total = 0, 0
+	local quantity, total, earnedXP = 0, 0, 0
 	for _, ore in ores.list do
 		local held = p:GetAttribute("Held" .. ore.name)
 		if held > 0 then
@@ -407,8 +448,12 @@ local function test()
 		end
 		quantity += held
 		total += held * ore.value
+		earnedXP += held * ore.xp
 	end
 	assert(quantity == 36 and total == value, "pack quantities and value")
+	assert(p:GetAttribute("MiningXP") == earnedXP, "XP from each material in the first haul")
+	local level = require(rep.Shared.Expeditions).level(earnedXP)
+	assert(gui.SafeArea.Location.Titles.Text == "Lv " .. level .. " · Titles", "title button reflects earned level")
 	n.Action:FireServer("Sell")
 	task.wait(0.4)
 	assert(p:GetAttribute("Used") == 36 and p:GetAttribute("Gold") == 0, "exchange must require a visit")
@@ -480,7 +525,7 @@ local function test()
 	end, 5, "equipped trail")
 	r:FireServer("depthSample")
 	waitFor(function()
-		return gui.SafeArea.Location.Depth.Text == "27 blocks"
+		return gui.SafeArea.Location.Depth.Text == "3 blocks"
 	end, 4, "return starting depth")
 	n.Action:FireServer("Surface")
 	local passage = p.PlayerGui.SurfaceReturn

@@ -5,7 +5,29 @@ local function equip(player, char)
 		return
 	end
 	local torso = char:WaitForChild(if human.RigType == Enum.HumanoidRigType.R15 then "UpperTorso" else "Torso", 8)
-	if not torso or player.Character ~= char or torso:FindFirstChild("Prospector kit") then
+	if not torso or player.Character ~= char then
+		return
+	end
+	local head = char:WaitForChild("Head", 8)
+	if not head then
+		return
+	end
+	if not head:FindFirstChild("Head clearance") then
+		local guard = Instance.new("Part")
+		guard.Name, guard.Shape, guard.Transparency = "Head clearance", Enum.PartType.Ball, 1
+		guard.CollisionGroup = "MinerHead"
+		guard.CanTouch, guard.CanQuery, guard.Massless = false, false, true
+		local function fitGuard()
+			guard.Size = Vector3.one * math.clamp(head.Size.Y + 0.14, 0.85, 2.4)
+		end
+		fitGuard()
+		guard.CFrame = head.CFrame
+		local weld = Instance.new("WeldConstraint")
+		weld.Part0, weld.Part1, weld.Parent = head, guard, guard
+		guard.Parent = head
+		head:GetPropertyChangedSignal("Size"):Connect(fitGuard)
+	end
+	if torso:FindFirstChild("Prospector kit") then
 		return
 	end
 	local kit = Instance.new("Model")
@@ -46,7 +68,7 @@ local function equip(player, char)
 		seam.C0 = binding.C0 * CFrame.new(0, 0.59 * scale, 0.02 * scale)
 		clasp.C0 = binding.C0 * CFrame.new(0, 0.36 * scale, 0.442 * scale)
 		nameplate.StudsOffsetWorldSpace = Vector3.new(0, torso.Size.Y / 2 + 2.7, 0)
-		local tier, rank = E.rank(player:GetAttribute("Power") or 1, player:GetAttribute("Speed") or 1, level)
+		local tier, rank = E.rank(E.level(player:GetAttribute("MiningXP") or 0))
 		title.Text = rank.name
 		bag.Color = ({
 			fabric,
@@ -54,11 +76,12 @@ local function equip(player, char)
 			Color3.fromRGB(68, 104, 156),
 			Color3.fromRGB(109, 72, 147),
 			Color3.fromRGB(51, 147, 134),
+			Color3.fromRGB(152, 108, 189),
 		})[tier]
 	end
 	fit()
 	local signals = { torso:GetPropertyChangedSignal("Size"):Connect(fit) }
-	for _, key in { "Capacity", "Speed", "Power" } do
+	for _, key in { "Capacity", "MiningXP" } do
 		table.insert(signals, player:GetAttributeChangedSignal(key):Connect(fit))
 	end
 	kit.Destroying:Once(function()

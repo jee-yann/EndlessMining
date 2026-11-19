@@ -9,6 +9,7 @@ local W, Icons = require(script.Parent.Widgets), require(script.Parent.Icons)
 local Menu = {}
 Menu.__index = Menu
 Menu.pages = {
+	Titles = { name = "Miner titles", color = W.gold },
 	Settings = { name = "Settings", color = Color3.fromRGB(120, 185, 255) },
 	Gear = { name = "Workshop", color = W.aqua },
 	Jobs = { name = "Shift jobs", color = W.violet },
@@ -162,7 +163,11 @@ function Menu:book()
 			W.title(row, layer.name, 12, 3, 273, 23, 18, W.white, true)
 			local depth = W.text(row, layer.depthBlocks .. " blocks", 294, 4, 143, 21, 15, W.aqua)
 			depth.Name = "Depth"
-			local chances = {}
+			local total = 0
+			for _, v in layer.oreChances do
+				total += v
+			end
+			local chances = { "Stone " .. (100 - total) .. "%" }
 			for _, ore in Ores.list do
 				local weight = layer.oreChances[ore.name]
 				if weight then
@@ -173,6 +178,15 @@ function Menu:book()
 			odds.TextWrapped = true
 		end
 		rows += #Config.Layers
+		local card = W.frame(self.list, "Rock hardness", 1, 1 + rows * 69, 447, 62, W.card, 10)
+		W.title(card, "Power needed at depth", 12, 3, 420, 23, 18, W.white, true)
+		local tiers = {}
+		for power, depth in Config.HardnessDepths do
+			table.insert(tiers, string.format("P%d at %d blocks", power, depth))
+		end
+		local levels = W.text(card, table.concat(tiers, "   ·   "), 12, 25, 420, 34, 13, W.muted, true)
+		levels.TextWrapped = true
+		rows += 1
 	end
 	return rows
 end
@@ -223,8 +237,26 @@ function Menu:store()
 	end
 	return #Catalog
 end
+function Menu:titles()
+	for i, title in Expeditions.ranks do
+		local _, detail, b = self:row(i, title.name, "Titles", W.gold)
+		detail.Text = "Unlocks at level " .. title.level
+		table.insert(self.updates, function()
+			local level = Expeditions.level(self.player:GetAttribute("MiningXP") or 0)
+			local current = Expeditions.rank(level)
+			setButton(
+				b,
+				if i == current then "Equipped" elseif i < current then "Unlocked" else "Locked",
+				if i == current then W.green else W.muted,
+				false
+			)
+		end)
+	end
+	return #Expeditions.ranks
+end
 local builders = {
 	Gear = Menu.gear,
+	Titles = Menu.titles,
 	Settings = function(self)
 		return self.preferences:build(self)
 	end,
@@ -250,10 +282,11 @@ function Menu:open(key)
 			and RunService:IsStudio()
 			and game.GameId == 0
 		then "Studio trials last for this session."
+		elseif key == "Titles" then "Mine blocks to earn XP. Ore earns more."
 		elseif key == "Pack" then "Take your haul to the amber Sell counter."
 		elseif key == "Jobs" then "Claim each job in order to collect its gold."
 		elseif key == "Settings" then "Changes take effect immediately."
-		elseif key == "Book" then "Scroll down for each region’s block chances."
+		elseif key == "Book" then "First 3 layers are dirt. Scroll for stone and ore odds."
 		elseif key == "Store" then "Permanent passes for this experience."
 		else "Upgrades stay equipped between visits."
 	local rows = builders[key](self)
@@ -297,7 +330,17 @@ function Menu:refresh()
 		return
 	end
 	local p = self.player
-	if self.page == "Pack" then
+	if self.page == "Titles" then
+		local xp = p:GetAttribute("MiningXP") or 0
+		local level = Expeditions.level(xp)
+		self.sub.Text = string.format(
+			"Level %d    ·    %s / %s XP to level %d",
+			level,
+			W.number(xp - Expeditions.levelXP(level)),
+			W.number(Expeditions.levelXP(level + 1) - Expeditions.levelXP(level)),
+			level + 1
+		)
+	elseif self.page == "Pack" then
 		local cap = Upgrades.items.Capacity.values[p:GetAttribute("Capacity") or 1]
 		local value = (p:GetAttribute("BagValue") or 0) * (if p:GetAttribute("DoubleGold") then 2 else 1)
 		self.sub.Text = string.format("%d / %d slots   ·   %s G", p:GetAttribute("Used") or 0, cap, W.number(value))

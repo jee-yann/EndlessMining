@@ -22,7 +22,7 @@ function Mining.target(world, character, point, normal)
 		return nil
 	end
 	local anchor = world.origin + (((point - world.origin) / Config.Cell):Floor() + Vector3.one * 0.5) * Config.Cell
-	if (anchor - point).Magnitude > 0.03 or not Config.inside(anchor - world.origin) then
+	if (anchor - point).Magnitude > 0.03 or anchor.Y >= world.origin.Y + Config.FloorY then
 		return nil
 	end
 	local params = RaycastParams.new()
@@ -71,7 +71,8 @@ function Mining.start(world, net, sessions, sync)
 			strokes[player] = nil
 			return
 		end
-		local duration = Ores.cutTime(Profile.stat(p, "Speed"), world:oreAt(point))
+		local duration =
+			Ores.cutTime(Profile.stat(p, "Speed"), world:oreAt(point), Config.strength(point.Y - world.origin.Y))
 		strokes[player] = {
 			point = point,
 			normal = normal,
@@ -115,14 +116,14 @@ function Mining.start(world, net, sessions, sync)
 			or cut.character ~= player.Character
 			or cut.generation ~= world.generation
 			or point ~= cut.point
-			or normal ~= cut.normal
+			or typeof(normal) ~= "Vector3"
 			or now + 0.18 < cut.due
 		then
 			return
 		end
 		strokes[player] = nil
 		cut.character:SetAttribute("MiningSwing", nil)
-		cut.time = now
+		cut.time, cut.normal = now, normal
 		pending[player] = cut
 		table.insert(queue, player)
 	end)
@@ -160,6 +161,7 @@ function Mining.start(world, net, sessions, sync)
 			profile.discoveries[name] = true
 			profile.bag[name] = (profile.bag[name] or 0) + count
 			profile.mined += count
+			profile.xp += count * ore.xp
 			if Ores.byName[name].value > best.value then
 				best = Ores.byName[name]
 			end

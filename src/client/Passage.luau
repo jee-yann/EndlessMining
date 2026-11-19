@@ -37,6 +37,9 @@ function Passage:depart(id, depth)
 		else "Mine entrance"
 	self.shade.GroupTransparency, self.gui.Enabled = 1, true
 	self:fade(0, 0.23)
+	if workspace.StreamingEnabled then
+		pcall(self.player.RequestStreamAroundAsync, self.player, self.net:GetAttribute("Entrance"), 2)
+	end
 	self.net.Action:FireServer("ReturnReady", id)
 	local blackAt = os.clock()
 	local hold = 0.22 + math.min(depth, 288) * 0.0065

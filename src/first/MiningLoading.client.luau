@@ -64,7 +64,7 @@ local function entranceBrickCount(net)
 		requestedEntrance = true
 		task.spawn(function()
 			pcall(function()
-				player:RequestStreamAroundAsync(origin, 2)
+				player:RequestStreamAroundAsync(origin + Vector3.new(0, -48, -86), 2)
 			end)
 		end)
 	end
@@ -76,7 +76,11 @@ local function entranceBrickCount(net)
 		return 0
 	end
 	overlap.FilterDescendantsInstances = { grid }
-	return #workspace:GetPartBoundsInBox(CFrame.new(origin + Vector3.new(0, 6, -16)), Vector3.new(56, 32, 48), overlap)
+	return #workspace:GetPartBoundsInBox(
+		CFrame.new(origin + Vector3.new(0, -50, -86)),
+		Vector3.new(32, 12, 22),
+		overlap
+	)
 end
 
 -- The entrance lights can already be replicated while the renderer still shows

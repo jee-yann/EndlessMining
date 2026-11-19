@@ -17,6 +17,7 @@ local function copy(p)
 		version = p.version,
 		gold = p.gold,
 		mined = p.mined,
+		xp = p.xp,
 		bestDepth = p.bestDepth,
 		levels = table.clone(p.levels),
 		preferences = table.clone(p.preferences),

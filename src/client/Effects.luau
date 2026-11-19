@@ -72,92 +72,77 @@ function Effects:aim(cells)
 		end
 	end
 end
--- A branching fracture is drawn directly on the selected face in the world.
--- Each new branch appears at a later cut stage and respects depth occlusion.
-local fractures = {
-	{ 0, 0, -0.19, 0.22 },
-	{ -0.19, 0.22, -0.10, 0.43 },
-	{ -0.10, 0.43, -0.31, 1 },
-	{ -0.19, 0.22, -1, 0.36 },
-	{ 0, 0, 0.28, -0.10 },
-	{ 0.28, -0.10, 0.48, -0.02 },
-	{ 0.48, -0.02, 1, -0.22 },
-	{ 0, 0, -0.16, -0.36 },
-	{ -0.16, -0.36, -0.06, -1 },
+-- Surface ink has no thickness. Four fissures advance together and meet the
+-- adjoining faces at their edge midpoints. The rock owns the ink's lifetime.
+local branches = {
+	{ Vector2.new(64, 64), Vector2.new(59, 48), Vector2.new(72, 29), Vector2.new(64, 0) },
+	{ Vector2.new(64, 64), Vector2.new(82, 69), Vector2.new(103, 56), Vector2.new(128, 64) },
+	{ Vector2.new(64, 64), Vector2.new(70, 80), Vector2.new(57, 101), Vector2.new(64, 128) },
+	{ Vector2.new(64, 64), Vector2.new(45, 57), Vector2.new(28, 69), Vector2.new(0, 64) },
 }
-local axes = require(shared.BlockPattern).axes
-function Effects:linger()
-	if not self.fracture or not self.fracture.Parent then
-		return
-	end
-	local fading = self.fracture:Clone()
-	fading.Name = "Fading fractures"
-	fading.Parent = self.preview
-	for _, line in fading:GetChildren() do
-		Tween:Create(
-			line,
-			TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.In, 0, false, 0.10),
-			{ Transparency = 1 }
-		):Play()
-	end
-	Debris:AddItem(fading, 0.30)
-	self:damage(nil)
+local function segment(gui, a, b, start, finish, width)
+	local bar = Instance.new("Frame")
+	bar.Name = "Fissure"
+	bar.BackgroundColor3, bar.BackgroundTransparency, bar.BorderSizePixel = Color3.fromRGB(42, 32, 36), 0.12, 0
+	bar.AnchorPoint = Vector2.new(0.5, 0.5)
+	local delta = b - a
+	bar.Rotation = math.deg(math.atan2(delta.Y, delta.X))
+	bar.Visible = false
+	bar.Parent = gui
+	return { bar = bar, a = a, delta = delta, length = delta.Magnitude, start = start, finish = finish, width = width }
 end
-function Effects:damage(cells, normal, progress)
-	local stage = if cells then math.clamp(math.ceil(progress * #fractures), 0, #fractures) else 0
-	if stage == 0 then
-		if self.fracture then
-			self.fracture.Parent = nil
-		end
-		self.lastStage = 0
+function Effects:clearDamage()
+	if self.fracture then
+		self.fracture:Destroy()
+	end
+	self.fracture, self.cracked, self.inkFaces, self.crackStep = nil, nil, nil, nil
+end
+function Effects:damage(part, progress)
+	if not part or not part.Parent or progress <= 0 then
+		self:clearDamage()
 		return
 	end
-	local same = self.lastStage == stage and self.lastFace == normal and self.lastCells and #self.lastCells == #cells
-	if same then
-		for i, c in cells do
-			if self.lastCells[i] ~= c then
-				same = false
-				break
+	if self.cracked ~= part then
+		self:clearDamage()
+		local group = Instance.new("Folder")
+		group.Name, group.Parent = "Fractures", part
+		self.fracture, self.cracked, self.inkFaces = group, part, {}
+	end
+	local step = math.min(32, math.ceil(progress * 32))
+	local mask = part:GetAttribute("OpenFaces") or 0
+	if self.crackStep == step and self.crackMask == mask then
+		return
+	end
+	self.crackStep, self.crackMask = step, mask
+	for _, face in Enum.NormalId:GetEnumItems() do
+		if not bit32.btest(mask, bit32.lshift(1, face.Value)) then
+			continue
+		end
+		local lines = self.inkFaces[face]
+		if not lines then
+			local gui = Instance.new("SurfaceGui")
+			gui.Name, gui.Face, gui.Adornee = face.Name, face, part
+			gui.SizingMode, gui.CanvasSize = Enum.SurfaceGuiSizingMode.FixedSize, Vector2.new(128, 128)
+			gui.AlwaysOnTop, gui.LightInfluence, gui.ZOffset = false, 1, 0
+			gui.Parent = self.fracture
+			lines = {}
+			for _, path in branches do
+				for j = 1, 3 do
+					table.insert(lines, segment(gui, path[j], path[j + 1], (j - 1) / 3, j / 3, 2.8 - 0.45 * j))
+				end
+				local d = path[3] - path[2]
+				table.insert(lines, segment(gui, path[2], path[2] + Vector2.new(-d.Y, d.X) * 0.74, 0.39, 0.83, 1.35))
 			end
+			self.inkFaces[face] = lines
 		end
-		if same then
-			return
-		end
-	end
-	self.lastStage, self.lastFace, self.lastCells = stage, normal, cells
-	if not self.fracture then
-		self.fracture = Instance.new("Folder")
-		self.fracture.Name = "Fractures"
-		self.lines = {}
-	end
-	local across, up = axes(normal)
-	local used = 0
-	for _, center in cells do
-		local front = center + normal * (Config.Cell / 2 + 0.022)
-		for j = 1, stage do
-			local segment = fractures[j]
-			local a = front + (across * segment[1] + up * segment[2]) * (Config.Cell / 2)
-			local b = front + (across * segment[3] + up * segment[4]) * (Config.Cell / 2)
-			used += 1
-			local line = self.lines[used]
-			if not line then
-				line = Instance.new("Part")
-				line.Name = "Crack"
-				line.Anchored, line.CanCollide, line.CanTouch, line.CanQuery, line.CastShadow =
-					true, false, false, false, false
-				line.Material, line.Color = Enum.Material.SmoothPlastic, Color3.fromRGB(44, 32, 50)
-				self.lines[used] = line
-			end
-			line.Size = Vector3.new(if j < 4 then 0.13 else 0.09, 0.035, (b - a).Magnitude + 0.055)
-			line.CFrame = CFrame.lookAt((a + b) * 0.5, b, normal)
-			line.Parent = self.fracture
+		for _, line in lines do
+			local t = math.clamp((step / 32 - line.start) / (line.finish - line.start), 0, 1)
+			local mid = line.a + line.delta * (0.5 * t)
+			line.bar.Visible = t > 0
+			line.bar.Position = UDim2.fromOffset(mid.X, mid.Y)
+			line.bar.Size = UDim2.fromOffset(line.length * t + 0.45, line.width)
 		end
 	end
-	for i = used + 1, self.usedLines or 0 do
-		self.lines[i].Parent = nil
-	end
-	self.usedLines = used
-	self.fracture.Parent = self.preview
 end
 -- One label per ore in a cut, anchored at a cell that actually yielded that ore.
 function Effects:labels(finds, loot, normal)

@@ -36,6 +36,7 @@ local function sync(player, p)
 	player:SetAttribute("Used", Profile.used(p))
 	player:SetAttribute("BagValue", Profile.value(p.bag))
 	player:SetAttribute("Mined", p.mined)
+	player:SetAttribute("MiningXP", p.xp)
 	player:SetAttribute("Jobs", p.jobs)
 	for _, ore in Ores.list do
 		player:SetAttribute("Held" .. ore.name, p.bag[ore.name] or 0)
@@ -213,7 +214,7 @@ local function action(player, key, option, value)
 		s.tripId = (s.tripId or 0) + 1
 		local travel = { id = s.tripId, character = character }
 		s.travel = travel
-		local depth = math.max(0, Config.depthInBlocks(world.origin.Y - root.Position.Y))
+		local depth = math.max(0, Config.depthInBlocks(world.origin.Y + Config.FloorY - root.Position.Y))
 		net.Feedback:FireClient(player, "depart", travel.id, depth)
 		task.delay(10, function()
 			if s.travel == travel then
@@ -303,21 +304,25 @@ task.spawn(function()
 				continue
 			end
 			local localPos = root.Position - world.origin
-			if
-				localPos.Y < Config.Min.Y - 10
-				or math.abs(localPos.X) > Config.SurfaceMax.X + 12
-				or localPos.Z > Config.SurfaceMax.Z + 12
-				or localPos.Z < Config.Min.Z - 25
-			then
-				moveCharacter(player.Character, CFrame.new(landing))
-			elseif Config.inside(localPos) then
-				local depthStuds = math.floor(-localPos.Y)
+			local mining = Config.inMine(localPos)
+			if mining and localPos.Y < Config.FloorY then
+				local cell = world.grid:cellAt(root.Position)
+				local chunk, index = world.grid:slot(cell, false)
+				mining = (chunk ~= nil and chunk[index] ~= nil)
+					or Config.inHall(localPos) and localPos.Y >= Config.FloorY - Config.BenchRows * Config.Cell
+			end
+			if mining then
+				local depthStuds = math.floor(Config.FloorY - localPos.Y)
 				if depthStuds > s.profile.bestDepth then
-					-- Existing profiles store this record in studs.
 					s.profile.bestDepth = depthStuds
 					player.leaderstats.Depth.Value = Config.depthInBlocks(depthStuds)
 				end
-			elseif localPos.Y < -35 then
+			elseif
+				localPos.Y < -35
+				or math.abs(localPos.X) > Config.SurfaceMax.X + 12
+				or localPos.Z > Config.SurfaceMax.Z + 12
+				or localPos.Z < Config.SiteMin.Z - 25
+			then
 				moveCharacter(player.Character, CFrame.new(landing))
 			end
 		end

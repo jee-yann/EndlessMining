@@ -12,6 +12,7 @@ function Profile.new()
 		levels = { Speed = 1, Power = 1, Capacity = 1 },
 		bag = {},
 		mined = 0,
+		xp = 0,
 		bestDepth = 0,
 		jobs = 0,
 		discoveries = {},
@@ -58,6 +59,9 @@ function Profile.valid(p)
 			return false
 		end
 	end
+	if p.xp ~= nil and not integer(p.xp, 9e15) then
+		return false
+	end
 	if p.jobs ~= nil and not integer(p.jobs, #Expeditions.jobs) then
 		return false
 	end
@@ -90,6 +94,7 @@ function Profile.upgradeSave(p)
 		p.gold += math.floor(24 * 2.5 ^ (level - 1) + 0.5)
 	end
 	p.levels.Radius = nil
+	p.xp = p.xp or p.mined * 2
 	p.preferences = p.preferences or {}
 	for key, value in Preferences.defaults do
 		if p.preferences[key] == nil then

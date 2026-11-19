@@ -100,7 +100,12 @@ function Hud.new(player, net, mobile)
 	end)
 	self.coordinates = W.text(loc, "", 10, 50, 191, 20, 15, W.white, true)
 	self.coordinates.Name = "Coordinates"
-	self.toolTitle = W.title(loc, "Field Pick", 10, 70, 191, 17, 14, W.gold, true)
+	self.toolTitle = W.title(loc, "Field Pick", 10, 70, 112, 17, 14, W.gold, true)
+	self.titles = W.button(loc, "Titles", 122, 68, 78, 21, W.gold, "Titles ›", "Select")
+	self.titles.TextSize = 13
+	self.titles.Activated:Connect(function()
+		self:openPage("Titles")
+	end)
 	self.stats = W.text(loc, "", 10, 87, 194, 16, 12, W.muted, true)
 	local dock = W.frame(root, "Action dock", 0, 0, 217, 64, W.ink)
 	dock.BackgroundTransparency = 1
@@ -314,7 +319,13 @@ function Hud:refresh()
 	local status = p:GetAttribute("SaveStatus")
 	self.status.Text = if status == "Saving enabled" then "" else status or "Opening pack…"
 	local mined, done = p:GetAttribute("Mined") or 0, p:GetAttribute("Jobs") or 0
-	local _, rank = Expeditions.rank(level("Power"), level("Speed"), level("Capacity"))
+	local minerLevel = Expeditions.level(p:GetAttribute("MiningXP") or 0)
+	local tier, rank = Expeditions.rank(minerLevel)
+	self.titles.Text = "Lv " .. minerLevel .. " · Titles"
+	if self.rankTier and tier > self.rankTier and self.player:GetAttribute("ProfileReady") then
+		self:milestone("TITLE UNLOCKED", rank.name, W.gold)
+	end
+	self.rankTier = tier
 	local job = Expeditions.jobs[done + 1]
 	self.jobFill.Size = UDim2.fromScale(if job then math.clamp(mined / job.goal, 0, 1) else 1, 1)
 	self.job.Text = if job then job.title else rank.name

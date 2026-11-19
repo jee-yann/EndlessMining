@@ -10,16 +10,22 @@ E.jobs = {
 	{ title = "Cove legend", goal = 750, reward = 2400 },
 }
 E.ranks = {
-	{ name = "Lamp Tender", goal = 0 },
-	{ name = "Prospector", goal = 3 },
-	{ name = "Crystal Seeker", goal = 7 },
-	{ name = "Grotto Warden", goal = 12 },
-	{ name = "Prism Keeper", goal = 17 },
+	{ name = "Noob Miner", level = 1 },
+	{ name = "Novice Miner", level = 2 },
+	{ name = "Tunnel Miner", level = 5 },
+	{ name = "Expert Miner", level = 10 },
+	{ name = "Crystal Prospector", level = 18 },
+	{ name = "Prismatic Excavator", level = 28 },
 }
-function E.rank(power, speed, capacity)
-	local points = power + speed + capacity - 3
+function E.level(xp)
+	return math.floor((1 + math.sqrt(1 + 0.4 * xp)) / 2)
+end
+function E.levelXP(level)
+	return 10 * (level - 1) * level
+end
+function E.rank(level)
 	for i = #E.ranks, 2, -1 do
-		if points >= E.ranks[i].goal then
+		if level >= E.ranks[i].level then
 			return i, E.ranks[i]
 		end
 	end

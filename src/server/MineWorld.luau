@@ -1,7 +1,6 @@
 local Shared = game:GetService("ReplicatedStorage").Shared
 local Config = require(Shared.GameConfig)
 local Blocks = require(script.Parent.MineBlocks)
-local Geology = require(script.Parent.Geology)
 local World = {}
 World.__index = World
 local terrain = workspace.Terrain
@@ -41,7 +40,7 @@ function World.new(seed, surface)
 		else Config.Origin
 	for _ = 1, 32 do
 		if
-			emptyRegion(origin + Config.Min, origin + Config.Max, surface)
+			emptyRegion(origin + Config.SiteMin, origin + Config.SiteMax, surface)
 			and emptyRegion(origin + Config.SurfaceMin, origin + Config.SurfaceMax, surface)
 		then
 			return setmetatable({
@@ -60,61 +59,24 @@ function World:generate()
 	self.ready = false
 	self.removed = 0
 	self.generation = (self.generation or 0) + 1
-	local geology = Geology.new(self.seed)
-	local grid, size = self.grid, Blocks.size
-	for z = 0, size.Z - 1 do
-		local pz = Config.Min.Z + (z + 0.5) * cell
-		for y = 0, size.Y - 1 do
-			local py = Config.Min.Y + (y + 0.5) * cell
-			local start = Blocks.index(0, y, z)
-			for x = 0, size.X - 1 do
-				local mat = geology:sample(Config.Min.X + (x + 0.5) * cell, py, pz)
-				buffer.writeu8(grid.cells, start + x, Blocks.codes[mat])
-			end
-		end
-		if z % Config.Chunk == Config.Chunk - 1 then
-			task.wait()
-		end
-	end
-	for z = 0, math.ceil(size.Z / Config.Chunk) - 1 do
-		for y = 0, math.ceil(size.Y / Config.Chunk) - 1 do
-			for x = 0, math.ceil(size.X / Config.Chunk) - 1 do
-				grid:rebuild(x, y, z)
-			end
-		end
-		task.wait()
-	end
+	self.grid:reset(self.seed)
+	self.grid:openHall()
 	self.ready = true
 end
-
 function World:oreAt(point)
-	local p = ((point - self.grid.corner) / cell):Floor()
-	local kind = Blocks.kinds[buffer.readu8(self.grid.cells, Blocks.index(p.X, p.Y, p.Z))]
-	return if kind then kind.ore else nil
+	return self.grid:oreAt(self.grid:cellAt(point))
 end
-
--- The server has checked the selected faces together in this same, non-yielding pulse.
 function World:excavate(selected)
-	local loot, finds, lower, upper = {}, {}, Blocks.size, Vector3.zero
+	local loot, finds = {}, {}
 	for _, point in selected do
-		local p = ((point - self.grid.corner) / cell):Floor()
-		local i = Blocks.index(p.X, p.Y, p.Z)
-		local kind = Blocks.kinds[buffer.readu8(self.grid.cells, i)]
-		if kind and kind.ore then
-			buffer.writeu8(self.grid.cells, i, 0)
-			local name = kind.ore.name
-			loot[name] = (loot[name] or 0) + 1
-			if not kind.ore.host and not finds[name] then
-				finds[name] = point
+		local ore = self.grid:take(self.grid:cellAt(point))
+		if ore then
+			loot[ore.name] = (loot[ore.name] or 0) + 1
+			if not ore.host then
+				finds[ore.name] = point
 			end
-			lower, upper = lower:Min(p), upper:Max(p)
+			self.removed += 1
 		end
-	end
-	if next(loot) then
-		for _, amount in loot do
-			self.removed += amount
-		end
-		self.grid:refresh(lower, upper)
 	end
 	return loot, finds
 end
