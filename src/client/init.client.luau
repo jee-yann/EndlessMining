@@ -243,6 +243,15 @@ end
 
 require(script.RockCompanions)()
 local lastCoordinates
+local function targetName(ore, center)
+	if ore.secret and not player:GetAttribute("Found" .. ore.name) then
+		return "???"
+	end
+	if ore.name == "Stone" then
+		return Config.StoneGrades[Config.strength(center.Y - origin.Y)].name
+	end
+	return ore.name
+end
 local function sampleAim()
 	aimPoint, aimPart = nil, nil
 	local camera = workspace.CurrentCamera
@@ -308,13 +317,7 @@ local function sampleAim()
 	elseif space <= 0 then
 		hud:guide("Backpack full", "Bring your haul to the amber Sell counter", true)
 	elseif not valid and locked then
-		hud:guide(
-			(if locked.secret and not player:GetAttribute("Found" .. locked.name) then "???" else locked.name)
-				.. " needs Power "
-				.. required,
-			"Upgrade Power at the workshop",
-			true
-		)
+		hud:guide(targetName(locked, center) .. " needs Power " .. required, "Upgrade Power at the workshop", true)
 	elseif valid or not firstHaul then
 		local help = if mobile then "Hold MINE on the highlighted blocks" else "Hold the left mouse button to mine"
 		if valid then
@@ -325,10 +328,7 @@ local function sampleAim()
 			help = "Hold to mine  ·  Hardness " .. Config.strength(center.Y - origin.Y) .. "  ·  " .. worth
 		end
 		local title = if valid
-			then "Mine " .. (if Ores.byName[hit.Instance.Name].secret
-					and not player:GetAttribute("Found" .. hit.Instance.Name)
-				then "???"
-				else string.lower(hit.Instance.Name))
+			then "Mine " .. string.lower(targetName(Ores.byName[hit.Instance.Name], center))
 			elseif localPos.Y < -2 then "Aim at the wall or floor to keep digging"
 			else "Follow the path to the crystal cave"
 		hud:guide(title, help, true)

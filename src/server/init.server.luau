@@ -55,7 +55,7 @@ local function applySkills(player, p)
 		lamp.Range = 20 + (if p.skills.Lamp then 8 else 0) + (if p.skills.Lantern then 8 else 0)
 	end
 end
-local function sync(player, p)
+local function sync(player, p, awardName)
 	player:SetAttribute("Level", E.level(p.xp))
 	player:SetAttribute("EquippedTitle", Guide.selectedTitle(p))
 	player:SetAttribute("Pet", p.pet)
@@ -85,10 +85,19 @@ local function sync(player, p)
 	end
 	player.leaderstats.Gold.Value = p.gold
 	player.leaderstats.Depth.Value = Config.depthInBlocks(p.bestDepth)
+	if awardName then
+		net.Feedback:FireClient(player, "achievement", awardName)
+	end
 end
+local Ascent = require(script.Ascent)
 local function moveCharacter(character, destination)
 	local root = character and character:FindFirstChild("HumanoidRootPart")
 	if root then
+		local owner = Players:GetPlayerFromCharacter(character)
+		local session = owner and sessions[owner]
+		if session then
+			session.climb = nil
+		end
 		root.AssemblyLinearVelocity, root.AssemblyAngularVelocity = Vector3.zero, Vector3.zero
 		character:PivotTo(destination)
 	end
@@ -281,9 +290,12 @@ local function action(player, key, option, value)
 			sync(player, p)
 		end
 	elseif key == "Skill" then
-		if type(option) == "string" and Profile.learn(p, option) then
-			sync(player, p)
-			applySkills(player, p)
+		if type(option) == "string" then
+			local learned, award = Profile.learn(p, option)
+			if learned then
+				sync(player, p, award)
+				applySkills(player, p)
+			end
 		end
 	elseif key == "Pet" then
 		if option == "Rock" or option == "" then
@@ -320,7 +332,7 @@ local function action(player, key, option, value)
 			name = filtered
 		end
 		p.petName = name
-		sync(player, p)
+		sync(player, p, if name ~= "Pebble" then Profile.unlock(p, "PetName") else nil)
 	elseif key == "Surface" then
 		local character = player.Character
 		local root = character and character:FindFirstChild("HumanoidRootPart")
@@ -329,6 +341,7 @@ local function action(player, key, option, value)
 		end
 		s.tripId = (s.tripId or 0) + 1
 		local travel = { id = s.tripId, character = character }
+		s.climb = nil
 		s.travel = travel
 		local depth = math.max(0, Config.depthInBlocks(world.origin.Y + Config.FloorY - root.Position.Y))
 		net.Feedback:FireClient(player, "depart", travel.id, depth)
@@ -342,17 +355,17 @@ local function action(player, key, option, value)
 		end)
 	elseif key == "Sell" then
 		local quantity = Profile.used(p)
-		local gold = Profile.sell(p, if player:GetAttribute("DoubleGold") then 2 else 1)
-		sync(player, p)
+		local gold, award = Profile.sell(p, if player:GetAttribute("DoubleGold") then 2 else 1)
+		sync(player, p, award)
 		net.Feedback:FireClient(player, "sale", gold, quantity, p.gold)
 	elseif key == "Buy" and type(option) == "string" and Upgrades.items[option] then
-		local ok, msg = Profile.buy(p, option)
-		sync(player, p)
+		local ok, msg, award = Profile.buy(p, option)
+		sync(player, p, award)
 		net.Feedback:FireClient(player, if ok then "upgrade" else "hint", msg, option, p.levels[option])
 	elseif key == "Job" then
-		local job = Profile.claimJob(p, option)
+		local job, award = Profile.claimJob(p, option)
 		if job then
-			sync(player, p)
+			sync(player, p, award)
 			net.Feedback:FireClient(player, "job", job.title, job.reward)
 		end
 	elseif key == "PreviewPass" then
@@ -418,6 +431,7 @@ task.spawn(function()
 		for player, s in sessions do
 			local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
 			if not root then
+				s.climb = nil
 				continue
 			end
 			local localPos = root.Position - world.origin
@@ -428,6 +442,12 @@ task.spawn(function()
 				mining = chunk ~= nil and chunk[index] ~= nil
 			end
 			local char = player.Character
+			local human = char:FindFirstChildOfClass("Humanoid")
+			if s.travel or not world.ready or not human or human.Health <= 0 or s.profile.earned.Ascent then
+				s.climb = nil
+			elseif Ascent.sample(s, char, localPos, mining, os.clock()) then
+				sync(player, s.profile, Profile.unlock(s.profile, "Ascent"))
+			end
 			if mining ~= (char:GetAttribute("SurfaceScale") ~= nil) then
 				mineFit(char, mining)
 				applySkills(player, s.profile)

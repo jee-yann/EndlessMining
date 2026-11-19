@@ -259,7 +259,7 @@ function Menu:open(key)
 		elseif key == "Inventory" then "Select an unlocked title to wear it."
 		elseif key == "Pets" then "Equip one companion at a time."
 		elseif key == "Skills" then "Earn one point per level. Follow the connected branches."
-		elseif key == "Achievements" then "Arrow goals need consecutive cuts. An extra block breaks the run."
+		elseif key == "Achievements" then "Mine, explore and try new things. ??? reveals when you find the ore."
 		elseif key == "Pack" then "Take your haul to the amber Sell counter."
 		elseif key == "Jobs" then "Claim any finished job to collect its gold."
 		elseif key == "Settings" then "Changes take effect immediately."

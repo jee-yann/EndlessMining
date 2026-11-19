@@ -98,11 +98,18 @@ function Config.blockCenter(origin, position, normal)
 	return origin + ((point / Config.Cell):Floor() + Vector3.one * 0.5) * Config.Cell
 end
 -- Hardness increases for all materials, including ordinary stone.
-Config.HardnessDepths = { 0, 27, 60, 90, 140, 185 }
+Config.StoneGrades = {
+	{ depth = 0, name = "Stone", color = Color3.fromRGB(160, 162, 169), face = Enum.SurfaceType.Studs },
+	{ depth = 27, name = "Hard Stone", color = Color3.fromRGB(119, 139, 151), face = Enum.SurfaceType.Inlet },
+	{ depth = 60, name = "Dense Stone", color = Color3.fromRGB(100, 107, 125), face = Enum.SurfaceType.Studs },
+	{ depth = 90, name = "Rift Stone", color = Color3.fromRGB(123, 109, 140), face = Enum.SurfaceType.Inlet },
+	{ depth = 140, name = "Tempered Stone", color = Color3.fromRGB(87, 99, 111), face = Enum.SurfaceType.Studs },
+	{ depth = 185, name = "Midnight Stone", color = Color3.fromRGB(69, 65, 91), face = Enum.SurfaceType.Inlet },
+}
 function Config.strength(localY)
 	local depth = Config.depthInBlocks(Config.FloorY - localY)
-	for tier = #Config.HardnessDepths, 2, -1 do
-		if depth >= Config.HardnessDepths[tier] then
+	for tier = #Config.StoneGrades, 2, -1 do
+		if depth >= Config.StoneGrades[tier].depth then
 			return tier
 		end
 	end

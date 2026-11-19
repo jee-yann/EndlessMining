@@ -18,7 +18,8 @@ function Receipt:show(amount, quantity, balance)
 	panel.BackgroundTransparency = 1
 	self.panel = panel
 	panel.ZIndex = 4
-	W.anchor(panel, 0.5, 0.5, UDim2.fromScale(0.5, 0.37))
+	local position = if hud.unlocks.playing then UDim2.new(0.5, 0, 0.41, 112) else UDim2.fromScale(0.5, 0.37)
+	W.anchor(panel, 0.5, 0.5, position)
 	local group = W.fadeGroup(panel, "Receipt face", 264, 88)
 	local face = W.frame(group, "Payout card", 8, 8, 248, 72, W.panel, 15)
 	W.stroke(face, W.gold, 2)

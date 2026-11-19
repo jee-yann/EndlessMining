@@ -101,9 +101,9 @@ function Pages.achievements(menu)
 		title.TextSize = 18
 		detail.Position, detail.Size = UDim2.fromOffset(67, 28), UDim2.fromOffset(247, 32)
 		detail.TextWrapped = true
-		detail.Text = award.detail or string.format("Mine %s %s.", W.number(award.goal), award.ore)
 		badge.Interactable, badge.AutoButtonColor = false, false
 		table.insert(menu.updates, function()
+			title.Text, detail.Text = Guide.awardText(award, menu.player)
 			local progress = menu.player:GetAttribute("Award" .. award.id) or 0
 			badge.Text = if progress >= award.goal then "Earned" else string.format("%d / %d", progress, award.goal)
 			badge.BackgroundColor3 = if progress >= award.goal then W.green else W.muted
@@ -165,13 +165,14 @@ function Pages.index(menu)
 		end)
 		y += 112
 	end
-	local card = W.frame(menu.list, "Rock hardness", 225, y, 222, 91, W.card, 8)
-	W.title(card, "Power at depth", 8, 3, 203, 23, 16, W.white, true)
-	local tiers = {}
-	for power, depth in Config.HardnessDepths do
-		table.insert(tiers, "P" .. power .. " at " .. depth)
+	local card = W.frame(menu.list, "Rock hardness", 225, y, 222, 165, W.card, 8)
+	W.title(card, "Stone grades", 8, 3, 203, 23, 16, W.white, true)
+	for power, grade in Config.StoneGrades do
+		local lineY = 28 + (power - 1) * 22
+		W.frame(card, "Swatch", 8, lineY + 3, 15, 15, grade.color, 3)
+		W.text(card, grade.name, 29, lineY, 115, 21, 13, W.white, true)
+		W.text(card, "P" .. power .. " · " .. grade.depth .. "+", 145, lineY, 70, 21, 12, W.aqua)
 	end
-	W.text(card, table.concat(tiers, "   ·   "), 8, 25, 205, 62, 13, W.muted, true).TextWrapped = true
-	return math.ceil(math.max(30 + #Ores.list * 56, y + 95) / 69)
+	return math.ceil(math.max(30 + #Ores.list * 56, y + 169) / 69)
 end
 return Pages

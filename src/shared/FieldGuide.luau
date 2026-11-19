@@ -1,4 +1,5 @@
 local E = require(script.Parent.Expeditions)
+local Ores = require(script.Parent.Ores)
 local Guide = {}
 -- One point per earned level. Links and positions are shared by the map and server.
 Guide.skills = {
@@ -18,12 +19,19 @@ end
 Guide.petNames = { Pebble = true, Chips = true, Granite = true, Chip = true, Pip = true, Flint = true }
 Guide.achievements = {
 	{ id = "PocketChange", name = "Pocket Change", ore = "Coal", goal = 1 },
-	{ id = "PayDirt", name = "Certified Dirt Person", ore = "Dirt", goal = 1000 },
-	{ id = "RockSolid", name = "Rock Solid", ore = "Stone", goal = 500 },
-	{ id = "CopperCollector", name = "Copper Collector", ore = "Copper", goal = 50 },
-	{ id = "GoldenTouch", name = "Golden Touch", ore = "Gold", goal = 25 },
-	{ id = "Ice", name = "Ice in My Pockets", ore = "Diamond", goal = 10 },
-	{ id = "Envy", name = "Green With Envy", ore = "Emerald", goal = 5 },
+	{ id = "CleanSale", name = "All Pay, No Gravel", goal = 1, detail = "Sell a haul made entirely of ore." },
+	{ id = "PickUpgrade", name = "Pick Me Up", goal = 1, detail = "Upgrade your pickaxe’s Power at the workshop." },
+	{
+		id = "Scales",
+		name = "Practicing My Scales",
+		sequence = { "Dirt", "Stone", "Coal", "Copper", "Iron", "Gold", "Diamond" },
+	},
+	{
+		id = "Ascent",
+		name = "Taking the Scenic Route",
+		goal = 1,
+		detail = "Reach the surface on foot from 101+ blocks deep in one life.",
+	},
 	{
 		id = "LuckAndSkill",
 		name = "Once Is Luck, Twice Is Skill",
@@ -31,34 +39,51 @@ Guide.achievements = {
 		goal = 2,
 		detail = "Mine Starfall twice across any number of shifts.",
 	},
+	{ id = "PetName", name = "Pet Rock, Proper Noun", goal = 1, detail = "Give your rock companion a new name." },
 	{
-		id = "Scales",
-		name = "Practicing My Scales",
-		sequence = { "Dirt", "Stone", "Coal", "Copper", "Iron", "Gold", "Diamond" },
+		id = "Branch",
+		name = "Branch Manager",
+		goal = 3,
+		detail = "Learn all three skills along one skill-tree branch.",
 	},
-	{ id = "Sandwich", name = "24-Carat Sandwich", sequence = { "Stone", "Gold", "Stone" } },
-	{ id = "Pressure", name = "Under Pressure", sequence = { "Coal", "Coal", "Diamond" } },
-	{ id = "Penny", name = "A Penny for Your Soot", sequence = { "Copper", "Coal", "Copper" } },
-	{ id = "Traffic", name = "Traffic Lights", sequence = { "Copper", "Gold", "Emerald" } },
-	{
-		id = "Variety",
-		name = "Variety Pack",
-		distinct = true,
-		goal = 5,
-		detail = "Mine five different materials in five consecutive cuts.",
-	},
+	{ id = "Shifts", name = "Timecard Complete", goal = #E.jobs, detail = "Collect the reward for every shift job." },
+	{ id = "PayDirt", name = "Certified Dirt Person", ore = "Dirt", goal = 1000 },
+	{ id = "RockSolid", name = "Rock Solid", ore = "Stone", goal = 500 },
+	{ id = "CopperCollector", name = "Copper Collector", ore = "Copper", goal = 50 },
+	{ id = "GoldenTouch", name = "Midas Touch", ore = "Gold", goal = 25 },
+	{ id = "Ice", name = "Ice in My Pockets", ore = "Diamond", goal = 10 },
+	{ id = "Envy", name = "Green With Envy", ore = "Emerald", goal = 5 },
 }
-Guide.cutWindow = 0
-Guide.cutAwards = {}
+Guide.awardsById = {}
+-- Keep previously awarded, retired badges readable in existing saves.
+Guide.storedAwards = { Sandwich = true, Pressure = true, Penny = true, Traffic = true, Variety = true }
 for _, award in Guide.achievements do
+	Guide.awardsById[award.id] = award
 	if award.sequence then
 		award.goal = #award.sequence
-		award.detail = table.concat(award.sequence, " → ")
 	end
 	if not award.ore then
-		Guide.cutAwards[award.id] = true
-		Guide.cutWindow = math.max(Guide.cutWindow, award.goal)
+		Guide.storedAwards[award.id] = true
 	end
+end
+Guide.cutWindow = #Guide.awardsById.Scales.sequence
+
+function Guide.awardText(award, player)
+	local detail = award.detail
+		or (
+			if award.sequence
+				then table.concat(award.sequence, " → ")
+				else string.format("Mine %d %s.", award.goal, award.ore)
+		)
+	local function mask(word)
+		if Ores.byName[word] and not player:GetAttribute("Found" .. word) then
+			return "???"
+		end
+		return word
+	end
+	local title = string.gsub(award.name, "%a+", mask)
+	local requirement = string.gsub(detail, "%a+", mask)
+	return title, requirement
 end
 
 function Guide.progress(p, award)
@@ -68,21 +93,24 @@ function Guide.progress(p, award)
 	if p.earned[award.id] then
 		return award.goal
 	end
-	local cuts = p.recentCuts
-	local limit = math.min(#cuts, award.goal)
-	if award.distinct then
-		local seen = {}
-		for length = 1, limit do
-			local ore = cuts[#cuts - length + 1]
-			if seen[ore] then
-				return length - 1
-			end
-			seen[ore] = true
+	if award.id == "PickUpgrade" then
+		return math.min(1, p.levels.Power - 1)
+	elseif award.id == "Shifts" then
+		return p.jobs
+	elseif award.id == "Branch" then
+		if p.skills.Tempo or p.skills.Scout then
+			return 3
+		elseif p.skills.ReachII or p.skills.Spring then
+			return 2
+		elseif p.skills.Reach or p.skills.Stride then
+			return 1
 		end
-		return limit
 	end
-	-- A mismatch can also begin a new run, e.g. Stone, Stone, Gold, Stone.
-	for length = limit, 1, -1 do
+	if not award.sequence then
+		return 0
+	end
+	local cuts = p.recentCuts
+	for length = math.min(#cuts, award.goal), 1, -1 do
 		local matches = true
 		for i = 1, length do
 			if cuts[#cuts - length + i] ~= award.sequence[i] then

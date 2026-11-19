@@ -75,31 +75,36 @@ for row = 0, 1 do
 	end
 end
 label("Title", "Mine EVERYTHING!", 0, 76, 422, 60, 45, ink)
-local status = label("Status", "Opening Citrine Cove…", 0, 139, 422, 29, 21, ink)
-local track = plate(center, "Loading bar", 24, 186, 374, 25, ink)
+local track = plate(center, "Loading bar", 24, 161, 374, 36, ink)
 round(track, 12)
-local fill = plate(track, "Progress", 4, 4, 0, 17, Color3.fromRGB(100, 234, 192))
+local fill = plate(track, "Progress", 4, 4, 0, 28, Color3.fromRGB(100, 234, 192))
 round(fill, 8)
-local percent = label("Percent", "0%", 0, 219, 422, 24, 17, ink)
+local status = label("Status", "Loading island parts…", 0, 0, 374, 36, 19, Color3.new(1, 1, 1))
+status.TextStrokeColor3, status.TextStrokeTransparency = ink, 0.08
+status.ZIndex, status.Parent = 2, track
+local percent = label("Percent", "0%", 0, 205, 422, 24, 17, ink)
 local shown = 0
 local function progress(value)
 	shown = math.max(shown, math.clamp(value, 0, 1))
-	fill.Size = UDim2.new(0, math.floor(366 * shown), 0, 17)
+	fill.Size = UDim2.new(0, math.floor(366 * shown), 0, 28)
 	percent.Text = math.floor(shown * 100) .. "%"
 end
 gui.Parent = parent
 First:RemoveDefaultLoadingScreen()
 -- Only warm the built-in surfaces used by the studded plastic blocks.
-local materialsFinished = false
+local textures = {
+	"rbxasset://textures/studs.dds",
+	"rbxasset://textures/SurfacesDefault.png",
+	"rbxasset://textures/plastic/diffuse.dds",
+	"rbxasset://textures/plastic/normal.dds",
+	"rbxasset://textures/plastic/normaldetail.dds",
+}
+local materialsFinished, processedTextures = false, 0
 task.spawn(function()
 	pcall(function()
-		Content:PreloadAsync({
-			"rbxasset://textures/studs.dds",
-			"rbxasset://textures/SurfacesDefault.png",
-			"rbxasset://textures/plastic/diffuse.dds",
-			"rbxasset://textures/plastic/normal.dds",
-			"rbxasset://textures/plastic/normaldetail.dds",
-		})
+		Content:PreloadAsync(textures, function()
+			processedTextures = math.min(processedTextures + 1, #textures)
+		end)
 	end)
 	materialsFinished = true
 end)
@@ -168,22 +173,35 @@ repeat
 		and character:FindFirstChild("Mining lamp", true)
 		and Lighting:FindFirstChild("SeaAir")
 		and Lighting:FindFirstChild("MarketGlow")
-	if ready then
-		firstReady = firstReady or now
-		status.Text = "Lighting the mine…"
-	else
-		firstReady = nil
-		if net and net:GetAttribute("Ready") then
-			status.Text = "Getting your gear ready…"
-		end
-	end
-	local staged = (if game:IsLoaded() then 0.12 else 0)
-		+ (if count > 0 then 0.19 else 0)
-		+ (if materialsFinished then 0.12 else 0)
-		+ (if player:GetAttribute("ProfileReady") then 0.1 else 0)
-		+ (if hud and hud:GetAttribute("ControllerReady") then 0.12 else 0)
-	progress(staged + 0.34 * math.min(1, renderedTime / lightWarmup))
+	firstReady = if ready then firstReady or now else nil
+	local scriptsReady = net and net:GetAttribute("Ready")
+	local controlsReady = hud and hud:GetAttribute("ControllerReady")
+	local profileReady = player:GetAttribute("ProfileReady")
 	local visualsReady = firstReady and (materialsFinished or now - firstReady >= 2.5)
+	status.Text = if not game:IsLoaded()
+		then "Loading island parts…"
+		elseif not scriptsReady then "Starting mine scripts…"
+		elseif count == 0 then "Loading the mine entrance…"
+		elseif not profileReady then "Loading your saved gear…"
+		elseif not controlsReady then "Starting controls and HUD…"
+		elseif
+			not workspace.CurrentCamera
+			or not character
+			or not character:GetAttribute("MiningViewReady")
+		then "Preparing your character…"
+		elseif not materialsFinished and not visualsReady then string.format(
+			"Loading surface textures · %d/%d",
+			processedTextures,
+			#textures
+		)
+		else "Warming up mine lighting…"
+	local staged = (if game:IsLoaded() then 0.10 else 0)
+		+ (if scriptsReady then 0.08 else 0)
+		+ (if count > 0 then 0.16 else 0)
+		+ 0.10 * (if materialsFinished then 1 else processedTextures / #textures)
+		+ (if profileReady then 0.10 else 0)
+		+ (if controlsReady then 0.11 else 0)
+	progress(staged + 0.34 * math.min(1, renderedTime / lightWarmup))
 	if count ~= lastCount then
 		countChanged = now
 		lastCount = count

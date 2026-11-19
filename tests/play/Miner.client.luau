@@ -276,26 +276,21 @@ local function test()
 		local overlays = cube.Fractures:GetChildren()
 		assert(#overlays == 6)
 		for _, surface in overlays do
-			local growing = 0
-			for _, line in surface:GetChildren() do
-				if line.Visible and line.Name == "Vein" then
-					growing += 1
-				end
-			end
-			assert(
-				growing == 3 and not surface.AlwaysOnTop and surface.ZOffset == 0 and surface.Adornee == cube,
-				"early cracks did not radiate together"
-			)
+			assert(not surface.AlwaysOnTop and surface.ZOffset == 0 and surface.Adornee == cube)
+			assert(surface.CanvasSize == Vector2.new(24, 24))
 		end
-		painter:damage(cube, 1)
-		for _, surface in overlays do
-			local visible = 0
-			for _, line in surface:GetChildren() do
-				if line.Visible then
-					visible += 1
+		local previous = 0
+		for _, amount in { 0.15, 0.3, 0.55, 1 } do
+			painter:damage(cube, amount)
+			local area = 0
+			for _, chip in overlays[1]:GetChildren() do
+				if chip.Visible then
+					assert(chip.Name == "Fault" and chip.Rotation == 0)
+					area += chip.Size.X.Offset * chip.Size.Y.Offset
 				end
 			end
-			assert(visible >= 48)
+			assert(area > previous and area < 24 * 24 / 5)
+			previous = area
 		end
 		cube:Destroy()
 		for _, surface in overlays do

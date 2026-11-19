@@ -5754,7 +5754,7 @@
       </Item>
       <Item class="Part" referent="RBX175">
         <Properties>
-          <string name="Name">Weathered cap</string>
+          <string name="Name">Grass shelf</string>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">true</bool>
           <bool name="CastShadow">true</bool>
@@ -5777,7 +5777,7 @@
             <R21>0.0</R21>
             <R22>1.0</R22>
           </CoordinateFrame>
-          <Color3uint8 name="Color3uint8">4292256884</Color3uint8>
+          <Color3uint8 name="Color3uint8">4287224658</Color3uint8>
           <token name="Material">256</token>
           <token name="TopSurface">3</token>
           <token name="BottomSurface">0</token>
@@ -5785,7 +5785,7 @@
       </Item>
       <Item class="Part" referent="RBX176">
         <Properties>
-          <string name="Name">Weathered cap</string>
+          <string name="Name">Grass shelf</string>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">true</bool>
           <bool name="CastShadow">true</bool>
@@ -5808,7 +5808,7 @@
             <R21>0.0</R21>
             <R22>1.0</R22>
           </CoordinateFrame>
-          <Color3uint8 name="Color3uint8">4292256884</Color3uint8>
+          <Color3uint8 name="Color3uint8">4287224658</Color3uint8>
           <token name="Material">256</token>
           <token name="TopSurface">3</token>
           <token name="BottomSurface">0</token>
@@ -5816,7 +5816,7 @@
       </Item>
       <Item class="WedgePart" referent="RBX177">
         <Properties>
-          <string name="Name">Weathered cap</string>
+          <string name="Name">Grass shelf</string>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">true</bool>
           <bool name="CastShadow">true</bool>
@@ -5839,7 +5839,7 @@
             <R21>0.0</R21>
             <R22>1.0</R22>
           </CoordinateFrame>
-          <Color3uint8 name="Color3uint8">4292256884</Color3uint8>
+          <Color3uint8 name="Color3uint8">4287224658</Color3uint8>
           <token name="Material">256</token>
           <token name="TopSurface">0</token>
           <token name="BottomSurface">0</token>
@@ -5848,7 +5848,7 @@
       </Item>
       <Item class="WedgePart" referent="RBX178">
         <Properties>
-          <string name="Name">Weathered cap</string>
+          <string name="Name">Grass shelf</string>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">true</bool>
           <bool name="CastShadow">true</bool>
@@ -5871,7 +5871,7 @@
             <R21>0.0</R21>
             <R22>-1.0</R22>
           </CoordinateFrame>
-          <Color3uint8 name="Color3uint8">4292256884</Color3uint8>
+          <Color3uint8 name="Color3uint8">4287224658</Color3uint8>
           <token name="Material">256</token>
           <token name="TopSurface">0</token>
           <token name="BottomSurface">0</token>
@@ -5880,7 +5880,7 @@
       </Item>
       <Item class="Part" referent="RBX179">
         <Properties>
-          <string name="Name">Weathered cap</string>
+          <string name="Name">Grass shelf</string>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">true</bool>
           <bool name="CastShadow">true</bool>
@@ -5903,7 +5903,7 @@
             <R21>0.0</R21>
             <R22>1.0</R22>
           </CoordinateFrame>
-          <Color3uint8 name="Color3uint8">4292256884</Color3uint8>
+          <Color3uint8 name="Color3uint8">4287224658</Color3uint8>
           <token name="Material">256</token>
           <token name="TopSurface">3</token>
           <token name="BottomSurface">0</token>
@@ -5911,7 +5911,7 @@
       </Item>
       <Item class="WedgePart" referent="RBX180">
         <Properties>
-          <string name="Name">Weathered cap</string>
+          <string name="Name">Grass shelf</string>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">true</bool>
           <bool name="CastShadow">true</bool>
@@ -5934,7 +5934,7 @@
             <R21>0.0</R21>
             <R22>1.0</R22>
           </CoordinateFrame>
-          <Color3uint8 name="Color3uint8">4292256884</Color3uint8>
+          <Color3uint8 name="Color3uint8">4287224658</Color3uint8>
           <token name="Material">256</token>
           <token name="TopSurface">0</token>
           <token name="BottomSurface">0</token>
@@ -5943,7 +5943,7 @@
       </Item>
       <Item class="WedgePart" referent="RBX181">
         <Properties>
-          <string name="Name">Weathered cap</string>
+          <string name="Name">Grass shelf</string>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">true</bool>
           <bool name="CastShadow">true</bool>
@@ -5966,7 +5966,7 @@
             <R21>0.0</R21>
             <R22>-1.0</R22>
           </CoordinateFrame>
-          <Color3uint8 name="Color3uint8">4292256884</Color3uint8>
+          <Color3uint8 name="Color3uint8">4287224658</Color3uint8>
           <token name="Material">256</token>
           <token name="TopSurface">0</token>
           <token name="BottomSurface">0</token>
@@ -6320,7 +6320,7 @@
       </Item>
       <Item class="Part" referent="RBX191">
         <Properties>
-          <string name="Name">Weathered cap</string>
+          <string name="Name">Grass shelf</string>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">true</bool>
           <bool name="CastShadow">true</bool>
@@ -6343,7 +6343,7 @@
             <R21>0.0</R21>
             <R22>1.0</R22>
           </CoordinateFrame>
-          <Color3uint8 name="Color3uint8">4292256884</Color3uint8>
+          <Color3uint8 name="Color3uint8">4285846607</Color3uint8>
           <token name="Material">256</token>
           <token name="TopSurface">3</token>
           <token name="BottomSurface">0</token>
@@ -6351,7 +6351,7 @@
       </Item>
       <Item class="Part" referent="RBX192">
         <Properties>
-          <string name="Name">Weathered cap</string>
+          <string name="Name">Grass shelf</string>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">true</bool>
           <bool name="CastShadow">true</bool>
@@ -6374,7 +6374,7 @@
             <R21>0.0</R21>
             <R22>1.0</R22>
           </CoordinateFrame>
-          <Color3uint8 name="Color3uint8">4292256884</Color3uint8>
+          <Color3uint8 name="Color3uint8">4285846607</Color3uint8>
           <token name="Material">256</token>
           <token name="TopSurface">3</token>
           <token name="BottomSurface">0</token>
@@ -6382,7 +6382,7 @@
       </Item>
       <Item class="WedgePart" referent="RBX193">
         <Properties>
-          <string name="Name">Weathered cap</string>
+          <string name="Name">Grass shelf</string>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">true</bool>
           <bool name="CastShadow">true</bool>
@@ -6405,7 +6405,7 @@
             <R21>0.0</R21>
             <R22>1.0</R22>
           </CoordinateFrame>
-          <Color3uint8 name="Color3uint8">4292256884</Color3uint8>
+          <Color3uint8 name="Color3uint8">4285846607</Color3uint8>
           <token name="Material">256</token>
           <token name="TopSurface">0</token>
           <token name="BottomSurface">0</token>
@@ -6414,7 +6414,7 @@
       </Item>
       <Item class="WedgePart" referent="RBX194">
         <Properties>
-          <string name="Name">Weathered cap</string>
+          <string name="Name">Grass shelf</string>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">true</bool>
           <bool name="CastShadow">true</bool>
@@ -6437,7 +6437,7 @@
             <R21>0.0</R21>
             <R22>-1.0</R22>
           </CoordinateFrame>
-          <Color3uint8 name="Color3uint8">4292256884</Color3uint8>
+          <Color3uint8 name="Color3uint8">4285846607</Color3uint8>
           <token name="Material">256</token>
           <token name="TopSurface">0</token>
           <token name="BottomSurface">0</token>
@@ -6446,7 +6446,7 @@
       </Item>
       <Item class="Part" referent="RBX195">
         <Properties>
-          <string name="Name">Weathered cap</string>
+          <string name="Name">Grass shelf</string>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">true</bool>
           <bool name="CastShadow">true</bool>
@@ -6469,7 +6469,7 @@
             <R21>0.0</R21>
             <R22>1.0</R22>
           </CoordinateFrame>
-          <Color3uint8 name="Color3uint8">4292256884</Color3uint8>
+          <Color3uint8 name="Color3uint8">4285846607</Color3uint8>
           <token name="Material">256</token>
           <token name="TopSurface">3</token>
           <token name="BottomSurface">0</token>
@@ -6477,7 +6477,7 @@
       </Item>
       <Item class="WedgePart" referent="RBX196">
         <Properties>
-          <string name="Name">Weathered cap</string>
+          <string name="Name">Grass shelf</string>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">true</bool>
           <bool name="CastShadow">true</bool>
@@ -6500,7 +6500,7 @@
             <R21>0.0</R21>
             <R22>1.0</R22>
           </CoordinateFrame>
-          <Color3uint8 name="Color3uint8">4292256884</Color3uint8>
+          <Color3uint8 name="Color3uint8">4285846607</Color3uint8>
           <token name="Material">256</token>
           <token name="TopSurface">0</token>
           <token name="BottomSurface">0</token>
@@ -6509,7 +6509,7 @@
       </Item>
       <Item class="WedgePart" referent="RBX197">
         <Properties>
-          <string name="Name">Weathered cap</string>
+          <string name="Name">Grass shelf</string>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">true</bool>
           <bool name="CastShadow">true</bool>
@@ -6532,7 +6532,7 @@
             <R21>0.0</R21>
             <R22>-1.0</R22>
           </CoordinateFrame>
-          <Color3uint8 name="Color3uint8">4292256884</Color3uint8>
+          <Color3uint8 name="Color3uint8">4285846607</Color3uint8>
           <token name="Material">256</token>
           <token name="TopSurface">0</token>
           <token name="BottomSurface">0</token>
@@ -6950,7 +6950,7 @@
       </Item>
       <Item class="Part" referent="RBX211">
         <Properties>
-          <string name="Name">Weathered cap</string>
+          <string name="Name">Grass shelf</string>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">true</bool>
           <bool name="CastShadow">true</bool>
@@ -6973,7 +6973,7 @@
             <R21>0.0</R21>
             <R22>1.0</R22>
           </CoordinateFrame>
-          <Color3uint8 name="Color3uint8">4292256884</Color3uint8>
+          <Color3uint8 name="Color3uint8">4287224658</Color3uint8>
           <token name="Material">256</token>
           <token name="TopSurface">3</token>
           <token name="BottomSurface">0</token>
@@ -6981,7 +6981,7 @@
       </Item>
       <Item class="WedgePart" referent="RBX212">
         <Properties>
-          <string name="Name">Weathered cap</string>
+          <string name="Name">Grass shelf</string>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">true</bool>
           <bool name="CastShadow">true</bool>
@@ -7004,7 +7004,7 @@
             <R21>0.0</R21>
             <R22>1.0</R22>
           </CoordinateFrame>
-          <Color3uint8 name="Color3uint8">4292256884</Color3uint8>
+          <Color3uint8 name="Color3uint8">4287224658</Color3uint8>
           <token name="Material">256</token>
           <token name="TopSurface">0</token>
           <token name="BottomSurface">0</token>
@@ -7013,7 +7013,7 @@
       </Item>
       <Item class="WedgePart" referent="RBX213">
         <Properties>
-          <string name="Name">Weathered cap</string>
+          <string name="Name">Grass shelf</string>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">true</bool>
           <bool name="CastShadow">true</bool>
@@ -7036,7 +7036,7 @@
             <R21>0.0</R21>
             <R22>-1.0</R22>
           </CoordinateFrame>
-          <Color3uint8 name="Color3uint8">4292256884</Color3uint8>
+          <Color3uint8 name="Color3uint8">4287224658</Color3uint8>
           <token name="Material">256</token>
           <token name="TopSurface">0</token>
           <token name="BottomSurface">0</token>
@@ -13928,11 +13928,11 @@
       </Item>
       <Item class="Part" referent="HutBank-1">
         <Properties>
-          <string name="Name">Sandstone bank</string>
+          <string name="Name">Bank turf</string>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">true</bool>
           <bool name="CanTouch">false</bool>
-          <Color3uint8 name="Color3uint8">4289364056</Color3uint8>
+          <Color3uint8 name="Color3uint8">4287023719</Color3uint8>
           <token name="Material">256</token>
           <token name="TopSurface">3</token>
           <token name="BottomSurface">0</token>
@@ -13990,11 +13990,11 @@
       </Item>
       <Item class="Part" referent="HutBank1">
         <Properties>
-          <string name="Name">Sandstone bank</string>
+          <string name="Name">Bank turf</string>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">true</bool>
           <bool name="CanTouch">false</bool>
-          <Color3uint8 name="Color3uint8">4289364056</Color3uint8>
+          <Color3uint8 name="Color3uint8">4287023719</Color3uint8>
           <token name="Material">256</token>
           <token name="TopSurface">3</token>
           <token name="BottomSurface">0</token>
@@ -14021,11 +14021,11 @@
       </Item>
       <Item class="Part" referent="HutBackBank">
         <Properties>
-          <string name="Name">Sandstone bank</string>
+          <string name="Name">Bank turf</string>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">true</bool>
           <bool name="CanTouch">false</bool>
-          <Color3uint8 name="Color3uint8">4289364056</Color3uint8>
+          <Color3uint8 name="Color3uint8">4287023719</Color3uint8>
           <token name="Material">256</token>
           <token name="TopSurface">3</token>
           <token name="BottomSurface">0</token>
@@ -14497,6 +14497,285 @@
             <X>0</X>
             <Y>22.408</Y>
             <Z>-56.57</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1</R11>
+            <R12>0</R12>
+            <R20>0</R20>
+            <R21>0</R21>
+            <R22>1</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="FlankSubsoil-1">
+        <Properties>
+          <string name="Name">Bluff foundation</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4289558871</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">0</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>71.2900</X>
+            <Y>4.5800</Y>
+            <Z>55.6700</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-60.6550</X>
+            <Y>20.8800</Y>
+            <Z>-23.4250</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1</R11>
+            <R12>0</R12>
+            <R20>0</R20>
+            <R21>0</R21>
+            <R22>1</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="FlankTurf-1">
+        <Properties>
+          <string name="Name">Bluff turf</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4287023719</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>71.2900</X>
+            <Y>0.4300</Y>
+            <Z>55.6700</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-60.6550</X>
+            <Y>23.3850</Y>
+            <Z>-23.4250</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1</R11>
+            <R12>0</R12>
+            <R20>0</R20>
+            <R21>0</R21>
+            <R22>1</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="WedgePart" referent="FlankSlope-1">
+        <Properties>
+          <string name="Name">Sloping bluff foundation</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4289493335</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">0</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>52.9600</X>
+            <Y>10.6100</Y>
+            <Z>31.2300</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-52.6200</X>
+            <Y>28.8150</Y>
+            <Z>-35.6650</Z>
+            <R00>-1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1</R11>
+            <R12>0</R12>
+            <R20>0</R20>
+            <R21>0</R21>
+            <R22>-1</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="FlankJoin-1">
+        <Properties>
+          <string name="Name">Ridge footing</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4290085211</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">0</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>98.7600</X>
+            <Y>13.0500</Y>
+            <Z>2.3000</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-74.4000</X>
+            <Y>25.5850</Y>
+            <Z>-50.1300</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1</R11>
+            <R12>0</R12>
+            <R20>0</R20>
+            <R21>0</R21>
+            <R22>1</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="FlankSubsoil1">
+        <Properties>
+          <string name="Name">Bluff foundation</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4289558871</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">0</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>71.2900</X>
+            <Y>4.5800</Y>
+            <Z>55.6700</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>60.6550</X>
+            <Y>20.8800</Y>
+            <Z>-23.4250</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1</R11>
+            <R12>0</R12>
+            <R20>0</R20>
+            <R21>0</R21>
+            <R22>1</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="FlankTurf1">
+        <Properties>
+          <string name="Name">Bluff turf</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4287023719</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>71.2900</X>
+            <Y>0.4300</Y>
+            <Z>55.6700</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>60.6550</X>
+            <Y>23.3850</Y>
+            <Z>-23.4250</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1</R11>
+            <R12>0</R12>
+            <R20>0</R20>
+            <R21>0</R21>
+            <R22>1</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="WedgePart" referent="FlankSlope1">
+        <Properties>
+          <string name="Name">Sloping bluff foundation</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4289493335</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">0</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>52.9600</X>
+            <Y>10.6100</Y>
+            <Z>31.2300</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>52.6200</X>
+            <Y>28.8150</Y>
+            <Z>-35.6650</Z>
+            <R00>-1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1</R11>
+            <R12>0</R12>
+            <R20>0</R20>
+            <R21>0</R21>
+            <R22>-1</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="FlankJoin1">
+        <Properties>
+          <string name="Name">Ridge footing</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4290085211</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">0</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>98.7600</X>
+            <Y>13.0500</Y>
+            <Z>2.3000</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>74.4000</X>
+            <Y>25.5850</Y>
+            <Z>-50.1300</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1</R11>
+            <R12>0</R12>
+            <R20>0</R20>
+            <R21>0</R21>
+            <R22>1</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="RearShelfCore">
+        <Properties>
+          <string name="Name">Rear bluff foundation</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4290019416</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">0</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>247.6000</X>
+            <Y>14.4300</Y>
+            <Z>49.6100</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>0.0000</X>
+            <Y>25.7950</Y>
+            <Z>-76.0850</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -86919,7 +87198,7 @@
         </Item>
         <Item class="Part" referent="RBX70093">
           <Properties>
-            <string name="Name">Mine crown</string>
+            <string name="Name">Ridgeline turf</string>
             <bool name="Anchored">true</bool>
             <bool name="CanCollide">true</bool>
             <bool name="CastShadow">true</bool>
@@ -86942,7 +87221,7 @@
               <R21>-0.0797452</R21>
               <R22>-0.9968153</R22>
             </CoordinateFrame>
-            <Color3uint8 name="Color3uint8">4289830275</Color3uint8>
+            <Color3uint8 name="Color3uint8">4286037865</Color3uint8>
             <token name="Material">256</token>
             <token name="TopSurface">3</token>
             <token name="BottomSurface">0</token>
@@ -86950,7 +87229,7 @@
         </Item>
         <Item class="Part" referent="RBX70094">
           <Properties>
-            <string name="Name">Mine crown</string>
+            <string name="Name">Ridgeline turf</string>
             <bool name="Anchored">true</bool>
             <bool name="CanCollide">true</bool>
             <bool name="CastShadow">true</bool>
@@ -86973,7 +87252,7 @@
               <R21>-0.2008236</R21>
               <R22>-0.9796274</R22>
             </CoordinateFrame>
-            <Color3uint8 name="Color3uint8">4289830275</Color3uint8>
+            <Color3uint8 name="Color3uint8">4286168691</Color3uint8>
             <token name="Material">256</token>
             <token name="TopSurface">3</token>
             <token name="BottomSurface">0</token>
@@ -87043,7 +87322,7 @@
         </Item>
         <Item class="Part" referent="RBX70097">
           <Properties>
-            <string name="Name">Mine crown</string>
+            <string name="Name">Ridgeline turf</string>
             <bool name="Anchored">true</bool>
             <bool name="CanCollide">true</bool>
             <bool name="CastShadow">true</bool>
@@ -87066,7 +87345,7 @@
               <R21>0.0</R21>
               <R22>-1.0</R22>
             </CoordinateFrame>
-            <Color3uint8 name="Color3uint8">4289830275</Color3uint8>
+            <Color3uint8 name="Color3uint8">4286168691</Color3uint8>
             <token name="Material">256</token>
             <token name="TopSurface">3</token>
             <token name="BottomSurface">0</token>

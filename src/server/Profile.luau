@@ -109,7 +109,7 @@ function Profile.valid(p)
 			return false
 		end
 		for id, value in p.earned do
-			if not Guide.cutAwards[id] or value ~= true then
+			if not Guide.storedAwards[id] or value ~= true then
 				return false
 			end
 		end
@@ -183,6 +183,20 @@ function Profile.upgradeSave(p)
 	p.recentCuts = p.recentCuts or {}
 	p.earned = p.earned or {}
 	p.discoveries = p.discoveries or {}
+	for _, id in { "PickUpgrade", "Branch", "Shifts" } do
+		local award = Guide.awardsById[id]
+		if Guide.progress(p, award) == award.goal then
+			p.earned[id] = true
+		end
+	end
+	if p.petName ~= "Pebble" then
+		p.earned.PetName = true
+	end
+	for name, amount in p.counts do
+		if amount > 0 then
+			p.discoveries[name] = true
+		end
+	end
 	for name, amount in p.bag do
 		if amount > 0 then
 			p.discoveries[name] = true
@@ -191,13 +205,21 @@ function Profile.upgradeSave(p)
 	return p
 end
 
+function Profile.unlock(p, id)
+	if p.earned[id] then
+		return nil
+	end
+	p.earned[id] = true
+	return Guide.awardsById[id].name
+end
 function Profile.learn(p, id)
 	local node = Guide.byId[id]
 	if not node or p.skills[id] or (node.parent and not p.skills[node.parent]) or Guide.points(p.xp, p.skills) < 1 then
 		return false
 	end
 	p.skills[id] = true
-	return true
+	local award = Guide.awardsById.Branch
+	return true, if Guide.progress(p, award) == award.goal then Profile.unlock(p, award.id) else nil
 end
 function Profile.equipTitle(p, id)
 	if not integer(id, #Expeditions.ranks) or id < 1 or Expeditions.ranks[id].level > Expeditions.level(p.xp) then
@@ -223,7 +245,7 @@ function Profile.recordCut(p, name)
 			if award.ore == name and p.counts[name] == award.goal then
 				table.insert(unlocked, award.name)
 			end
-		elseif not p.earned[award.id] and Guide.progress(p, award) == award.goal then
+		elseif award.sequence and not p.earned[award.id] and Guide.progress(p, award) == award.goal then
 			p.earned[award.id] = true
 			table.insert(unlocked, award.name)
 		end
@@ -242,7 +264,7 @@ function Profile.claimJob(p, i)
 	p.claimedJobs = bit32.bor(p.claimedJobs, bit32.lshift(1, i - 1))
 	p.jobs += 1
 	p.gold += job.reward
-	return job
+	return job, if p.jobs == #Expeditions.jobs then Profile.unlock(p, "Shifts") else nil
 end
 
 function Profile.value(bag)
@@ -254,10 +276,17 @@ function Profile.value(bag)
 end
 
 function Profile.sell(p, multiplier)
+	local oreOnly = next(p.bag) ~= nil
+	for name, count in p.bag do
+		if count > 0 and Ores.byName[name].host then
+			oreOnly = false
+			break
+		end
+	end
 	local amount = Profile.value(p.bag) * (multiplier or 1)
 	p.gold += amount
 	p.bag = {}
-	return amount
+	return amount, if amount > 0 and oreOnly then Profile.unlock(p, "CleanSale") else nil
 end
 
 function Profile.buy(p, key)
@@ -274,6 +303,6 @@ function Profile.buy(p, key)
 	end
 	p.gold -= price
 	p.levels[key] += 1
-	return true, (item.label or key) .. " upgraded!"
+	return true, (item.label or key) .. " upgraded!", if key == "Power" then Profile.unlock(p, "PickUpgrade") else nil
 end
 return Profile

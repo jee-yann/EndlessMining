@@ -82,7 +82,7 @@ for _, name in { "Dirt", "Stone", "Stone", "Coal", "Copper", "Iron", "Gold", "Di
 	Profile.recordCut(challenge, name)
 end
 assert(not challenge.earned.Scales and Guide.progress(challenge, scales) == 0)
-assert(challenge.earned.Variety)
+assert(not challenge.earned.CleanSale and not challenge.earned.Ascent)
 for i, name in scales.sequence do
 	local unlocked = Profile.recordCut(challenge, name)
 	assert(Guide.progress(challenge, scales) == i)
@@ -96,15 +96,49 @@ end
 for _, name in scales.sequence do
 	assert(not table.find(Profile.recordCut(challenge, name), scales.name))
 end
-local overlap = Profile.new()
-for _, name in { "Stone", "Stone", "Gold", "Stone" } do
-	Profile.recordCut(overlap, name)
+local haul = Profile.new()
+for _, bag in { {}, { Stone = 2 }, { Dirt = 1, Coal = 2 }, { Gold = 0 } } do
+	haul.bag = bag
+	local _, award = Profile.sell(haul)
+	assert(not award)
 end
-assert(overlap.earned.Sandwich and not overlap.earned.Scales)
-assert(not table.find(Profile.recordCut(overlap, "Starfall"), awards.LuckAndSkill.name))
-assert(table.find(Profile.recordCut(overlap, "Starfall"), awards.LuckAndSkill.name))
-assert(not table.find(Profile.recordCut(overlap, "Starfall"), awards.LuckAndSkill.name))
-print("PASS consecutive single cuts, overlapping starts, reconnect and once-only awards")
+haul.bag = { Iron = 1, Copper = 3 }
+local payout, award = Profile.sell(haul)
+assert(payout == 60 and award == awards.CleanSale.name)
+haul.bag = { Coal = 1 }
+local _, repeatAward = Profile.sell(haul)
+assert(not repeatAward and haul.earned.CleanSale and not haul.earned.Scales)
+haul.gold = 36
+local bought, _, workshopAward = Profile.buy(haul, "Power")
+assert(bought and workshopAward == awards.PickUpgrade.name)
+haul.earned.Sandwich = true
+assert(Profile.valid(haul) and Data.claim({ profile = haul }, "legacyAward", 32).profile.earned.Sandwich)
+assert(not table.find(Profile.recordCut(haul, "Starfall"), awards.LuckAndSkill.name))
+assert(table.find(Profile.recordCut(haul, "Starfall"), awards.LuckAndSkill.name))
+assert(not table.find(Profile.recordCut(haul, "Starfall"), awards.LuckAndSkill.name))
+local reader = Instance.new("Folder")
+local hiddenTitle, hiddenDetail = Guide.awardText(awards.CopperCollector, reader)
+assert(hiddenTitle == "??? Collector" and hiddenDetail == "Mine 50 ???.")
+reader:SetAttribute("FoundDirt", true)
+local _, sequenceText = Guide.awardText(scales, reader)
+assert(sequenceText == "Dirt → ??? → ??? → ??? → ??? → ??? → ???")
+reader:Destroy()
+local ascent = require(Server.Ascent)
+local trip = {}
+local function climb(y, time, character)
+	return ascent.sample(trip, character or "miner", Vector3.new(0, y, -20), true, time)
+end
+assert(not climb(-500, 0) and not trip.climb)
+assert(not climb(-505, 1) and trip.climb)
+assert(not climb(1, 1.5) and not trip.climb)
+climb(-510, 2)
+assert(not climb(1, 3, "respawn"))
+climb(-510, 4)
+for i = 1, 51 do
+	assert(climb(-510 + 10 * i, 4 + i * 0.5) == (i == 51))
+end
+assert(not climb(5, 30.5))
+print("PASS consecutive cuts, masked discoveries, unique sale/upgrade awards and manual ascent")
 local miner = Profile.new()
 assert(not Profile.learn(miner, "Reach"))
 miner.xp = titles.levelXP(3)
@@ -183,6 +217,14 @@ for _, x in { -3, 0, 3 } do
 		local floor = floorAt(x, z)
 		assert(floor and math.abs(floor.Position.Y - lastY) < 1, "Landing-to-mine path at " .. z)
 		lastY = floor.Position.Y
+	end
+end
+-- The thin gaps beside the sandstone seams were visible from the trail above.
+for _, x in { -73, -63, -56, 52, 68, 76 } do
+	for _, z in { -1.5, -4, -9, -18 } do
+		local at = world.origin + Vector3.new(x, 40, z)
+		local hit = workspace:Raycast(at, -Vector3.yAxis * 41, onMap)
+		assert(hit and hit.Position.Y >= world.origin.Y - 0.5, "Open mine flank at " .. tostring(at))
 	end
 end
 local highlands = mapCopy["Citrine Highlands"]
