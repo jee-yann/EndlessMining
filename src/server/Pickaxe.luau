@@ -1,6 +1,9 @@
 local Ores = require(game.ReplicatedStorage.Shared.Ores)
 local Pickaxe = {}
-local grip = CFrame.new(0.36, -0.22, -0.32) * CFrame.Angles(math.rad(-20), 0, math.rad(-58))
+-- RightGripAttachment points along the hand's tool axis. Match it at the wrapped
+-- part of the shaft, with the steel head reaching forward from the palm at rest.
+local tapeY = -0.54
+local handleGrip = CFrame.new(0, tapeY, 0) * CFrame.Angles(0, math.rad(90), 0)
 local function component(model, root, name, size, offset, color)
 	local part = Instance.new("Part")
 	part.Name, part.Size, part.Color, part.Material = name, size, color, Enum.Material.Plastic
@@ -17,16 +20,27 @@ function Pickaxe.equip(player, char)
 		return
 	end
 	local hand = char:WaitForChild(if humanoid.RigType == Enum.HumanoidRigType.R15 then "RightHand" else "Right Arm", 8)
-	if not hand or player.Character ~= char or char:FindFirstChild("Harbor pick") then
+	if not hand or player.Character ~= char then
 		return
+	end
+	local existing = char:FindFirstChild("Harbor pick")
+	if existing then
+		local oldGrip = existing:FindFirstChild("Grip", true)
+		if oldGrip and oldGrip.Part0 == hand then
+			return
+		end
+		existing:Destroy()
 	end
 	local model = Instance.new("Model")
 	model.Name = "Harbor pick"
 	local handle = Instance.new("Part")
 	handle.Name, handle.Size, handle.Color = "Handle", Vector3.new(0.19, 1.9, 0.21), Color3.fromRGB(176, 106, 56)
 	handle.Massless, handle.CanCollide, handle.CanTouch, handle.CanQuery = true, false, false, false
-	local offset = if humanoid.RigType == Enum.HumanoidRigType.R6 then CFrame.new(0, -0.63, 0) * grip else grip
-	handle.CFrame = hand.CFrame * offset
+	local palm = hand:FindFirstChild("RightGripAttachment")
+	local function palmOffset()
+		return if palm then palm.CFrame else CFrame.new(0, -hand.Size.Y * 0.4, 0) * CFrame.Angles(-math.pi / 2, 0, 0)
+	end
+	handle.CFrame = hand.CFrame * palmOffset() * handleGrip:Inverse()
 	handle.Parent = model
 	local pale = Color3.fromRGB(211, 234, 241)
 	component(model, handle, "Steel", Vector3.new(1.05, 0.25, 0.28), CFrame.new(0, 0.95, 0), pale)
@@ -53,12 +67,32 @@ function Pickaxe.equip(player, char)
 		handle,
 		"Grip tape",
 		Vector3.new(0.215, 0.48, 0.23),
-		CFrame.new(0, -0.54, 0),
+		CFrame.new(0, tapeY, 0),
 		Color3.fromRGB(42, 67, 80)
 	)
-	local motor = Instance.new("Motor6D")
-	motor.Name, motor.Part0, motor.Part1, motor.C0, motor.Parent = "Grip", hand, handle, offset, handle
-	handle:SetAttribute("Rest", offset)
+	local grip = Instance.new("Weld")
+	grip.Name, grip.Part0, grip.Part1 = "Grip", hand, handle
+	grip.C0, grip.C1, grip.Parent = palmOffset(), handleGrip, handle
+	local scaleChanged
+	local function bindPalm()
+		palm = hand:FindFirstChild("RightGripAttachment")
+		if scaleChanged then
+			scaleChanged:Disconnect()
+		end
+		grip.C0 = palmOffset()
+		local changed = if palm then palm:GetPropertyChangedSignal("CFrame") else hand:GetPropertyChangedSignal("Size")
+		scaleChanged = changed:Connect(function()
+			grip.C0 = palmOffset()
+		end)
+	end
+	local function attachmentChanged(child)
+		if child.Name == "RightGripAttachment" then
+			bindPalm()
+		end
+	end
+	bindPalm()
+	local added = hand.ChildAdded:Connect(attachmentChanged)
+	local removed = hand.ChildRemoved:Connect(attachmentChanged)
 	model.PrimaryPart, model.Parent = handle, char
 	local function update()
 		local level = player:GetAttribute("Power") or 1
@@ -68,6 +102,9 @@ function Pickaxe.equip(player, char)
 	local changed = player:GetAttributeChangedSignal("Power"):Connect(update)
 	model.Destroying:Once(function()
 		changed:Disconnect()
+		scaleChanged:Disconnect()
+		added:Disconnect()
+		removed:Disconnect()
 	end)
 end
 return Pickaxe

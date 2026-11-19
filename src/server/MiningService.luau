@@ -60,6 +60,33 @@ function Mining.start(world, net, sessions, sync)
 		end
 	end
 
+	net.Swing.OnServerEvent:Connect(function(player, active, target)
+		local character = player.Character
+		if not character or type(active) ~= "boolean" then
+			return
+		end
+		if not active then
+			if character:GetAttribute("MiningSwing") then
+				character:SetAttribute("MiningSwing", nil)
+			end
+			return
+		end
+		local session = sessions[player]
+		local head = character:FindFirstChild("Head")
+		-- This attribute animates nearby avatars. Only the mining request can remove ore.
+		if
+			session
+			and world.ready
+			and head
+			and not character:GetAttribute("MiningSwing")
+			and Mining.validPoint(target)
+			and Config.inside(target - world.origin)
+			and (head.Position - target).Magnitude <= Config.Reach + Config.Cell
+		then
+			character:SetAttribute("MiningSwing", Profile.stat(session.profile, "Speed"))
+		end
+	end)
+
 	net.Mine.OnServerEvent:Connect(function(player, point, normal, count, mask)
 		local now = os.clock()
 		if now < (nextInput[player] or 0) then
@@ -79,7 +106,7 @@ function Mining.start(world, net, sessions, sync)
 		then
 			return
 		end
-		if now < (nextPulse[player] or 0) or pending[player] then
+		if now + 0.07 < (nextPulse[player] or 0) or pending[player] then
 			return
 		end
 		local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
@@ -145,20 +172,26 @@ function Mining.start(world, net, sessions, sync)
 		for _, other in Players:GetPlayers() do
 			local root = other.Character and other.Character:FindFirstChild("HumanoidRootPart")
 			if other ~= player and root and (root.Position - center).Magnitude < 72 then
-				net.Dust:FireClient(other, center, spread, best.name, player)
+				net.Dust:FireClient(other, center, spread, best.name)
 			end
 		end
 	end
 
 	RunService.Heartbeat:Connect(function(dt)
 		credit = math.min(Config.BurstCells, credit + Config.CellBudget * dt)
-		for _ = 1, 2 do
+		for _ = 1, math.min(2, #queue) do
 			local player = queue[1]
 			if not player then
 				break
 			end
 			local session, request = sessions[player], pending[player]
 			local now = os.clock()
+			if request and now < (nextPulse[player] or 0) then
+				-- Allow a slightly early packet to wait for the same server cooldown.
+				table.remove(queue, 1)
+				table.insert(queue, player)
+				continue
+			end
 			if session and request and now - request.time < 1 then
 				local p = session.profile
 				local cost = request.count

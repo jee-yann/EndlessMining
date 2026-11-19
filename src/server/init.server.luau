@@ -16,7 +16,7 @@ net.Name = "EndlessMiningNet"
 net:SetAttribute("Origin", world.origin)
 net:SetAttribute("Landing", landing)
 net:SetAttribute("Ready", false)
-for _, name in { "Mine", "Action", "Feedback", "Dust", "FriendsBoard" } do
+for _, name in { "Mine", "Action", "Feedback", "Dust", "FriendsBoard", "Swing" } do
 	local event = Instance.new(if name == "Dust" then "UnreliableRemoteEvent" else "RemoteEvent")
 	event.Name, event.Parent = name, net
 end
@@ -68,6 +68,9 @@ local function join(player)
 	loading[player] = true
 	Passes.join(player)
 	player.RespawnLocation = site.spawn
+	player.CharacterAppearanceLoaded:Connect(function(char)
+		Pickaxe.equip(player, char)
+	end)
 	player.CharacterAdded:Connect(function(char)
 		onCharacter(player, char)
 	end)

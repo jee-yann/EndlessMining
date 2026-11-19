@@ -27,38 +27,78 @@ function Swing:restore()
 	end
 end
 
-function Swing:pose(t)
-	local rise = math.sin(math.min(t / 0.72, 1) * math.pi * 0.5)
-	local strike = math.clamp((t - 0.72) / 0.28, 0, 1) ^ 2
-	local axes = self.shoulder.C0.Rotation
-	local lift = CFrame.Angles(math.rad(150 * rise - 117 * strike), 0, math.rad(9 * rise))
-	self.shoulderOffset = axes:Inverse() * lift * axes
-	self.elbowOffset = CFrame.Angles(math.rad(30 * rise * (1 - strike)), 0, 0)
-	if self.afterAnimator then
-		return
-	end
-	-- Remove our previous layer before the animator runs, including on throttled rigs.
-	self.beforeAnimator = RunService.PreAnimation:Connect(function()
-		self:restore()
-	end)
-	self.afterAnimator = RunService.PreSimulation:Connect(function()
-		self.baseShoulder = self.shoulder.Transform
-		self.shoulder.Transform = self.shoulderOffset * self.baseShoulder
-		self.lastShoulder = self.shoulder.Transform
-		if self.elbow then
-			self.baseElbow = self.elbow.Transform
-			self.elbow.Transform = self.baseElbow * self.elbowOffset
-			self.lastElbow = self.elbow.Transform
-		end
-	end)
-end
-
-function Swing:reset()
+function Swing:destroy()
 	if self.afterAnimator then
 		self.beforeAnimator:Disconnect()
 		self.afterAnimator:Disconnect()
 		self.afterAnimator = nil
 		self:restore()
+	end
+end
+
+function Swing:play(duration)
+	-- Several short taps can contribute to a single mining cut.
+	local taps = math.max(1, math.round(duration / 0.24))
+	self.duration, self.period = duration, duration / taps
+	self.playing = true
+	if self.afterAnimator then
+		return
+	end
+	self.phase, self.weight = 0, 0
+	self.beforeAnimator = RunService.PreAnimation:Connect(function()
+		self:restore()
+	end)
+	self.afterAnimator = RunService.PreSimulation:Connect(function(dt)
+		if not self.shoulder:IsDescendantOf(workspace) then
+			self:destroy()
+			return
+		end
+		self.phase = (self.phase + dt / self.period) % 1
+		self.weight = math.clamp(self.weight + (if self.playing then 14 else -11) * dt, 0, 1)
+		if self.weight == 0 and not self.playing then
+			self:destroy()
+			return
+		end
+		local arc = if self.phase < 0.58 then self.phase / 0.58 else (1 - self.phase) / 0.42
+		local lift = (1 - math.cos(arc * math.pi)) * 0.5
+		local pitch = math.rad(30 + 110 * lift) * self.weight
+		local axes = self.shoulder.C0.Rotation
+		local offset = CFrame.Angles(pitch, 0, math.rad(8 * lift) * self.weight)
+		self.baseShoulder = self.shoulder.Transform
+		self.shoulder.Transform = axes:Inverse() * offset * axes * self.baseShoulder
+		self.lastShoulder = self.shoulder.Transform
+		if self.elbow then
+			self.baseElbow = self.elbow.Transform
+			self.elbow.Transform = self.baseElbow * CFrame.Angles(math.rad(24 * lift) * self.weight, 0, 0)
+			self.lastElbow = self.elbow.Transform
+		end
+	end)
+end
+
+function Swing:stop()
+	self.playing = false
+end
+
+function Swing.observe(player)
+	local function bind(character)
+		local rig
+		local function changed()
+			local duration = character:GetAttribute("MiningSwing")
+			if duration then
+				rig = rig or Swing.new(character)
+				if rig then
+					rig:play(duration)
+				end
+			elseif rig then
+				rig:stop()
+			end
+		end
+		character:GetAttributeChangedSignal("MiningSwing"):Connect(changed)
+		changed()
+	end
+	player.CharacterAdded:Connect(bind)
+	if player.Character then
+		bind(player.Character)
 	end
 end
 return Swing

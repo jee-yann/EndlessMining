@@ -25,6 +25,9 @@
     },
     "StarterPlayer": {
       "$ignoreUnknownInstances": true,
+      "$properties": {
+        "LoadCharacterAppearance": true
+      },
       "StarterPlayerScripts": {
         "$ignoreUnknownInstances": true,
         "Client": {

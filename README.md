@@ -11,6 +11,8 @@ Citrine Cove is a multiplayer Roblox mining simulator. Aim at a cave wall or flo
 3. After eight blocks, open **Jobs** and claim **First strike** for 25 gold. Walk to the cyan **Upgrades** stall, use its prompt and buy **Mining area** for 24 gold to cut two blocks per hit. Use the amber **Sell** counter to empty your pack. Open **Pack** anywhere to see quantities and sale values for each ore.
 4. At 36 lifetime blocks, open **Lift → Ember Foundry → Travel**. Use **↑ Harbor** to return from underground. Press **Shift+F5** to end the session.
 
+The place uses each player�s equipped Roblox avatar. If Studio Output reports �Authentication required to access Asset� for a missing head or clothing item, refresh the Studio sign-in and start another play session to retry asset delivery.
+
 ![Player spawn and mining HUD in Roblox Studio](map/Harbor-HUD.jpg)
 
 To rebuild the local place after editing, run the following command in the project directory.
@@ -52,9 +54,9 @@ The 192 × 224 stud mine extends 352 studs below the entrance. Sunstone Hollow g
 
 The server keeps one byte per grid cell. Only exposed rock needs physical Parts. Within each 8 × 8 × 8 cell chunk, neighbouring exposed cells of the same shade share anchored plastic bricks. Cutting a block rebuilds the affected chunks and exposes the next layer. Excavations are shared for the lifetime of that server.
 
-Mining area upgrades unlock **1×1, 2×1, 2×2, 3×2, 3×3, 4×3, 4×4, and 5×5** face patterns. Each hit takes one layer. Every selected block has a twelve-edge outline. Holding a target raises the pick and fills the swing meter at the equipped speed. Releasing early or switching targets cancels the stroke. The outlines and on-screen count account for missing blocks, reach, obstructions, power and space in the pack. An almost-full pack selects the nearest blocks to the aim point first. The server checks the same pattern and intersects it with the squares the player saw. If another player takes one, the hit skips that square. Existing profiles retain their upgrade levels.
+Mining area upgrades unlock **1×1, 2×1, 2×2, 3×2, 3×3, 4×3, 4×4, and 5×5** face patterns. Each hit takes one layer. Mint borders follow the visible faces of each selected block. A flush wall shows one square. Exposed corners show multiple sides as you move the camera. Holding a target plays a sequence of quick pickaxe swings while one meter fills for the cut. Releasing early or switching targets cancels the stroke. The outlines and on-screen count account for missing blocks, reach, obstructions, power and space in the pack. An almost-full pack selects the nearest blocks to the aim point first. The server checks the same pattern and intersects it with the squares the player saw. If another player takes one, the hit skips that square. Existing profiles retain their upgrade levels.
 
-![Aimed block and pickaxe at the starter seam](map/Mining-area-preview.jpg)
+![Block borders in three Studio views, exposed, flush with the wall, and covered by another rock](map/Mining-area-preview.jpg)
 
 | Change | File |
 | --- | --- |
@@ -107,6 +109,6 @@ Look for a standalone `QUARRY_TESTS_PASSED` output line. The map checks cover th
 & $studioExe --task RunScript --localPlaceFile $quarryPlace --runScriptFile $playTest --outputFile "$env:TEMP\EndlessMining-play.log" --quitAfterExecution
 ```
 
-The play check first uses a virtual mouse in a solo session to verify all twelve block edges, a raised hand, the visible swing meter, cancellation and collection. It then uses two clients with real client-to-server requests. Each miner must open all six menus, fill a pack, check its ore counts, visit the Sell counter, upgrade to a two-block cut, claim a job once, try both Studio passes, travel to the Foundry, and return to the surface. The test checks that remote sales and out-of-range upgrades are declined, the Vault stays locked, each sound loads, the music pauses and resumes, and an ore carrier moves. Look for `QUARRY_PLAYTEST_RESULT PASS` followed by both clients' results.
+The play check first uses a virtual mouse in a solo session to verify depth-tested face borders, the pickaxe grip through repeated swings, the visible cut meter, cancellation and collection. It then uses two clients with real client-to-server requests. Each miner must open all six menus, fill a pack, check its ore counts, visit the Sell counter, upgrade to a two-block cut, claim a job once, try both Studio passes, travel to the Foundry, and return to the surface. The test checks that remote sales and out-of-range upgrades are declined, the Vault stays locked, each sound loads, the music pauses and resumes, and an ore carrier moves. Look for `QUARRY_PLAYTEST_RESULT PASS` followed by both clients' results.
 
 For hands-on checks, choose **Server & Clients** in Studio's Test selector and start two players. Mine the same face, compare balances and verify both players see the same missing bricks. Use the device emulator to check the shop, hold/release control, thumbstick and jump in phone landscape and portrait. A persistence round trip requires a separate published test place with Studio API access enabled. Sell ore, buy an upgrade, stop the session and rejoin to verify the balance and level.

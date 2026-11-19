@@ -65,7 +65,7 @@ local function test()
 	waitFor(function() return n:GetAttribute("Ready") and p:GetAttribute("ProfileReady") and p.Character and p.Character:FindFirstChild("Head") end,30,"profile/world readiness")
 	local gui=p.PlayerGui:WaitForChild("QuarryHUD",10)
 	assert(gui and gui.SafeArea:FindFirstChild("ShopOverlay"),"HUD did not mount")
-	waitFor(function() return p.PlayerGui:FindFirstChild("MiningSelection") end,8,"aim controller did not start")
+	waitFor(function() return workspace:FindFirstChild("MiningSelection") end,8,"aim controller did not start")
 	assert(p:GetAttribute("SaveStatus")=="Practice session","local data scope")
 	waitFor(function() return p.Character:FindFirstChild("Harbor pick") end,8,"equipped pickaxe")
 	local harbor=game.SoundService:WaitForChild("Harbor audio",8)
@@ -139,20 +139,49 @@ local function test()
 		input:SendMousePosition(xy)
 		local meter=gui.SafeArea.Feedback["Mining progress"]
 		local function outlined()
-			local marker=p.PlayerGui.MiningSelection:FindFirstChild("Selected block")
-			return marker and #marker:GetChildren()==12 and marker.Edge.Visible
+			local marker=workspace.MiningSelection:FindFirstChild("Selected block")
+			if not marker or (marker:GetPivot().Position-aim).Magnitude>.02 or #marker:GetChildren()~=12 then return false end
+			for _,edge in marker:GetChildren() do
+				if not edge:IsA("BasePart") or edge.CanQuery or edge.CanCollide then return false end
+			end
+			return true
 		end
-		waitFor(outlined,4,"twelve-edge block preview")
+		waitFor(outlined,4,"depth-tested borders on the selected cell")
+		assert(game:GetService("StarterPlayer").LoadCharacterAppearance,"account appearance disabled")
+		local pick=p.Character["Harbor pick"]
+		local palm=hand:FindFirstChild("RightGripAttachment")
+		local function gripError()
+			local expected=if palm then palm.WorldPosition else hand.CFrame:PointToWorldSpace(Vector3.new(0,-hand.Size.Y*.4,0))
+			return (pick["Grip tape"].Position-expected).Magnitude
+		end
+		assert(gripError()<.035,"idle hand grip")
 		input:SendMouseButton(xy,Enum.UserInputType.MouseButton1,true)
-		waitFor(function() return meter.Visible and meter.Charge.Size.X.Scale>.28 and hand.Position.Y>defaultY+.48 end,3,"raised pick and progress")
+		waitFor(function() return meter.Visible and meter.Charge.Size.X.Scale>.1 and hand.Position.Y>defaultY+.4 end,3,"raised pick and progress")
 		input:SendMouseButton(xy,Enum.UserInputType.MouseButton1,false)
 		waitFor(function() return not meter.Visible and math.abs(hand.Position.Y-defaultY)<.48 end,3,"cancelled swing")
 		assert(p:GetAttribute("Used")==0,"early release spent a block")
 		input:SendMouseButton(xy,Enum.UserInputType.MouseButton1,true)
-		waitFor(function() return p:GetAttribute("Used")==1 end,3,"completed swing")
+		local peaks,high,maxGap,replicated=0,false,0,false
+		local deadline=os.clock()+3
+		repeat
+			game:GetService("RunService").PostSimulation:Wait()
+			maxGap=math.max(maxGap,gripError())
+			replicated=replicated or p.Character:GetAttribute("MiningSwing")~=nil
+			local rise=hand.Position.Y-defaultY
+			if not high and rise>.9 then
+				high=true
+				peaks+=1
+			elseif high and rise<.5 then
+				high=false
+			end
+		until p:GetAttribute("Used")>=1 or os.clock()>deadline
 		input:SendMouseButton(xy,Enum.UserInputType.MouseButton1,false)
-
-		return "twelve block edges, raised pick, partial progress, early release, completed swing"
+		assert(p:GetAttribute("Used")==1,"completed cut")
+		assert(peaks>=2,"expected repeated swings during the first cut, saw "..peaks)
+		assert(maxGap<.035,"grip drift: "..maxGap)
+		assert(replicated,"swing start was not replicated")
+		waitFor(function() return not p.Character:GetAttribute("MiningSwing") end,3,"replicated swing release")
+		return string.format("depth-tested faces, %d swings in one cut, grip error %.4f studs, early release",peaks,maxGap)
 	end
 	local directions={}
 	for x=-3,3 do

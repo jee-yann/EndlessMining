@@ -6,7 +6,7 @@ local GuiService = game:GetService("GuiService")
 local player = Players.LocalPlayer
 local net = Rep:WaitForChild("EndlessMiningNet")
 local shared = Rep:WaitForChild("Shared")
-for _, name in { "Mine", "Action", "Feedback", "Dust" } do
+for _, name in { "Mine", "Action", "Feedback", "Dust", "Swing" } do
 	net:WaitForChild(name)
 end
 for _, name in { "BlockPattern", "GameConfig", "Ores", "Upgrades", "Expeditions", "PassCatalog" } do
@@ -20,17 +20,23 @@ local hud = Hud.new(player, net, mobile)
 local fx = Effects.new()
 local Swing = require(script.PickSwing)
 local held, firstHaul, rig = nil, false, nil
-local target, targetSide, charge, awaiting = nil, nil, 0, 0
+local target, targetSide, strokeStart
+local aimPoint, aimSide, aimCount, aimMask
+local swinging = false
 local params = RaycastParams.new()
 params.FilterType = Enum.RaycastFilterType.Exclude
 local origin = net:GetAttribute("Origin")
 local landing = net:GetAttribute("Landing")
 task.spawn(require(script.Tramway), origin)
 local function cancelStroke()
-	if rig and target then
-		rig:reset()
+	if swinging then
+		if rig then
+			rig:stop()
+		end
+		net.Swing:FireServer(false)
+		swinging = false
 	end
-	target, targetSide, charge = nil, nil, 0
+	target, targetSide, strokeStart = nil, nil, nil
 	hud.meter.Visible = false
 end
 local function release()
@@ -39,7 +45,10 @@ local function release()
 end
 local function gotCharacter(character)
 	release()
-	rig, awaiting = nil, 0
+	if rig then
+		rig:destroy()
+	end
+	rig, aimPoint = nil, nil
 	params.FilterDescendantsInstances = { character }
 	-- Face the mine approach when spawning in an empty place file.
 	local root = character:WaitForChild("HumanoidRootPart", 10)
@@ -99,7 +108,6 @@ end)
 net.Feedback.OnClientEvent:Connect(function(kind, a, point, spread)
 	if kind == "loot" then
 		firstHaul = true
-		awaiting = 0
 		local best = Ores.byName.Stone
 		local pieces, value, lines = 0, 0, {}
 		for _, ore in Ores.list do
@@ -156,8 +164,7 @@ net.Feedback.OnClientEvent:Connect(function(kind, a, point, spread)
 		hud:notice(a, "", W.gold)
 	end
 end)
-net.Dust.OnClientEvent:Connect(function(point, spread, ore, miner)
-	fx:swing(miner)
+net.Dust.OnClientEvent:Connect(function(point, spread, ore)
 	fx:burst(point, spread, Ores.byName[ore], true)
 end)
 
@@ -187,14 +194,15 @@ workspace.DescendantAdded:Connect(function(obj)
 	end
 end)
 
-local elapsed = 0
-RunService.RenderStepped:Connect(function(dt)
-	elapsed += dt
-	if elapsed < 1 / 30 then
-		return
+Players.PlayerAdded:Connect(Swing.observe)
+for _, other in Players:GetPlayers() do
+	if other ~= player then
+		Swing.observe(other)
 	end
-	local step = elapsed
-	elapsed = 0
+end
+
+local function sampleAim()
+	aimPoint = nil
 	local camera = workspace.CurrentCamera
 	local char = player.Character
 	local head = char and char:FindFirstChild("Head")
@@ -269,26 +277,46 @@ RunService.RenderStepped:Connect(function(dt)
 	else
 		hud:guide("", "", false)
 	end
-	if not held or not valid or os.clock() < awaiting then
-		cancelStroke()
+	if valid then
+		aimPoint, aimSide, aimCount, aimMask = center, normal, count, mask
+	end
+end
+
+local elapsed = 1
+RunService.RenderStepped:Connect(function(dt)
+	elapsed += dt
+	if elapsed >= 1 / 30 then
+		elapsed %= 1 / 30
+		sampleAim()
+	end
+	if not held or not aimPoint or hud.overlay.Visible then
+		if strokeStart then
+			cancelStroke()
+		end
 		return
 	end
-	if target ~= center or targetSide ~= normal then
-		cancelStroke()
-		target, targetSide = center, normal
-		step = 0
+	local now = os.clock()
+	if aimPoint ~= target or targetSide ~= aimSide then
+		target, targetSide, strokeStart = aimPoint, aimSide, now
 	end
 	local duration = Upgrades.items.Speed.values[player:GetAttribute("Speed") or 1]
-	charge = math.min(1, charge + math.min(step, 0.10) / duration)
-	rig = rig or Swing.new(char)
-	if rig then
-		rig:pose(charge)
+	if not swinging then
+		net.Swing:FireServer(true, target)
+		swinging = true
 	end
+	if rig and not rig.shoulder:IsDescendantOf(workspace) then
+		rig:destroy()
+		rig = nil
+	end
+	rig = rig or Swing.new(player.Character)
+	if rig and (not rig.playing or rig.duration ~= duration) then
+		rig:play(duration)
+	end
+	local progress = math.clamp((now - strokeStart) / duration, 0, 1)
 	hud.speech.Visible, hud.meter.Visible = true, true
-	hud.swingFill.Size = UDim2.fromScale(charge, 1)
-	if charge >= 1 then
-		awaiting = os.clock() + 0.48
-		charge = 0
-		net.Mine:FireServer(center, normal, count, mask)
+	hud.swingFill.Size = UDim2.fromScale(progress, 1)
+	if progress == 1 then
+		net.Mine:FireServer(target, targetSide, aimCount, aimMask)
+		strokeStart = now
 	end
 end)
