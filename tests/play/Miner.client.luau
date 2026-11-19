@@ -12,6 +12,18 @@ local function waitFor(check, seconds, msg)
 	error(msg)
 end
 local function test()
+	local loading = p.PlayerGui:WaitForChild("MiningLoading", 6)
+	assert(loading and loading.Cover.BackgroundTransparency == 0, "opaque loading screen")
+	local cover = loading.Cover
+	local sawReveal, prematureReveal = false, false
+	local monitor = cover:GetPropertyChangedSignal("BackgroundTransparency"):Connect(function()
+		if cover.BackgroundTransparency > 0 and cover.BackgroundTransparency < 1 then
+			sawReveal = true
+			if cover["Load panel"]["Loading bar"].Status.Text ~= "Ready to dig" then
+				prematureReveal = true
+			end
+		end
+	end)
 	local n = rep:WaitForChild("EndlessMiningNet", 25)
 	assert(n, "server bootstrap")
 	waitFor(function()
@@ -38,6 +50,8 @@ local function test()
 	waitFor(function()
 		return gui:GetAttribute("ControllerReady") and not p.PlayerGui:FindFirstChild("MiningLoading")
 	end, 18, "loading screen dismisses")
+	monitor:Disconnect()
+	assert(sawReveal and not prematureReveal, "loading fades only after readiness")
 	local mount = p.Character.HumanoidRootPart:FindFirstChild("Lamp mount")
 	assert(
 		mount and mount:FindFirstChildOfClass("PointLight") and p.Character:GetAttribute("MiningViewReady"),
@@ -45,6 +59,9 @@ local function test()
 	)
 	local gallery = workspace.CitrineCove["Citrine Mine"]:FindFirstChild("Gallery glow")
 	assert(gallery and gallery:FindFirstChildOfClass("PointLight"), "gallery lighting on reveal")
+	local centerLamp = workspace.CitrineCove["Working gallery"]["Center lantern"]
+	local light = centerLamp:FindFirstChildOfClass("SurfaceLight")
+	assert(light and light.Enabled and light.Face == Enum.NormalId.Bottom, "central work light on reveal")
 	local audio = require(p.PlayerScripts.Client.HarborAudio)
 	for _, voice in harbor:GetChildren() do
 		if voice == song then
@@ -265,7 +282,6 @@ local function test()
 			return not overlay.Visible
 		end, 2, "animated close")
 		local hand = p.Character:FindFirstChild("RightHand") or p.Character:FindFirstChild("Right Arm")
-		local defaultY = hand.Position.Y
 		-- Inspect six surfaces, including an isolated block that can be viewed from every side.
 		local painter = require(p.PlayerScripts.Client.Effects).new()
 		local cube = Instance.new("Part")
@@ -276,21 +292,26 @@ local function test()
 		local overlays = cube.Fractures:GetChildren()
 		assert(#overlays == 6)
 		for _, surface in overlays do
-			assert(not surface.AlwaysOnTop and surface.ZOffset == 0 and surface.Adornee == cube)
-			assert(surface.CanvasSize == Vector2.new(24, 24))
-		end
-		local previous = 0
-		for _, amount in { 0.15, 0.3, 0.55, 1 } do
-			painter:damage(cube, amount)
-			local area = 0
-			for _, chip in overlays[1]:GetChildren() do
-				if chip.Visible then
-					assert(chip.Name == "Fault" and chip.Rotation == 0)
-					area += chip.Size.X.Offset * chip.Size.Y.Offset
+			local growing = 0
+			for _, line in surface:GetChildren() do
+				if line.Visible and line.Name == "Vein" then
+					growing += 1
 				end
 			end
-			assert(area > previous and area < 24 * 24 / 5)
-			previous = area
+			assert(
+				growing == 3 and not surface.AlwaysOnTop and surface.ZOffset == 0 and surface.Adornee == cube,
+				"early cracks did not radiate together"
+			)
+		end
+		painter:damage(cube, 1)
+		for _, surface in overlays do
+			local visible = 0
+			for _, line in surface:GetChildren() do
+				if line.Visible then
+					visible += 1
+				end
+			end
+			assert(visible >= 48)
 		end
 		cube:Destroy()
 		for _, surface in overlays do
@@ -376,15 +397,26 @@ local function test()
 				else hand.CFrame:PointToWorldSpace(Vector3.new(0, -hand.Size.Y * 0.4, 0))
 			return (pick["Grip tape"].Position - expected).Magnitude
 		end
+		-- Measure the arm's arc relative to the torso across avatar sizes and idle poses.
+		local arm = p.Character:FindFirstChild("RightUpperArm") or hand
+		local torso = p.Character:FindFirstChild("UpperTorso") or p.Character.Torso
+		local function armPose()
+			return torso.CFrame:ToObjectSpace(arm.CFrame).Rotation
+		end
+		local idlePose = armPose()
+		local function swingAngle()
+			local _, angle = idlePose:ToObjectSpace(armPose()):ToAxisAngle()
+			return math.deg(angle)
+		end
 		assert(gripError() < 0.035, "idle hand grip")
 		input:SendMouseButton(xy, Enum.UserInputType.MouseButton1, true)
 		waitFor(function()
-			return meter.Visible and meter.Charge.Size.X.Scale > 0.1 and hand.Position.Y > defaultY + 0.4
+			return meter.Visible and meter.Charge.Size.X.Scale > 0.1 and swingAngle() > 60
 		end, 3, "raised pick and progress")
 		assert(workspace.CitrineCove.MineBlocks:FindFirstChild("Fractures", true) ~= nil, "visible impact cracks")
 		input:SendMouseButton(xy, Enum.UserInputType.MouseButton1, false)
 		waitFor(function()
-			return not meter.Visible and math.abs(hand.Position.Y - defaultY) < 0.48
+			return not meter.Visible and swingAngle() < 20
 		end, 3, "cancelled swing")
 		assert(p:GetAttribute("Used") == startingHaul, "early release spent a block")
 		input:SendMouseButton(xy, Enum.UserInputType.MouseButton1, true)
@@ -394,11 +426,11 @@ local function test()
 			game:GetService("RunService").PostSimulation:Wait()
 			maxGap = math.max(maxGap, gripError())
 			replicated = replicated or p.Character:GetAttribute("MiningSwing") ~= nil
-			local rise = hand.Position.Y - defaultY
-			if not high and rise > 0.9 then
+			local angle = swingAngle()
+			if not high and angle > 85 then
 				high = true
 				peaks += 1
-			elseif high and rise < 0.5 then
+			elseif high and angle < 55 then
 				high = false
 			end
 		until p:GetAttribute("Used") > startingHaul or os.clock() > deadline

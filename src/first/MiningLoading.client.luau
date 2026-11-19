@@ -4,6 +4,7 @@ local Players = game:GetService("Players")
 local Rep = game:GetService("ReplicatedStorage")
 local Lighting = game:GetService("Lighting")
 local Run = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
 local Actions = game:GetService("ContextActionService")
 local player = Players.LocalPlayer
 local parent = player:WaitForChild("PlayerGui")
@@ -219,6 +220,21 @@ progress(1)
 status.Text = "Ready to dig"
 Run.PreRender:Wait()
 task.wait(0.12)
+local fade = TweenInfo.new(
+	if player:GetAttribute("MenuMotion") == false then 0.25 else 0.7,
+	Enum.EasingStyle.Sine,
+	Enum.EasingDirection.InOut
+)
+for _, item in cover:GetDescendants() do
+	if item:IsA("TextLabel") then
+		TweenService:Create(item, fade, { TextTransparency = 1, TextStrokeTransparency = 1 }):Play()
+	elseif item:IsA("Frame") and item.BackgroundTransparency < 1 then
+		TweenService:Create(item, fade, { BackgroundTransparency = 1 }):Play()
+	end
+end
+local reveal = TweenService:Create(cover, fade, { BackgroundTransparency = 1 })
+reveal:Play()
+reveal.Completed:Wait()
 gui:Destroy()
 local net = Rep:FindFirstChild("EndlessMiningNet")
 local action = net and net:FindFirstChild("Action")

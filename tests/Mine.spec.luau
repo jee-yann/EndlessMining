@@ -334,6 +334,22 @@ for _, key in { "Jobs", "Store", "Book" } do
 	assert(stall:FindFirstChildWhichIsA("BillboardGui", true) and stall:FindFirstChildWhichIsA("PointLight", true))
 end
 local back = highlands["Cableway trail"]
+local obstructions = { mapCopy["Honey bluffs"], highlands["Ridge tramway"] }
+for _, piece in back:GetChildren() do
+	if piece.Name == "Tower footing" then
+		table.insert(obstructions, piece)
+	end
+end
+local terraceCheck = OverlapParams.new()
+terraceCheck.FilterType, terraceCheck.FilterDescendantsInstances = Enum.RaycastFilterType.Include, obstructions
+for _, piece in highlands["Turquoise cascade"]:GetChildren() do
+	if piece.Name == "Meadow cap" then
+		assert(piece.Color == Color3.fromRGB(116, 212, 79), "Waterfall turf palette")
+	end
+	if piece.Name == "Meadow cap" or piece.Name == "Mesa face" then
+		assert(#workspace:GetPartsInPart(piece, terraceCheck) == 0, "Waterfall intersects a hill or tower")
+	end
+end
 local groundParams = RaycastParams.new()
 groundParams.FilterType, groundParams.FilterDescendantsInstances = Enum.RaycastFilterType.Include, { back }
 for _, pos in { Vector2.new(-89, -57), Vector2.new(-29, -65), Vector2.new(35, -63), Vector2.new(91, -53) } do
