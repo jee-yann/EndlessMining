@@ -5449,14 +5449,14 @@
           <bool name="CanCollide">true</bool>
           <bool name="CastShadow">true</bool>
           <Vector3 name="size">
-            <X>15.0</X>
-            <Y>21.0</Y>
-            <Z>21.0</Z>
+            <X>15</X>
+            <Y>5.86</Y>
+            <Z>21</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>-21.0</X>
-            <Y>32.5</Y>
-            <Z>-2.0</Z>
+            <X>-21</X>
+            <Y>40.07</Y>
+            <Z>-2</Z>
             <R00>1.0</R00>
             <R01>0.0</R01>
             <R02>0.0</R02>
@@ -5466,6 +5466,68 @@
             <R20>0.0</R20>
             <R21>0.0</R21>
             <R22>1.0</R22>
+          </CoordinateFrame>
+          <Color3uint8 name="Color3uint8">4291527767</Color3uint8>
+          <token name="Material">272</token>
+          <token name="TopSurface">0</token>
+          <token name="BottomSurface">0</token>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="RBX168Foot1">
+        <Properties>
+          <string name="Name">Weathered sandstone</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CastShadow">true</bool>
+          <Vector3 name="size">
+            <X>3.38</X>
+            <Y>15.14</Y>
+            <Z>21</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-26.81</X>
+            <Y>29.57</Y>
+            <Z>-2</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1</R11>
+            <R12>0</R12>
+            <R20>0</R20>
+            <R21>0</R21>
+            <R22>1</R22>
+          </CoordinateFrame>
+          <Color3uint8 name="Color3uint8">4291527767</Color3uint8>
+          <token name="Material">272</token>
+          <token name="TopSurface">0</token>
+          <token name="BottomSurface">0</token>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="RBX168Foot2">
+        <Properties>
+          <string name="Name">Weathered sandstone</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CastShadow">true</bool>
+          <Vector3 name="size">
+            <X>11.62</X>
+            <Y>15.14</Y>
+            <Z>9.38</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-19.31</X>
+            <Y>29.57</Y>
+            <Z>3.81</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1</R11>
+            <R12>0</R12>
+            <R20>0</R20>
+            <R21>0</R21>
+            <R22>1</R22>
           </CoordinateFrame>
           <Color3uint8 name="Color3uint8">4291527767</Color3uint8>
           <token name="Material">272</token>
@@ -5574,13 +5636,13 @@
           <bool name="CastShadow">true</bool>
           <Vector3 name="size">
             <X>3.4</X>
-            <Y>21.0</Y>
-            <Z>13.0</Z>
+            <Y>5.86</Y>
+            <Z>13</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>-11.8</X>
-            <Y>32.5</Y>
-            <Z>-2.0</Z>
+            <Y>40.07</Y>
+            <Z>-2</Z>
             <R00>1.0</R00>
             <R01>0.0</R01>
             <R02>0.0</R02>
@@ -5597,6 +5659,37 @@
           <token name="BottomSurface">0</token>
         </Properties>
       </Item>
+      <Item class="Part" referent="RBX172Foot1">
+        <Properties>
+          <string name="Name">Weathered sandstone</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CastShadow">true</bool>
+          <Vector3 name="size">
+            <X>3.4</X>
+            <Y>15.14</Y>
+            <Z>5.38</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-11.8</X>
+            <Y>29.57</Y>
+            <Z>1.81</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1</R11>
+            <R12>0</R12>
+            <R20>0</R20>
+            <R21>0</R21>
+            <R22>1</R22>
+          </CoordinateFrame>
+          <Color3uint8 name="Color3uint8">4291527767</Color3uint8>
+          <token name="Material">272</token>
+          <token name="TopSurface">0</token>
+          <token name="BottomSurface">0</token>
+        </Properties>
+      </Item>
       <Item class="WedgePart" referent="RBX173">
         <Properties>
           <string name="Name">Weathered sandstone</string>
@@ -5604,13 +5697,13 @@
           <bool name="CanCollide">true</bool>
           <bool name="CastShadow">true</bool>
           <Vector3 name="size">
-            <X>21.0</X>
+            <X>5.86</X>
             <Y>3.4</Y>
-            <Z>4.0</Z>
+            <Z>4</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>-11.8</X>
-            <Y>32.5</Y>
+            <Y>40.07</Y>
             <Z>-10.5</Z>
             <R00>0.0</R00>
             <R01>1.0</R01>
@@ -5953,14 +6046,14 @@
           <bool name="CanCollide">true</bool>
           <bool name="CastShadow">true</bool>
           <Vector3 name="size">
-            <X>17.0</X>
-            <Y>17.0</Y>
-            <Z>22.0</Z>
+            <X>17</X>
+            <Y>1.86</Y>
+            <Z>22</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>23.0</X>
-            <Y>30.5</Y>
-            <Z>-3.0</Z>
+            <X>23</X>
+            <Y>38.07</Y>
+            <Z>-3</Z>
             <R00>1.0</R00>
             <R01>0.0</R01>
             <R02>0.0</R02>
@@ -5977,6 +6070,68 @@
           <token name="BottomSurface">0</token>
         </Properties>
       </Item>
+      <Item class="Part" referent="RBX184Foot1">
+        <Properties>
+          <string name="Name">Weathered sandstone</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CastShadow">true</bool>
+          <Vector3 name="size">
+            <X>6.38</X>
+            <Y>15.14</Y>
+            <Z>22</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>28.31</X>
+            <Y>29.57</Y>
+            <Z>-3</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1</R11>
+            <R12>0</R12>
+            <R20>0</R20>
+            <R21>0</R21>
+            <R22>1</R22>
+          </CoordinateFrame>
+          <Color3uint8 name="Color3uint8">4292515685</Color3uint8>
+          <token name="Material">272</token>
+          <token name="TopSurface">0</token>
+          <token name="BottomSurface">0</token>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="RBX184Foot2">
+        <Properties>
+          <string name="Name">Weathered sandstone</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CastShadow">true</bool>
+          <Vector3 name="size">
+            <X>10.62</X>
+            <Y>15.14</Y>
+            <Z>8.88</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>19.81</X>
+            <Y>29.57</Y>
+            <Z>3.56</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1</R11>
+            <R12>0</R12>
+            <R20>0</R20>
+            <R21>0</R21>
+            <R22>1</R22>
+          </CoordinateFrame>
+          <Color3uint8 name="Color3uint8">4292515685</Color3uint8>
+          <token name="Material">272</token>
+          <token name="TopSurface">0</token>
+          <token name="BottomSurface">0</token>
+        </Properties>
+      </Item>
       <Item class="Part" referent="RBX185">
         <Properties>
           <string name="Name">Weathered sandstone</string>
@@ -5985,13 +6140,13 @@
           <bool name="CastShadow">true</bool>
           <Vector3 name="size">
             <X>4.4</X>
-            <Y>17.0</Y>
-            <Z>12.0</Z>
+            <Y>1.86</Y>
+            <Z>12</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>12.3</X>
-            <Y>30.5</Y>
-            <Z>-3.0</Z>
+            <Y>38.07</Y>
+            <Z>-3</Z>
             <R00>1.0</R00>
             <R01>0.0</R01>
             <R02>0.0</R02>
@@ -6015,13 +6170,13 @@
           <bool name="CanCollide">true</bool>
           <bool name="CastShadow">true</bool>
           <Vector3 name="size">
-            <X>17.0</X>
+            <X>1.86</X>
             <Y>4.4</Y>
-            <Z>5.0</Z>
+            <Z>5</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>12.3</X>
-            <Y>30.5</Y>
+            <Y>38.07</Y>
             <Z>-11.5</Z>
             <R00>0.0</R00>
             <R01>-1.0</R01>
@@ -6581,14 +6736,14 @@
           <bool name="CanCollide">true</bool>
           <bool name="CastShadow">true</bool>
           <Vector3 name="size">
-            <X>5.0</X>
-            <Y>17.0</Y>
-            <Z>12.0</Z>
+            <X>4.4</X>
+            <Y>17</Y>
+            <Z>12</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>-32.0</X>
+            <X>-32.3</X>
             <Y>30.453</Y>
-            <Z>-5.0</Z>
+            <Z>-5</Z>
             <R00>1.0</R00>
             <R01>0.0</R01>
             <R02>0.0</R02>
@@ -6612,12 +6767,12 @@
           <bool name="CanCollide">true</bool>
           <bool name="CastShadow">true</bool>
           <Vector3 name="size">
-            <X>17.0</X>
-            <Y>5.0</Y>
-            <Z>5.0</Z>
+            <X>17</X>
+            <Y>4.4</Y>
+            <Z>5</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>-32.0</X>
+            <X>-32.3</X>
             <Y>30.5</Y>
             <Z>-13.5</Z>
             <R00>0.0</R00>
@@ -9473,14 +9628,14 @@
           <bool name="CanCollide">true</bool>
           <bool name="CastShadow">true</bool>
           <Vector3 name="size">
-            <X>7.0</X>
-            <Y>29.0</Y>
-            <Z>13.0</Z>
+            <X>7</X>
+            <Y>13.86</Y>
+            <Z>13</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>-26.0</X>
-            <Y>36.5</Y>
-            <Z>-30.0</Z>
+            <X>-26</X>
+            <Y>44.07</Y>
+            <Z>-30</Z>
             <R00>1.0</R00>
             <R01>0.0</R01>
             <R02>0.0</R02>
@@ -9497,6 +9652,37 @@
           <token name="BottomSurface">0</token>
         </Properties>
       </Item>
+      <Item class="Part" referent="RBX296Foot1">
+        <Properties>
+          <string name="Name">Weathered sandstone</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CastShadow">true</bool>
+          <Vector3 name="size">
+            <X>4.38</X>
+            <Y>15.14</Y>
+            <Z>13</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-27.31</X>
+            <Y>29.57</Y>
+            <Z>-30</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1</R11>
+            <R12>0</R12>
+            <R20>0</R20>
+            <R21>0</R21>
+            <R22>1</R22>
+          </CoordinateFrame>
+          <Color3uint8 name="Color3uint8">4291527767</Color3uint8>
+          <token name="Material">272</token>
+          <token name="TopSurface">0</token>
+          <token name="BottomSurface">0</token>
+        </Properties>
+      </Item>
       <Item class="WedgePart" referent="RBX297">
         <Properties>
           <string name="Name">Weathered sandstone</string>
@@ -9504,14 +9690,14 @@
           <bool name="CanCollide">true</bool>
           <bool name="CastShadow">true</bool>
           <Vector3 name="size">
-            <X>29.0</X>
-            <Y>7.0</Y>
-            <Z>7.0</Z>
+            <X>13.86</X>
+            <Y>7</Y>
+            <Z>7</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>-26.0</X>
-            <Y>36.5</Y>
-            <Z>-40.0</Z>
+            <X>-26</X>
+            <Y>44.07</Y>
+            <Z>-40</Z>
             <R00>0.0</R00>
             <R01>1.0</R01>
             <R02>0.0</R02>
@@ -9528,6 +9714,68 @@
           <token name="BottomSurface">0</token>
         </Properties>
       </Item>
+      <Item class="Part" referent="RBX297Foot1">
+        <Properties>
+          <string name="Name">Weathered sandstone</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CastShadow">true</bool>
+          <Vector3 name="size">
+            <X>4.38</X>
+            <Y>15.14</Y>
+            <Z>2.62</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-27.31</X>
+            <Y>29.57</Y>
+            <Z>-37.81</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1</R11>
+            <R12>0</R12>
+            <R20>0</R20>
+            <R21>0</R21>
+            <R22>1</R22>
+          </CoordinateFrame>
+          <Color3uint8 name="Color3uint8">4291527767</Color3uint8>
+          <token name="Material">272</token>
+          <token name="TopSurface">0</token>
+          <token name="BottomSurface">0</token>
+        </Properties>
+      </Item>
+      <Item class="WedgePart" referent="RBX297Foot2">
+        <Properties>
+          <string name="Name">Weathered sandstone</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CastShadow">true</bool>
+          <Vector3 name="size">
+            <X>15.14</X>
+            <Y>4.38</Y>
+            <Z>4.38</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-27.31</X>
+            <Y>29.57</Y>
+            <Z>-41.31</Z>
+            <R00>0</R00>
+            <R01>0</R01>
+            <R02>-1</R02>
+            <R10>1</R10>
+            <R11>0</R11>
+            <R12>0</R12>
+            <R20>0</R20>
+            <R21>-1</R21>
+            <R22>0</R22>
+          </CoordinateFrame>
+          <Color3uint8 name="Color3uint8">4291527767</Color3uint8>
+          <token name="Material">272</token>
+          <token name="TopSurface">0</token>
+          <token name="BottomSurface">0</token>
+        </Properties>
+      </Item>
       <Item class="WedgePart" referent="RBX298">
         <Properties>
           <string name="Name">Weathered sandstone</string>
@@ -9535,14 +9783,14 @@
           <bool name="CanCollide">true</bool>
           <bool name="CastShadow">true</bool>
           <Vector3 name="size">
-            <X>29.0</X>
-            <Y>7.0</Y>
-            <Z>7.0</Z>
+            <X>13.86</X>
+            <Y>7</Y>
+            <Z>7</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>-26.0</X>
-            <Y>36.5</Y>
-            <Z>-20.0</Z>
+            <X>-26</X>
+            <Y>44.07</Y>
+            <Z>-20</Z>
             <R00>0.0</R00>
             <R01>1.0</R01>
             <R02>0.0</R02>
@@ -9552,6 +9800,68 @@
             <R20>0.0</R20>
             <R21>0.0</R21>
             <R22>-1.0</R22>
+          </CoordinateFrame>
+          <Color3uint8 name="Color3uint8">4291527767</Color3uint8>
+          <token name="Material">272</token>
+          <token name="TopSurface">0</token>
+          <token name="BottomSurface">0</token>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="RBX298Foot1">
+        <Properties>
+          <string name="Name">Weathered sandstone</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CastShadow">true</bool>
+          <Vector3 name="size">
+            <X>4.38</X>
+            <Y>15.14</Y>
+            <Z>2.62</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-27.31</X>
+            <Y>29.57</Y>
+            <Z>-22.19</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1</R11>
+            <R12>0</R12>
+            <R20>0</R20>
+            <R21>0</R21>
+            <R22>1</R22>
+          </CoordinateFrame>
+          <Color3uint8 name="Color3uint8">4291527767</Color3uint8>
+          <token name="Material">272</token>
+          <token name="TopSurface">0</token>
+          <token name="BottomSurface">0</token>
+        </Properties>
+      </Item>
+      <Item class="WedgePart" referent="RBX298Foot2">
+        <Properties>
+          <string name="Name">Weathered sandstone</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CastShadow">true</bool>
+          <Vector3 name="size">
+            <X>15.14</X>
+            <Y>4.38</Y>
+            <Z>4.38</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-27.31</X>
+            <Y>29.57</Y>
+            <Z>-18.69</Z>
+            <R00>0</R00>
+            <R01>0</R01>
+            <R02>-1</R02>
+            <R10>-1</R10>
+            <R11>0</R11>
+            <R12>0</R12>
+            <R20>0</R20>
+            <R21>1</R21>
+            <R22>0</R22>
           </CoordinateFrame>
           <Color3uint8 name="Color3uint8">4291527767</Color3uint8>
           <token name="Material">272</token>
@@ -9818,14 +10128,14 @@
           <bool name="CanCollide">true</bool>
           <bool name="CastShadow">true</bool>
           <Vector3 name="size">
-            <X>6.0</X>
-            <Y>27.0</Y>
-            <Z>11.0</Z>
+            <X>6</X>
+            <Y>11.86</Y>
+            <Z>11</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>23.0</X>
-            <Y>35.5</Y>
-            <Z>-29.0</Z>
+            <X>23</X>
+            <Y>43.07</Y>
+            <Z>-29</Z>
             <R00>1.0</R00>
             <R01>0.0</R01>
             <R02>0.0</R02>
@@ -9842,6 +10152,37 @@
           <token name="BottomSurface">0</token>
         </Properties>
       </Item>
+      <Item class="Part" referent="RBX307Foot1">
+        <Properties>
+          <string name="Name">Weathered sandstone</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CastShadow">true</bool>
+          <Vector3 name="size">
+            <X>0.88</X>
+            <Y>15.14</Y>
+            <Z>11</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>25.56</X>
+            <Y>29.57</Y>
+            <Z>-29</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1</R11>
+            <R12>0</R12>
+            <R20>0</R20>
+            <R21>0</R21>
+            <R22>1</R22>
+          </CoordinateFrame>
+          <Color3uint8 name="Color3uint8">4292515685</Color3uint8>
+          <token name="Material">272</token>
+          <token name="TopSurface">0</token>
+          <token name="BottomSurface">0</token>
+        </Properties>
+      </Item>
       <Item class="WedgePart" referent="RBX308">
         <Properties>
           <string name="Name">Weathered sandstone</string>
@@ -9849,13 +10190,13 @@
           <bool name="CanCollide">true</bool>
           <bool name="CastShadow">true</bool>
           <Vector3 name="size">
-            <X>27.0</X>
-            <Y>6.0</Y>
-            <Z>6.0</Z>
+            <X>11.86</X>
+            <Y>6</Y>
+            <Z>6</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>23.0</X>
-            <Y>35.5</Y>
+            <X>23</X>
+            <Y>43.07</Y>
             <Z>-37.5</Z>
             <R00>0.0</R00>
             <R01>-1.0</R01>
@@ -9873,6 +10214,68 @@
           <token name="BottomSurface">0</token>
         </Properties>
       </Item>
+      <Item class="Part" referent="RBX308Foot1">
+        <Properties>
+          <string name="Name">Weathered sandstone</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CastShadow">true</bool>
+          <Vector3 name="size">
+            <X>0.88</X>
+            <Y>15.14</Y>
+            <Z>5.12</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>25.56</X>
+            <Y>29.57</Y>
+            <Z>-37.06</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1</R11>
+            <R12>0</R12>
+            <R20>0</R20>
+            <R21>0</R21>
+            <R22>1</R22>
+          </CoordinateFrame>
+          <Color3uint8 name="Color3uint8">4292515685</Color3uint8>
+          <token name="Material">272</token>
+          <token name="TopSurface">0</token>
+          <token name="BottomSurface">0</token>
+        </Properties>
+      </Item>
+      <Item class="WedgePart" referent="RBX308Foot2">
+        <Properties>
+          <string name="Name">Weathered sandstone</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CastShadow">true</bool>
+          <Vector3 name="size">
+            <X>15.14</X>
+            <Y>0.88</Y>
+            <Z>0.88</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>25.56</X>
+            <Y>29.57</Y>
+            <Z>-40.06</Z>
+            <R00>0</R00>
+            <R01>0</R01>
+            <R02>1</R02>
+            <R10>-1</R10>
+            <R11>0</R11>
+            <R12>0</R12>
+            <R20>0</R20>
+            <R21>-1</R21>
+            <R22>0</R22>
+          </CoordinateFrame>
+          <Color3uint8 name="Color3uint8">4292515685</Color3uint8>
+          <token name="Material">272</token>
+          <token name="TopSurface">0</token>
+          <token name="BottomSurface">0</token>
+        </Properties>
+      </Item>
       <Item class="WedgePart" referent="RBX309">
         <Properties>
           <string name="Name">Weathered sandstone</string>
@@ -9880,13 +10283,13 @@
           <bool name="CanCollide">true</bool>
           <bool name="CastShadow">true</bool>
           <Vector3 name="size">
-            <X>27.0</X>
-            <Y>6.0</Y>
-            <Z>6.0</Z>
+            <X>11.86</X>
+            <Y>6</Y>
+            <Z>6</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>23.0</X>
-            <Y>35.5</Y>
+            <X>23</X>
+            <Y>43.07</Y>
             <Z>-20.5</Z>
             <R00>0.0</R00>
             <R01>-1.0</R01>
@@ -9897,6 +10300,68 @@
             <R20>0.0</R20>
             <R21>0.0</R21>
             <R22>-1.0</R22>
+          </CoordinateFrame>
+          <Color3uint8 name="Color3uint8">4292515685</Color3uint8>
+          <token name="Material">272</token>
+          <token name="TopSurface">0</token>
+          <token name="BottomSurface">0</token>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="RBX309Foot1">
+        <Properties>
+          <string name="Name">Weathered sandstone</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CastShadow">true</bool>
+          <Vector3 name="size">
+            <X>0.88</X>
+            <Y>15.14</Y>
+            <Z>5.12</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>25.56</X>
+            <Y>29.57</Y>
+            <Z>-20.94</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1</R11>
+            <R12>0</R12>
+            <R20>0</R20>
+            <R21>0</R21>
+            <R22>1</R22>
+          </CoordinateFrame>
+          <Color3uint8 name="Color3uint8">4292515685</Color3uint8>
+          <token name="Material">272</token>
+          <token name="TopSurface">0</token>
+          <token name="BottomSurface">0</token>
+        </Properties>
+      </Item>
+      <Item class="WedgePart" referent="RBX309Foot2">
+        <Properties>
+          <string name="Name">Weathered sandstone</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CastShadow">true</bool>
+          <Vector3 name="size">
+            <X>15.14</X>
+            <Y>0.88</Y>
+            <Z>0.88</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>25.56</X>
+            <Y>29.57</Y>
+            <Z>-17.94</Z>
+            <R00>0</R00>
+            <R01>0</R01>
+            <R02>1</R02>
+            <R10>1</R10>
+            <R11>0</R11>
+            <R12>0</R12>
+            <R20>0</R20>
+            <R21>1</R21>
+            <R22>0</R22>
           </CoordinateFrame>
           <Color3uint8 name="Color3uint8">4292515685</Color3uint8>
           <token name="Material">272</token>
@@ -13379,23 +13844,23 @@
           <token name="TopSurface">3</token>
           <token name="BottomSurface">0</token>
           <Vector3 name="size">
-            <X>20</X>
-            <Y>0.06400</Y>
+            <X>50</X>
+            <Y>0.064</Y>
             <Z>5.1</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>0</X>
-            <Y>24.06800</Y>
+            <Y>24.068</Y>
             <Z>1.55</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
             <R10>0</R10>
-            <R11>1.0</R11>
-            <R12>0.0</R12>
+            <R11>1</R11>
+            <R12>0</R12>
             <R20>0</R20>
-            <R21>-0.0</R21>
-            <R22>1.0</R22>
+            <R21>0</R21>
+            <R22>1</R22>
           </CoordinateFrame>
         </Properties>
       </Item>
@@ -13410,23 +13875,23 @@
           <token name="TopSurface">0</token>
           <token name="BottomSurface">0</token>
           <Vector3 name="size">
-            <X>22.6</X>
-            <Y>12.02</Y>
-            <Z>1.7</Z>
+            <X>52.76</X>
+            <Y>12.2</Y>
+            <Z>2.18</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>0</X>
-            <Y>30.09</Y>
-            <Z>-21.85</Z>
+            <Y>30.18</Y>
+            <Z>-52.09</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
             <R10>0</R10>
-            <R11>1.0</R11>
-            <R12>0.0</R12>
+            <R11>1</R11>
+            <R12>0</R12>
             <R20>0</R20>
-            <R21>-0.0</R21>
-            <R22>1.0</R22>
+            <R21>0</R21>
+            <R22>1</R22>
           </CoordinateFrame>
         </Properties>
       </Item>
@@ -13441,23 +13906,23 @@
           <token name="TopSurface">0</token>
           <token name="BottomSurface">0</token>
           <Vector3 name="size">
-            <X>1.1</X>
-            <Y>12.28</Y>
-            <Z>20</Z>
+            <X>1.16</X>
+            <Y>12.32</Y>
+            <Z>50.06</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>-10.55</X>
-            <Y>30.22</Y>
-            <Z>-11</Z>
+            <X>-25.58</X>
+            <Y>30.24</Y>
+            <Z>-25.97</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
             <R10>0</R10>
-            <R11>1.0</R11>
-            <R12>0.0</R12>
+            <R11>1</R11>
+            <R12>0</R12>
             <R20>0</R20>
-            <R21>-0.0</R21>
-            <R22>1.0</R22>
+            <R21>0</R21>
+            <R22>1</R22>
           </CoordinateFrame>
         </Properties>
       </Item>
@@ -13472,23 +13937,23 @@
           <token name="TopSurface">3</token>
           <token name="BottomSurface">0</token>
           <Vector3 name="size">
-            <X>30</X>
-            <Y>0.04400</Y>
-            <Z>28.6</Z>
+            <X>15</X>
+            <Y>0.044</Y>
+            <Z>63.6</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>-25</X>
-            <Y>24.05800</Y>
-            <Z>-9.7</Z>
+            <X>-32.5</X>
+            <Y>24.058</Y>
+            <Z>-27.2</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
             <R10>0</R10>
-            <R11>1.0</R11>
-            <R12>0.0</R12>
+            <R11>1</R11>
+            <R12>0</R12>
             <R20>0</R20>
-            <R21>-0.0</R21>
-            <R22>1.0</R22>
+            <R21>0</R21>
+            <R22>1</R22>
           </CoordinateFrame>
         </Properties>
       </Item>
@@ -13503,23 +13968,23 @@
           <token name="TopSurface">0</token>
           <token name="BottomSurface">0</token>
           <Vector3 name="size">
-            <X>1.1</X>
-            <Y>12.28</Y>
-            <Z>20</Z>
+            <X>1.16</X>
+            <Y>12.32</Y>
+            <Z>50.06</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>10.55</X>
-            <Y>30.22</Y>
-            <Z>-11</Z>
+            <X>25.58</X>
+            <Y>30.24</Y>
+            <Z>-25.97</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
             <R10>0</R10>
-            <R11>1.0</R11>
-            <R12>0.0</R12>
+            <R11>1</R11>
+            <R12>0</R12>
             <R20>0</R20>
-            <R21>-0.0</R21>
-            <R22>1.0</R22>
+            <R21>0</R21>
+            <R22>1</R22>
           </CoordinateFrame>
         </Properties>
       </Item>
@@ -13534,23 +13999,23 @@
           <token name="TopSurface">3</token>
           <token name="BottomSurface">0</token>
           <Vector3 name="size">
-            <X>30</X>
-            <Y>0.04400</Y>
-            <Z>28.6</Z>
+            <X>15</X>
+            <Y>0.044</Y>
+            <Z>63.6</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>25</X>
-            <Y>24.05800</Y>
-            <Z>-9.7</Z>
+            <X>32.5</X>
+            <Y>24.058</Y>
+            <Z>-27.2</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
             <R10>0</R10>
-            <R11>1.0</R11>
-            <R12>0.0</R12>
+            <R11>1</R11>
+            <R12>0</R12>
             <R20>0</R20>
-            <R21>-0.0</R21>
-            <R22>1.0</R22>
+            <R21>0</R21>
+            <R22>1</R22>
           </CoordinateFrame>
         </Properties>
       </Item>
@@ -13565,23 +14030,23 @@
           <token name="TopSurface">3</token>
           <token name="BottomSurface">0</token>
           <Vector3 name="size">
-            <X>20</X>
-            <Y>0.04400</Y>
-            <Z>6</Z>
+            <X>50</X>
+            <Y>0.044</Y>
+            <Z>11</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>0</X>
-            <Y>24.05800</Y>
-            <Z>-24</Z>
+            <Y>24.058</Y>
+            <Z>-56.5</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
             <R10>0</R10>
-            <R11>1.0</R11>
-            <R12>0.0</R12>
+            <R11>1</R11>
+            <R12>0</R12>
             <R20>0</R20>
-            <R21>-0.0</R21>
-            <R22>1.0</R22>
+            <R21>0</R21>
+            <R22>1</R22>
           </CoordinateFrame>
         </Properties>
       </Item>
@@ -13596,23 +14061,23 @@
           <token name="TopSurface">3</token>
           <token name="BottomSurface">0</token>
           <Vector3 name="size">
-            <X>22.42</X>
+            <X>52.56</X>
             <Y>1.86</Y>
-            <Z>23.3</Z>
+            <Z>53.92</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>0</X>
             <Y>37.03</Y>
-            <Z>-10.65</Z>
+            <Z>-25.96</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
             <R10>0</R10>
-            <R11>1.0</R11>
-            <R12>0.0</R12>
+            <R11>1</R11>
+            <R12>0</R12>
             <R20>0</R20>
-            <R21>-0.0</R21>
-            <R22>1.0</R22>
+            <R21>0</R21>
+            <R22>1</R22>
           </CoordinateFrame>
         </Properties>
       </Item>
@@ -13633,9 +14098,9 @@
             <Z>0.27</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>-8.9</X>
+            <X>-23.75</X>
             <Y>35.49</Y>
-            <Z>-4.5</Z>
+            <Z>-8</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -13665,9 +14130,9 @@
             <Z>0.75</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>-8.9</X>
+            <X>-23.75</X>
             <Y>34.54</Y>
-            <Z>-4.5</Z>
+            <Z>-8</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -13709,9 +14174,9 @@
             <Z>0.27</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>-8.9</X>
+            <X>-23.75</X>
             <Y>35.49</Y>
-            <Z>-17</Z>
+            <Z>-44</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -13741,9 +14206,9 @@
             <Z>0.75</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>-8.9</X>
+            <X>-23.75</X>
             <Y>34.54</Y>
-            <Z>-17</Z>
+            <Z>-44</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -13785,9 +14250,9 @@
             <Z>0.27</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>8.9</X>
+            <X>23.75</X>
             <Y>35.49</Y>
-            <Z>-4.5</Z>
+            <Z>-8</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -13817,9 +14282,9 @@
             <Z>0.75</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>8.9</X>
+            <X>23.75</X>
             <Y>34.54</Y>
-            <Z>-4.5</Z>
+            <Z>-8</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -13861,9 +14326,9 @@
             <Z>0.27</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>8.9</X>
+            <X>23.75</X>
             <Y>35.49</Y>
-            <Z>-17</Z>
+            <Z>-44</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -13893,9 +14358,9 @@
             <Z>0.75</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>8.9</X>
+            <X>23.75</X>
             <Y>34.54</Y>
-            <Z>-17</Z>
+            <Z>-44</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -13931,23 +14396,23 @@
           <token name="TopSurface">0</token>
           <token name="BottomSurface">0</token>
           <Vector3 name="size">
-            <X>19.84</X>
-            <Y>0.57600</Y>
-            <Z>4.9600</Z>
+            <X>49.84</X>
+            <Y>0.576</Y>
+            <Z>4.96</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>0</X>
-            <Y>23.74800</Y>
-            <Z>1.6200</Z>
+            <Y>23.748</Y>
+            <Z>1.62</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
             <R10>0</R10>
-            <R11>1.0</R11>
-            <R12>0.0</R12>
+            <R11>1</R11>
+            <R12>0</R12>
             <R20>0</R20>
-            <R21>-0.0</R21>
-            <R22>1.0</R22>
+            <R21>0</R21>
+            <R22>1</R22>
           </CoordinateFrame>
         </Properties>
       </Item>
@@ -13962,23 +14427,23 @@
           <token name="TopSurface">0</token>
           <token name="BottomSurface">0</token>
           <Vector3 name="size">
-            <X>29.8600</X>
-            <Y>3.19600</Y>
-            <Z>28.6</Z>
+            <X>14.86</X>
+            <Y>3.196</Y>
+            <Z>63.6</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>-25.0700</X>
-            <Y>22.43800</Y>
-            <Z>-9.7</Z>
+            <X>-32.57</X>
+            <Y>22.438</Y>
+            <Z>-27.2</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
             <R10>0</R10>
-            <R11>1.0</R11>
-            <R12>0.0</R12>
+            <R11>1</R11>
+            <R12>0</R12>
             <R20>0</R20>
-            <R21>-0.0</R21>
-            <R22>1.0</R22>
+            <R21>0</R21>
+            <R22>1</R22>
           </CoordinateFrame>
         </Properties>
       </Item>
@@ -13993,23 +14458,23 @@
           <token name="TopSurface">0</token>
           <token name="BottomSurface">0</token>
           <Vector3 name="size">
-            <X>29.8600</X>
-            <Y>3.19600</Y>
-            <Z>28.6</Z>
+            <X>14.86</X>
+            <Y>3.196</Y>
+            <Z>63.6</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>25.0700</X>
-            <Y>22.43800</Y>
-            <Z>-9.7</Z>
+            <X>32.57</X>
+            <Y>22.438</Y>
+            <Z>-27.2</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
             <R10>0</R10>
-            <R11>1.0</R11>
-            <R12>0.0</R12>
+            <R11>1</R11>
+            <R12>0</R12>
             <R20>0</R20>
-            <R21>-0.0</R21>
-            <R22>1.0</R22>
+            <R21>0</R21>
+            <R22>1</R22>
           </CoordinateFrame>
         </Properties>
       </Item>
@@ -14024,23 +14489,116 @@
           <token name="TopSurface">0</token>
           <token name="BottomSurface">0</token>
           <Vector3 name="size">
-            <X>19.84</X>
-            <Y>3.25600</Y>
-            <Z>5.8600</Z>
+            <X>49.84</X>
+            <Y>3.256</Y>
+            <Z>10.86</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>0</X>
-            <Y>22.40800</Y>
-            <Z>-24.0700</Z>
+            <Y>22.408</Y>
+            <Z>-56.57</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
             <R10>0</R10>
-            <R11>1.0</R11>
-            <R12>0.0</R12>
+            <R11>1</R11>
+            <R12>0</R12>
             <R20>0</R20>
-            <R21>-0.0</R21>
-            <R22>1.0</R22>
+            <R21>0</R21>
+            <R22>1</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="HutEntranceCheek-1">
+        <Properties>
+          <string name="Name">Entrance return</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4287192657</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">0</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>16.78</X>
+            <Y>13</Y>
+            <Z>2.65</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-17.69</X>
+            <Y>30.6</Y>
+            <Z>0.325</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1</R11>
+            <R12>0</R12>
+            <R20>0</R20>
+            <R21>0</R21>
+            <R22>1</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="HutEntranceCheek1">
+        <Properties>
+          <string name="Name">Entrance return</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4287192657</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">0</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>16.78</X>
+            <Y>13</Y>
+            <Z>2.65</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>17.69</X>
+            <Y>30.6</Y>
+            <Z>0.325</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1</R11>
+            <R12>0</R12>
+            <R20>0</R20>
+            <R21>0</R21>
+            <R22>1</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="HutRidgeFill">
+        <Properties>
+          <string name="Name">Rear sandstone bank</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4287192657</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">0</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>64.9</X>
+            <Y>11.57</Y>
+            <Z>10.23</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>0</X>
+            <Y>29.835</Y>
+            <Z>-56.335</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1</R11>
+            <R12>0</R12>
+            <R20>0</R20>
+            <R21>0</R21>
+            <R22>1</R22>
           </CoordinateFrame>
         </Properties>
       </Item>
@@ -14531,6 +15089,2610 @@
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>7.5</X>
+            <Y>21.5</Y>
+            <Z>-3.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt0_0">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291136092</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-22.5</X>
+            <Y>21.5</Y>
+            <Z>-48.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt0_1">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291333213</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-22.5</X>
+            <Y>21.5</Y>
+            <Z>-43.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt0_2">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291399264</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-22.5</X>
+            <Y>21.5</Y>
+            <Z>-38.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt0_3">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291465314</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-22.5</X>
+            <Y>21.5</Y>
+            <Z>-33.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt0_4">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4290938970</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-22.5</X>
+            <Y>21.5</Y>
+            <Z>-28.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt0_5">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291136092</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-22.5</X>
+            <Y>21.5</Y>
+            <Z>-23.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt0_6">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291333213</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-22.5</X>
+            <Y>21.5</Y>
+            <Z>-18.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt0_7">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291399264</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-22.5</X>
+            <Y>21.5</Y>
+            <Z>-13.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt0_8">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291465314</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-22.5</X>
+            <Y>21.5</Y>
+            <Z>-8.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt0_9">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4290938970</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-22.5</X>
+            <Y>21.5</Y>
+            <Z>-3.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt1_0">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291399264</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-17.5</X>
+            <Y>21.5</Y>
+            <Z>-48.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt1_1">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291465314</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-17.5</X>
+            <Y>21.5</Y>
+            <Z>-43.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt1_2">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4290938970</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-17.5</X>
+            <Y>21.5</Y>
+            <Z>-38.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt1_3">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291136092</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-17.5</X>
+            <Y>21.5</Y>
+            <Z>-33.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt1_4">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291333213</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-17.5</X>
+            <Y>21.5</Y>
+            <Z>-28.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt1_5">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291399264</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-17.5</X>
+            <Y>21.5</Y>
+            <Z>-23.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt1_6">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291465314</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-17.5</X>
+            <Y>21.5</Y>
+            <Z>-18.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt1_7">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4290938970</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-17.5</X>
+            <Y>21.5</Y>
+            <Z>-13.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt1_8">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291136092</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-17.5</X>
+            <Y>21.5</Y>
+            <Z>-8.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt1_9">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291333213</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-17.5</X>
+            <Y>21.5</Y>
+            <Z>-3.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt2_0">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4290938970</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-12.5</X>
+            <Y>21.5</Y>
+            <Z>-48.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt2_1">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291136092</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-12.5</X>
+            <Y>21.5</Y>
+            <Z>-43.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt2_2">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291333213</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-12.5</X>
+            <Y>21.5</Y>
+            <Z>-38.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt2_3">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291399264</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-12.5</X>
+            <Y>21.5</Y>
+            <Z>-33.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt2_4">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291465314</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-12.5</X>
+            <Y>21.5</Y>
+            <Z>-28.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt2_5">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4290938970</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-12.5</X>
+            <Y>21.5</Y>
+            <Z>-23.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt2_6">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291136092</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-12.5</X>
+            <Y>21.5</Y>
+            <Z>-18.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt2_7">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291333213</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-12.5</X>
+            <Y>21.5</Y>
+            <Z>-13.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt2_8">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291399264</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-12.5</X>
+            <Y>21.5</Y>
+            <Z>-8.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt2_9">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291465314</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-12.5</X>
+            <Y>21.5</Y>
+            <Z>-3.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt3_0">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291333213</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-7.5</X>
+            <Y>21.5</Y>
+            <Z>-48.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt3_1">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291399264</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-7.5</X>
+            <Y>21.5</Y>
+            <Z>-43.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt3_2">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291465314</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-7.5</X>
+            <Y>21.5</Y>
+            <Z>-38.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt3_3">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4290938970</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-7.5</X>
+            <Y>21.5</Y>
+            <Z>-33.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt3_4">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291136092</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-7.5</X>
+            <Y>21.5</Y>
+            <Z>-28.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt3_5">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291333213</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-7.5</X>
+            <Y>21.5</Y>
+            <Z>-23.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt4_0">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291465314</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-2.5</X>
+            <Y>21.5</Y>
+            <Z>-48.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt4_1">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4290938970</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-2.5</X>
+            <Y>21.5</Y>
+            <Z>-43.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt4_2">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291136092</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-2.5</X>
+            <Y>21.5</Y>
+            <Z>-38.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt4_3">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291333213</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-2.5</X>
+            <Y>21.5</Y>
+            <Z>-33.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt4_4">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291399264</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-2.5</X>
+            <Y>21.5</Y>
+            <Z>-28.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt4_5">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291465314</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-2.5</X>
+            <Y>21.5</Y>
+            <Z>-23.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt5_0">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291136092</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>2.5</X>
+            <Y>21.5</Y>
+            <Z>-48.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt5_1">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291333213</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>2.5</X>
+            <Y>21.5</Y>
+            <Z>-43.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt5_2">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291399264</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>2.5</X>
+            <Y>21.5</Y>
+            <Z>-38.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt5_3">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291465314</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>2.5</X>
+            <Y>21.5</Y>
+            <Z>-33.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt5_4">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4290938970</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>2.5</X>
+            <Y>21.5</Y>
+            <Z>-28.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt5_5">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291136092</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>2.5</X>
+            <Y>21.5</Y>
+            <Z>-23.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt6_0">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291399264</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>7.5</X>
+            <Y>21.5</Y>
+            <Z>-48.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt6_1">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291465314</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>7.5</X>
+            <Y>21.5</Y>
+            <Z>-43.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt6_2">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4290938970</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>7.5</X>
+            <Y>21.5</Y>
+            <Z>-38.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt6_3">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291136092</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>7.5</X>
+            <Y>21.5</Y>
+            <Z>-33.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt6_4">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291333213</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>7.5</X>
+            <Y>21.5</Y>
+            <Z>-28.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt6_5">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291399264</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>7.5</X>
+            <Y>21.5</Y>
+            <Z>-23.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt7_0">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4290938970</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>12.5</X>
+            <Y>21.5</Y>
+            <Z>-48.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt7_1">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291136092</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>12.5</X>
+            <Y>21.5</Y>
+            <Z>-43.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt7_2">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291333213</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>12.5</X>
+            <Y>21.5</Y>
+            <Z>-38.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt7_3">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291399264</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>12.5</X>
+            <Y>21.5</Y>
+            <Z>-33.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt7_4">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291465314</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>12.5</X>
+            <Y>21.5</Y>
+            <Z>-28.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt7_5">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4290938970</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>12.5</X>
+            <Y>21.5</Y>
+            <Z>-23.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt7_6">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291136092</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>12.5</X>
+            <Y>21.5</Y>
+            <Z>-18.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt7_7">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291333213</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>12.5</X>
+            <Y>21.5</Y>
+            <Z>-13.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt7_8">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291399264</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>12.5</X>
+            <Y>21.5</Y>
+            <Z>-8.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt7_9">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291465314</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>12.5</X>
+            <Y>21.5</Y>
+            <Z>-3.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt8_0">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291333213</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>17.5</X>
+            <Y>21.5</Y>
+            <Z>-48.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt8_1">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291399264</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>17.5</X>
+            <Y>21.5</Y>
+            <Z>-43.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt8_2">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291465314</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>17.5</X>
+            <Y>21.5</Y>
+            <Z>-38.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt8_3">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4290938970</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>17.5</X>
+            <Y>21.5</Y>
+            <Z>-33.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt8_4">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291136092</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>17.5</X>
+            <Y>21.5</Y>
+            <Z>-28.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt8_5">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291333213</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>17.5</X>
+            <Y>21.5</Y>
+            <Z>-23.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt8_6">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291399264</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>17.5</X>
+            <Y>21.5</Y>
+            <Z>-18.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt8_7">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291465314</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>17.5</X>
+            <Y>21.5</Y>
+            <Z>-13.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt8_8">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4290938970</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>17.5</X>
+            <Y>21.5</Y>
+            <Z>-8.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt8_9">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291136092</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>17.5</X>
+            <Y>21.5</Y>
+            <Z>-3.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt9_0">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291465314</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>22.5</X>
+            <Y>21.5</Y>
+            <Z>-48.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt9_1">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4290938970</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>22.5</X>
+            <Y>21.5</Y>
+            <Z>-43.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt9_2">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291136092</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>22.5</X>
+            <Y>21.5</Y>
+            <Z>-38.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt9_3">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291333213</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>22.5</X>
+            <Y>21.5</Y>
+            <Z>-33.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt9_4">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291399264</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>22.5</X>
+            <Y>21.5</Y>
+            <Z>-28.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt9_5">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291465314</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>22.5</X>
+            <Y>21.5</Y>
+            <Z>-23.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt9_6">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4290938970</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>22.5</X>
+            <Y>21.5</Y>
+            <Z>-18.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt9_7">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291136092</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>22.5</X>
+            <Y>21.5</Y>
+            <Z>-13.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt9_8">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291333213</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>22.5</X>
+            <Y>21.5</Y>
+            <Z>-8.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="ExpandedDirt9_9">
+        <Properties>
+          <string name="Name">Dirt</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291399264</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>22.5</X>
             <Y>21.5</Y>
             <Z>-3.5</Z>
             <R00>1</R00>
@@ -83700,12 +86862,12 @@
             <bool name="CanCollide">true</bool>
             <bool name="CastShadow">true</bool>
             <Vector3 name="size">
-              <X>67.5</X>
+              <X>53.253</X>
               <Y>2.5</Y>
               <Z>30.7916</Z>
             </Vector3>
             <CoordinateFrame name="CFrame">
-              <X>-45.703</X>
+              <X>-52.8265</X>
               <Y>29.525</Y>
               <Z>-34.5</Z>
               <R00>-1.0</R00>
@@ -83731,12 +86893,12 @@
             <bool name="CanCollide">true</bool>
             <bool name="CastShadow">true</bool>
             <Vector3 name="size">
-              <X>59.5</X>
+              <X>52.753</X>
               <Y>2.5</Y>
               <Z>30.7916</Z>
             </Vector3>
             <CoordinateFrame name="CFrame">
-              <X>49.203</X>
+              <X>52.5765</X>
               <Y>29.525</Y>
               <Z>-34.5</Z>
               <R00>-1.0</R00>
@@ -83762,14 +86924,14 @@
             <bool name="CanCollide">true</bool>
             <bool name="CastShadow">true</bool>
             <Vector3 name="size">
-              <X>31.5</X>
-              <Y>1.05</Y>
+              <X>52.4</X>
+              <Y>3.37</Y>
               <Z>30.09585</Z>
             </Vector3>
             <CoordinateFrame name="CFrame">
-              <X>3.75</X>
-              <Y>38.675</Y>
-              <Z>-34.0</Z>
+              <X>0</X>
+              <Y>37.5186943</Y>
+              <Z>-33.9074956</Z>
               <R00>-1.0</R00>
               <R01>0.0</R01>
               <R02>0.0</R02>
@@ -83793,14 +86955,14 @@
             <bool name="CanCollide">true</bool>
             <bool name="CastShadow">true</bool>
             <Vector3 name="size">
-              <X>31.5</X>
+              <X>52.64</X>
               <Y>1.05</Y>
               <Z>10.20796</Z>
             </Vector3>
             <CoordinateFrame name="CFrame">
-              <X>3.797</X>
+              <X>0</X>
               <Y>36.45</Y>
-              <Z>-54.0</Z>
+              <Z>-54</Z>
               <R00>-1.0</R00>
               <R01>0.0</R01>
               <R02>0.0</R02>
@@ -83824,14 +86986,14 @@
             <bool name="CanCollide">true</bool>
             <bool name="CastShadow">true</bool>
             <Vector3 name="size">
-              <X>112.0</X>
-              <Y>4.0</Y>
-              <Z>52.0</Z>
+              <X>97.61</X>
+              <Y>4</Y>
+              <Z>52</Z>
             </Vector3>
             <CoordinateFrame name="CFrame">
-              <X>-68.0</X>
+              <X>-75.195</X>
               <Y>33.95</Y>
-              <Z>-75.0</Z>
+              <Z>-75</Z>
               <R00>-1.0</R00>
               <R01>0.0</R01>
               <R02>0.0</R02>
@@ -83855,14 +87017,14 @@
             <bool name="CanCollide">true</bool>
             <bool name="CastShadow">true</bool>
             <Vector3 name="size">
-              <X>104.5</X>
-              <Y>4.0</Y>
-              <Z>52.0</Z>
+              <X>97.61</X>
+              <Y>4</Y>
+              <Z>52</Z>
             </Vector3>
             <CoordinateFrame name="CFrame">
-              <X>71.75</X>
+              <X>75.195</X>
               <Y>33.95</Y>
-              <Z>-75.0</Z>
+              <Z>-75</Z>
               <R00>-1.0</R00>
               <R01>0.0</R01>
               <R02>0.0</R02>
@@ -83886,14 +87048,14 @@
             <bool name="CanCollide">true</bool>
             <bool name="CastShadow">true</bool>
             <Vector3 name="size">
-              <X>31.5</X>
-              <Y>3.0</Y>
-              <Z>42.0</Z>
+              <X>52.78</X>
+              <Y>3</Y>
+              <Z>42</Z>
             </Vector3>
             <CoordinateFrame name="CFrame">
-              <X>3.75</X>
+              <X>0</X>
               <Y>34.45</Y>
-              <Z>-80.0</Z>
+              <Z>-80</Z>
               <R00>-1.0</R00>
               <R01>0.0</R01>
               <R02>0.0</R02>

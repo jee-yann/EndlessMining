@@ -41,8 +41,8 @@ report.OnServerEvent:Connect(function(player, stage, detail)
 		params.FilterType = Enum.RaycastFilterType.Include
 		params.FilterDescendantsInstances = { workspace.CitrineCove.MineBlocks }
 		local lowest
-		for x = -2, 1 do
-			for z = -5, -2 do
+		for x = -config.HallHalfWidth / config.Cell, config.HallHalfWidth / config.Cell - 1 do
+			for z = config.HallBack / config.Cell, config.HallFront / config.Cell - 1 do
 				local start = origin + Vector3.new((x + 0.5) * config.Cell, 2, (z + 0.5) * config.Cell)
 				local hit = workspace:Raycast(start, -Vector3.yAxis * 65, params)
 				if hit and (not lowest or hit.Position.Y < lowest.Y) then

@@ -24,6 +24,7 @@ net:SetAttribute("Origin", world.origin)
 net:SetAttribute("Landing", landing)
 net:SetAttribute("Entrance", entrance)
 net:SetAttribute("DigFloor", world.origin + Vector3.new(0, Config.FloorY, (Config.HallFront + Config.HallBack) / 2))
+net:SetAttribute("DigFloorSize", Vector3.new(2 * Config.HallHalfWidth, Config.Cell, Config.HallFront - Config.HallBack))
 net:SetAttribute("Ready", false)
 for _, name in { "Mine", "Action", "Feedback", "Dust", "FriendsBoard", "Swing" } do
 	local event = Instance.new(if name == "Dust" then "UnreliableRemoteEvent" else "RemoteEvent")

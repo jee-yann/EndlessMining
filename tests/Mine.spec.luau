@@ -85,12 +85,12 @@ assert(
 assert(Ores.byName.Dirt.xp == 0 and Ores.byName.Stone.xp == 0 and Ores.byName.Starfall.xp > Ores.byName.Emerald.xp)
 local top = Geology.new(11)
 for row = 1, 2 do
-	for x = -2, 1 do
-		for z = -5, -2 do
+	for x = -5, 4 do
+		for z = -11, -2 do
 			assert(top:material(Vector3.new(x, -row, z)) == Ores.byName.Dirt.material)
 		end
 	end
-	assert(not Ores.byMaterial[top:material(Vector3.new(2, -row, -3))])
+	assert(not Ores.byMaterial[top:material(Vector3.new(5, -row, -3))])
 end
 local hashes = {}
 for _, seed in { 11, 73129, 91003, 73129 } do
@@ -186,7 +186,7 @@ for _, ore in Ores.list do
 	assert(exhibit:FindFirstChild(ore.name .. " sample") and exhibit:FindFirstChild(ore.name .. " label"))
 end
 assert(not floorAt(10, 32), "The inlet should pass completely under the bridge")
-for z = 2, -24, -0.5 do
+for z = 2, -54, -0.5 do
 	for _, x in { -6, 0, 6 } do
 		local floor = floorAt(x, z)
 		assert(floor and math.abs(floor.Position.Y - world.origin.Y) < 0.30, "Gap on hut approach at " .. z)
@@ -198,8 +198,15 @@ for z = 2, -24, -0.5 do
 end
 assert(not mapCopy:FindFirstChild("Mine threshold", true))
 assert(Config.FloorY == 0 and Config.Cell == 5)
+-- From the rear or either rear corner, solid rock must close the view into the hut.
+for x = -24, 24, 1.5 do
+	for height = 0.5, 12, 1 do
+		local start = world.origin + Vector3.new(x, height, -68)
+		assert(workspace:Raycast(start, Vector3.zAxis * 14, onMap), "Open back wall")
+	end
+end
 for x = -35, 35, 1.25 do
-	for z = -26, -14, 1.25 do
+	for z = -65, -14, 1.25 do
 		assert(workspace:Raycast(world.origin + Vector3.new(x, 48, z), -Vector3.yAxis * 50, onMap), "Hole around hut")
 	end
 end
@@ -285,7 +292,7 @@ assert(not surface:FindFirstChild("EditFace"))
 mapCopy.EditFace:Destroy()
 local grid = world.grid
 local count = #grid.folder:GetChildren()
-assert(count == 16, "Starting shell parts: " .. count)
+assert(count == 100, "Starting shell parts: " .. count)
 local function center(x, y, z)
 	return grid:center(Vector3.new(x, y, z))
 end
@@ -302,9 +309,10 @@ local function cut(x, y, z)
 	return original.name
 end
 onMap.FilterDescendantsInstances = { mapCopy, grid.folder }
-for x = -2, 1 do
-	for z = -5, -2 do
+for x = -5, 4 do
+	for z = -11, -2 do
 		local at = center(x, -1, z)
+		assert(not workspace:Raycast(at + Vector3.yAxis * 2.8, Vector3.yAxis * 8, onMap), "Blocked mining floor")
 		local hit = workspace:Raycast(at + Vector3.yAxis * 6, -Vector3.yAxis * 7, onMap)
 		assert(
 			hit
@@ -321,7 +329,7 @@ for y = -1, -6, -1 do
 		cut(0, y, -5)
 	end
 end
-assert(not grid:take(Vector3.new(0, -1, -6)), "Surface foundation must remain closed")
+assert(not grid:take(Vector3.new(0, -1, -12)), "Surface foundation must remain closed")
 for y = -1, -3, -1 do
 	cut(1, y, -5)
 end
@@ -379,8 +387,18 @@ assert(workspace.Terrain:CountCells() == terrainCells)
 local old = world.generation
 world.seed = 90237
 world:generate()
+assert(#grid.folder:GetChildren() == 100, "Field reset lost part of the hut floor")
 assert(world.generation == old + 1 and world.removed == 0 and world:oreAt(center(-1, -1, -5)).name == "Dirt")
 assert(not entry(58, -3, -142) and not entry(2, -7, -44))
+for x = -5, 4 do
+	for z = -11, -2 do
+		assert(cut(x, -1, z) == "Dirt")
+		local top = center(x, -1, z) + Vector3.yAxis * Config.Cell
+		local hit = workspace:Raycast(top, -Vector3.yAxis * (2 * Config.Cell), onMap)
+		assert(hit and hit.Instance == entry(x, -2, z), "Fixed scenery obstructs the second layer")
+		assert(cut(x, -2, z) == "Dirt" and world:oreAt(center(x, -3, z)).name ~= "Dirt")
+	end
+end
 print(
 	"PASS winding cave discovery, narrow entrance, clearance, depth gates, distant chunk cuts, shared depletion and reset"
 )

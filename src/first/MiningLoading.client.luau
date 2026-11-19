@@ -109,7 +109,8 @@ overlap.FilterType = Enum.RaycastFilterType.Include
 local requestedEntrance = false
 local function entranceBrickCount(net)
 	local floor = net:GetAttribute("DigFloor")
-	if not floor then
+	local size = net:GetAttribute("DigFloorSize")
+	if not floor or not size then
 		return 0
 	end
 	if workspace.StreamingEnabled and not requestedEntrance then
@@ -128,7 +129,7 @@ local function entranceBrickCount(net)
 		return 0
 	end
 	overlap.FilterDescendantsInstances = { grid }
-	return #workspace:GetPartBoundsInBox(CFrame.new(floor - Vector3.yAxis * 2.5), Vector3.new(19, 5, 19), overlap)
+	return #workspace:GetPartBoundsInBox(CFrame.new(floor - Vector3.yAxis * (size.Y / 2)), size, overlap)
 end
 
 -- The entrance lights can already be replicated while the renderer still shows
