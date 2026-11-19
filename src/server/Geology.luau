@@ -20,12 +20,13 @@ function Geology:vein(a, b, c)
 	local rng = Random.new((self.seed + a * 73856093 + b * 19349663 + c * 83492791) % 2147483647)
 	local x, y, z = a * 32 + rng:NextNumber(10, 22), b * 32 + rng:NextNumber(10, 22), c * 32 + rng:NextNumber(10, 22)
 	local depth = math.max(0, -y)
-	local lode = depth >= 104 and rng:NextNumber() < 0.075
+	local lode = depth >= Ores.byName.Gold.min and rng:NextNumber() < 0.075
 	local total, ore = 0, Ores.byName.Coal
 	for i = 2, #Ores.list do
 		local candidate = Ores.list[i]
 		if depth >= candidate.min and (not lode or candidate.hardness >= 4) then
-			local weight = candidate.weight / (1 + ((depth - candidate.preferred) / 58) ^ 2)
+			local weight = candidate.weight
+				/ (1 + ((depth - candidate.preferred) / math.max(58, candidate.preferred * 0.26)) ^ 2)
 			total += weight
 			if rng:NextNumber() * total < weight then
 				ore = candidate
@@ -81,7 +82,7 @@ function Geology:sample(x, y, z)
 	if y >= 0 and z > -23 and (x / 13) ^ 2 + (y / 15) ^ 2 < 1 then
 		return air, 0
 	end
-	if y > top - 3 then
+	if y + Config.Cell > top then
 		return Enum.Material.Grass, math.clamp((top + 2 - y) / 4, 0.3, 1)
 	end
 	if shoulder > 0.4 and z > face - 8 and math.abs(y - 12 - math.sin(x / 14) * 3) < 2 then

@@ -3,7 +3,6 @@ local Config = require(shared.GameConfig)
 local Audio = require(script.Parent.HarborAudio)
 local Tween = game:GetService("TweenService")
 local Debris = game:GetService("Debris")
-local SoundService = game:GetService("SoundService")
 local Effects = {}
 Effects.__index = Effects
 local rng = Random.new()
@@ -12,10 +11,6 @@ function Effects.new()
 	local preview = Instance.new("Folder")
 	preview.Name, preview.Parent = "MiningSelection", workspace
 	self.preview = preview
-	local impact = Instance.new("Sound")
-	impact.Name, impact.SoundId, impact.Volume, impact.Parent =
-		"Rock impact", "rbxasset://sounds/action_jump_land.mp3", 0.19, SoundService
-	self.impact = impact
 	local sparkOrigin = Instance.new("Attachment")
 	sparkOrigin.Name, sparkOrigin.Parent = "Quarry discovery", workspace.Terrain
 	local glints = Instance.new("ParticleEmitter")
@@ -76,6 +71,76 @@ function Effects:aim(cells)
 		end
 	end
 end
+-- A branching fracture is drawn directly on the selected face in the world.
+-- Each new branch appears at a later cut stage and respects depth occlusion.
+local fractures = {
+	{ 0, 0, -0.19, 0.22 },
+	{ -0.19, 0.22, -0.10, 0.43 },
+	{ -0.10, 0.43, -0.31, 0.71 },
+	{ -0.19, 0.22, -0.47, 0.29 },
+	{ 0, 0, 0.28, -0.10 },
+	{ 0.28, -0.10, 0.48, -0.02 },
+	{ 0.48, -0.02, 0.76, -0.22 },
+	{ 0, 0, -0.16, -0.36 },
+	{ -0.16, -0.36, -0.06, -0.68 },
+}
+local axes = require(shared.BlockPattern).axes
+function Effects:damage(cells, normal, progress)
+	local stage = if cells then math.clamp(math.ceil(progress * #fractures), 0, #fractures) else 0
+	if stage == 0 then
+		if self.fracture then
+			self.fracture.Parent = nil
+		end
+		self.lastStage = 0
+		return
+	end
+	local same = self.lastStage == stage and self.lastFace == normal and self.lastCells and #self.lastCells == #cells
+	if same then
+		for i, c in cells do
+			if self.lastCells[i] ~= c then
+				same = false
+				break
+			end
+		end
+		if same then
+			return
+		end
+	end
+	self.lastStage, self.lastFace, self.lastCells = stage, normal, cells
+	if not self.fracture then
+		self.fracture = Instance.new("Folder")
+		self.fracture.Name = "Fractures"
+		self.lines = {}
+	end
+	local across, up = axes(normal)
+	local used = 0
+	for _, center in cells do
+		local front = center + normal * (Config.Cell / 2 + 0.022)
+		for j = 1, stage do
+			local segment = fractures[j]
+			local a = front + (across * segment[1] + up * segment[2]) * 1.95
+			local b = front + (across * segment[3] + up * segment[4]) * 1.95
+			used += 1
+			local line = self.lines[used]
+			if not line then
+				line = Instance.new("Part")
+				line.Name = "Crack"
+				line.Anchored, line.CanCollide, line.CanTouch, line.CanQuery, line.CastShadow =
+					true, false, false, false, false
+				line.Material, line.Color = Enum.Material.SmoothPlastic, Color3.fromRGB(44, 32, 50)
+				self.lines[used] = line
+			end
+			line.Size = Vector3.new(if j < 4 then 0.13 else 0.09, 0.035, (b - a).Magnitude + 0.055)
+			line.CFrame = CFrame.lookAt((a + b) * 0.5, b, normal)
+			line.Parent = self.fracture
+		end
+	end
+	for i = used + 1, self.usedLines or 0 do
+		self.lines[i].Parent = nil
+	end
+	self.usedLines = used
+	self.fracture.Parent = self.preview
+end
 function Effects:burst(point, spread, ore, quiet)
 	local now = os.clock()
 	if now - self.lastBurst < 0.085 then
@@ -91,13 +156,6 @@ function Effects:burst(point, spread, ore, quiet)
 		self.sparkOrigin.WorldPosition = point + outward * 3
 		self.glints.Color = ColorSequence.new(ore.color, Color3.new(1, 1, 1))
 		self.glints:Emit(9)
-	end
-	if not quiet then
-		self.impact.PlaybackSpeed = rng:NextNumber(1.25, 1.55)
-		SoundService:PlayLocalSound(self.impact)
-		if rare then
-			self:chime(1.7)
-		end
 	end
 	for i = 1, math.min(if rare then 10 else 6, 28 - self.activeChips) do
 		local chip = Instance.new("Part")

@@ -1,3 +1,4 @@
+local Descent = require(script.Parent.Descent)
 local Quarry = {}
 
 function Quarry.bind(map, world)
@@ -7,6 +8,7 @@ function Quarry.bind(map, world)
 	if preview then
 		preview:Destroy()
 	end
+	Descent.build(map, world.origin)
 	local market = map["Shore market"]
 	local harbor = map["Harbor Plaza"]
 	local stations = {

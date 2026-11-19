@@ -66,6 +66,10 @@ end
 -- lose cells to another miner, but it can never take a different cell as a substitute.
 function Pattern.select(origin, anchor, normal, count, power, space, allowed, probe)
 	local chosen, mask, locked = {}, 0, nil
+	local anchorOre = probe(anchor)
+	if not anchorOre or anchorOre.hardness > power then
+		return chosen, 0, anchorOre
+	end
 	local across, up = Pattern.axes(normal)
 	for i, offset in layout(count) do
 		if #chosen >= space then
@@ -79,7 +83,7 @@ function Pattern.select(origin, anchor, normal, count, power, space, allowed, pr
 		if not Pattern.mineable(center - origin) then
 			continue
 		end
-		local ore = probe(center)
+		local ore = if center == anchor then anchorOre else probe(center)
 		if ore and ore.hardness <= power then
 			table.insert(chosen, center)
 			mask = bit32.bor(mask, bit)

@@ -39,7 +39,8 @@
     "Workspace": {
       "$ignoreUnknownInstances": true,
       "$properties": {
-        "FilteringEnabled": true
+        "FilteringEnabled": true,
+        "FallenPartsDestroyHeight": -2048
       },
       "CitrineCove": {
         "$path": "map/CitrineCove.rbxmx"

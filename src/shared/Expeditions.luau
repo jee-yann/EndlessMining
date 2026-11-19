@@ -3,33 +3,39 @@ local E = {}
 
 -- Floor centres are on the same four-stud grid as the mine.
 E.stops = {
-	{ key = "Harbor", name = "Citrine Harbor", goal = 0, color = rgb(62, 211, 255), detail = "Shops, jobs & starter mine" },
+	{
+		key = "Harbor",
+		name = "Citrine Harbor",
+		goal = 0,
+		color = rgb(62, 211, 255),
+		detail = "Shops, jobs & starter mine",
+	},
 	{
 		key = "Foundry",
 		name = "Ember Foundry",
 		goal = 36,
-		floor = Vector3.new(-40, -80, -76),
+		floor = Vector3.new(-16, -128, -36),
 		color = rgb(255, 152, 59),
 		ore = "Iron",
-		detail = "80 studs down  ·  Iron & copper",
+		detail = "128 studs down  ·  Iron & copper",
 	},
 	{
 		key = "Prism",
 		name = "Prism Arcade",
 		goal = 150,
-		floor = Vector3.new(40, -168, -120),
+		floor = Vector3.new(-16, -448, -36),
 		color = rgb(186, 116, 255),
 		ore = "Diamond",
-		detail = "168 studs down  ·  Diamonds & gold",
+		detail = "448 studs down  ·  Diamonds & gold",
 	},
 	{
 		key = "Deep",
 		name = "Emerald Vault",
 		goal = 420,
-		floor = Vector3.new(0, -280, -168),
+		floor = Vector3.new(-16, -1024, -36),
 		color = rgb(61, 231, 158),
 		ore = "Emerald",
-		detail = "280 studs down  ·  Emeralds & diamonds",
+		detail = "1,024 studs down  ·  Emeralds & diamonds",
 	},
 }
 E.byKey, E.byBand = {}, {}

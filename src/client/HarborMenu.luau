@@ -56,7 +56,7 @@ function Menu.new(root, player, net, close)
 end
 function Menu:layout(width, height, touch)
 	local designHeight = if touch and width > height then math.clamp(height - 14, 270, 408) else 408
-	self.scale.Scale = math.clamp(math.min((width - 18) / 480, (height - 14) / designHeight), 0.3, 1.2)
+	self.scale.Scale = math.clamp(math.min((width - 18) / 480, (height - 14) / designHeight), 0.3, 1.38)
 	self.modal.Size = UDim2.fromOffset(480, designHeight)
 	self.list.Size = UDim2.fromOffset(458, designHeight - 135)
 	self.footer.Position = UDim2.fromOffset(11, designHeight - 37)
@@ -240,7 +240,7 @@ function Menu:open(key)
 		then "Studio trials last for this session."
 		elseif key == "Pack" then "Take your haul to the amber Sell counter."
 		elseif key == "Jobs" then "Claim each job in order to collect its gold."
-		elseif key == "Lift" then "Mine blocks anywhere to unlock more stops."
+		elseif key == "Lift" then "Walk down the mine trail or unlock a lift shortcut."
 		elseif key == "Book" then "Mine each ore once to add it to your collection."
 		elseif key == "Store" then "Permanent passes for this experience."
 		else "Upgrades stay equipped between visits."

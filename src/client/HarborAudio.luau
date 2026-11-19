@@ -11,8 +11,8 @@ local function sound(name, asset, volume, pitch)
 	return s
 end
 
--- Jim Condelli, Another 8 Bit Game, from APM's Roblox Creator Store catalog.
-local music = sound("Another 8 Bit Game", "rbxassetid://9048374150", 0, 1)
+-- Anthony Mawer, Prima Bossa Nova, from APM's Roblox Creator Store catalog.
+local music = sound("Prima Bossa Nova", "rbxassetid://1837070127", 0, 1)
 music.Looped = true
 local enabled = true
 local fade
@@ -73,6 +73,60 @@ function Audio.reward(pitch)
 		voices.Reward.PlaybackSpeed = pitch
 		play("Reward")
 	end)
+end
+-- Each ore has its own short attack. Gem finds finish with a rising pop cadence.
+local signatures = {
+	{ "Stone", 9118628948, 0.18, 1.12, 0.30 },
+	{ "Coal", 9125869505, 0.16, 1.20, 0.38 },
+	{ "Copper", 9118608006, 0.19, 1.45, 0.33 },
+	{ "Iron", 9116673915, 0.14, 0.95, 0.40 },
+	{ "Gold", 9113849492, 0.19, 1.18, 0.48 },
+	{ "Diamond", 9116394545, 0.20, 1.34, 0.70 },
+	{ "Emerald", 9116395089, 0.22, 1.08, 0.85 },
+}
+local oreVoices = {}
+for _, cue in signatures do
+	local s = sound(cue[1] .. " break", "rbxassetid://" .. cue[2], cue[3], cue[4])
+	s.PlaybackRegionsEnabled = true
+	s.PlaybackRegion = NumberRange.new(0, cue[5])
+	oreVoices[cue[1]] = s
+end
+local notes = {}
+for i = 1, 3 do
+	local voice = voices.Reward:Clone()
+	voice.Name, voice.PlaybackSpeed, voice.Parent = "Discovery note " .. i, 1.15 * 2 ^ ((i * 4) / 12), bus
+	notes[i] = voice
+end
+local flourishEnd, flourishRank, flourishSerial = 0, 0, 0
+function Audio.ore(loot)
+	local delay, best = 0, 0
+	for rank, cue in signatures do
+		if loot[cue[1]] then
+			best = rank
+			local voice = oreVoices[cue[1]]
+			task.delay(delay, function()
+				voice.TimePosition = 0
+				voice:Play()
+			end)
+			delay += 0.025
+		end
+	end
+	local now = os.clock()
+	if best < 5 or (now < flourishEnd and best <= flourishRank) then
+		return
+	end
+	local noteCount = best - 4
+	flourishRank, flourishEnd, flourishSerial = best, now + delay + noteCount * 0.09, flourishSerial + 1
+	local serial = flourishSerial
+	for note = 1, noteCount do
+		task.delay(delay + note * 0.09, function()
+			if flourishSerial == serial then
+				local chime = notes[note]
+				chime:Stop()
+				chime:Play()
+			end
+		end)
+	end
 end
 local lastHover = 0
 function Audio.bind(button, cue)

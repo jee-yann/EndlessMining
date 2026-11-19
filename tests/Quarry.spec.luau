@@ -163,6 +163,39 @@ for _, key in { "Lift", "Jobs", "Store", "Book" } do
 	local stall = site.stations[key].Parent.Parent
 	assert(stall:FindFirstChildWhichIsA("BillboardGui", true) and stall:FindFirstChildWhichIsA("PointLight", true))
 end
+local back = highlands["Cableway trail"]
+local groundParams = RaycastParams.new()
+groundParams.FilterType, groundParams.FilterDescendantsInstances = Enum.RaycastFilterType.Include, { back }
+for _, pos in { Vector2.new(-89, -57), Vector2.new(-29, -65), Vector2.new(35, -63), Vector2.new(91, -53) } do
+	local foot = workspace:Raycast(world.origin + Vector3.new(pos.X, 13, pos.Y), -Vector3.yAxis * 2, groundParams)
+	assert(foot and foot.Instance.Name == "Tower footing", "Unsupported tram tower")
+end
+for _, side in { -1, 1 } do
+	local path = {
+		Vector2.new(116, 7),
+		Vector2.new(116, -38),
+		Vector2.new(105, -50),
+		Vector2.new(83, -65),
+		Vector2.new(73, -73),
+		Vector2.new(0, -73),
+	}
+	local prev
+	for i = 2, #path do
+		local steps = math.ceil((path[i] - path[i - 1]).Magnitude)
+		for t = 0, steps do
+			local at = path[i - 1]:Lerp(path[i], t / steps)
+			local height = math.min(11.95, -0.05 + (9 - at.Y) * 12 / 62)
+			local feet = world.origin + Vector3.new(side * at.X, height, at.Y)
+			local hit = workspace:Raycast(feet + Vector3.yAxis * 2, -Vector3.yAxis * 4, onMap)
+			assert(hit and (not prev or math.abs(hit.Position.Y - prev) < 0.8), "Ridge trail gap at " .. tostring(at))
+			assert(
+				not workspace:Raycast(feet + Vector3.yAxis * 0.9, Vector3.yAxis * 6, onMap),
+				"Ridge trail clearance at " .. tostring(at)
+			)
+			prev = hit.Position.Y
+		end
+	end
+end
 for _, stop in require(Shared.Expeditions).stops do
 	if stop.floor then
 		local base = world.origin + stop.floor
@@ -174,12 +207,48 @@ for _, stop in require(Shared.Expeditions).stops do
 		assert(geology:sample(stop.floor.X + 2, stop.floor.Y + 6, stop.floor.Z - 22) == Ores.byName[stop.ore].material)
 	end
 end
-mapCopy:Destroy()
 print("PASS harbor paths, 360 rock rim rays, lit service pads, bridge crossing and edit-face removal")
 local terrainCells = workspace.Terrain:CountCells()
 world:generate()
+local trail = require(Server.Descent)
+onMap.FilterDescendantsInstances = { mapCopy, world.grid.folder }
+local function checkRoad(point, side)
+	for _, offset in { Vector3.zero, side * 1.75, -side * 1.75 } do
+		local feet = world.origin + point + offset
+		local ground = workspace:Raycast(feet + Vector3.yAxis * 1.4, -Vector3.yAxis * 3, onMap)
+		assert(ground and math.abs(ground.Position.Y - feet.Y) < 1.2, "Unwalkable floor at " .. tostring(point))
+		local ceiling = workspace:Raycast(feet + Vector3.yAxis * 1.5, Vector3.yAxis * 5.4, onMap)
+		assert(
+			not ceiling,
+			"Passage blocked at "
+				.. tostring(point)
+				.. " by "
+				.. (if ceiling then ceiling.Instance:GetFullName() else "")
+		)
+	end
+end
+for _, run in trail.runs do
+	local steps = math.ceil((run.b - run.a).Magnitude / 2)
+	for j = 0, steps do
+		checkRoad(run.a:Lerp(run.b, j / steps), (run.b - run.a):Cross(Vector3.yAxis).Unit)
+	end
+end
+for _, turn in trail.turns do
+	checkRoad(turn, Vector3.xAxis)
+end
+assert(workspace.FallenPartsDestroyHeight < world.origin.Y + Config.Min.Y)
+print("PASS continuous walkable route and headroom at", #trail.turns, "switchbacks")
+local roof
+for _, part in world.grid.folder:GetChildren() do
+	if part.Name == "Turf" then
+		roof = Config.blockCenter(world.origin, part.Position + Vector3.yAxis * part.Size.Y * 0.5, Vector3.yAxis)
+		break
+	end
+end
+assert(roof and not world:oreAt(roof) and not next(world:excavate({ roof })), "Landscape turf was mined")
+mapCopy:Destroy()
 local bricks = world.grid.folder:GetChildren()
-assert(#bricks > 0 and #bricks < 3500, "Starting brick count: " .. #bricks)
+assert(#bricks > 0 and #bricks < 5800, "Starting brick count: " .. #bricks)
 for _, part in bricks do
 	assert(part:IsA("Part") and part.Material == Enum.Material.Plastic and part.Anchored and part.CanCollide)
 	assert(part.TopSurface == Enum.SurfaceType.Studs and part.BackSurface == Enum.SurfaceType.Studs)
@@ -191,7 +260,7 @@ local rig = Instance.new("Model")
 local human = Instance.new("Humanoid")
 human.Parent = rig
 local head = Instance.new("Part")
-head.Name, head.Anchored, head.Position, head.Parent = "Head", true, world.origin + Vector3.new(0, 6, -8), rig
+head.Name, head.Anchored, head.Position, head.Parent = "Head", true, world.origin + Vector3.new(-3, 6, -8), rig
 rig.Parent = workspace
 local face = workspace:Raycast(head.Position + Vector3.new(0, 0, -2), Vector3.new(0, 0, -32))
 assert(face and face.Instance.Parent == world.grid.folder)

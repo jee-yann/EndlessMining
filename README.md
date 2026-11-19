@@ -9,9 +9,9 @@ Citrine Cove is a multiplayer Roblox mining simulator. Aim at a cave wall or flo
 1. Open `EndlessMining.rbxlx` from this folder in Roblox Studio, or use the existing **Endless Mining** Studio place connected to this project's Rojo server.
 2. Press **F5**. The island is already visible in edit mode. Play generates studded plastic bricks behind the cave mouth. Cross the bridge and walk beneath the golden crystal marked **MINE**. Aim at the dark starter seam and hold the left mouse button. On a touch device, aim with the center dot and hold **HOLD MINE**.
 3. After eight blocks, open **Jobs** and claim **First strike** for 25 gold. Walk to the cyan **Upgrades** stall, use its prompt and buy **Mining area** for 24 gold to cut two blocks per hit. Use the amber **Sell** counter to empty your pack. Open **Pack** anywhere to see quantities and sale values for each ore.
-4. At 36 lifetime blocks, open **Lift → Ember Foundry → Travel**. Use **↑ Harbor** to return from underground. Press **Shift+F5** to end the session.
+4. At the starter seam, follow the gold guide on your right to walk down to every landing. At 36 lifetime blocks, open **Lift → Ember Foundry → Travel**. Use **↑ Harbor** to return from underground. Press **Shift+F5** to end the session.
 
-The place uses each player�s equipped Roblox avatar. If Studio Output reports �Authentication required to access Asset� for a missing head or clothing item, refresh the Studio sign-in and start another play session to retry asset delivery.
+The place uses each player’s equipped Roblox avatar. If Studio Output reports an authentication error for a missing head or clothing texture, refresh the Studio sign-in and start another play session.
 
 ![Player spawn and mining HUD in Roblox Studio](map/Harbor-HUD.jpg)
 
@@ -25,9 +25,9 @@ For live editing, run `rojo serve default.project.json` here if this project's s
 
 ## World and balance
 
-The harbor spans roughly 268 × 229 studs inside a continuous rock rim. The spawn compass opens onto a 95-stud-wide court. Follow the central bridge to the mine, the amber bullion sign to Sell, or the cyan pickaxe to Upgrades. Side paths pass ore wagons, gardens and the stepped waterfall. Three overhead ore carriers shuttle between the ridge towers.
+The harbor spans roughly 268 × 229 studs inside a continuous rock rim. The spawn compass opens onto a 95-stud-wide court. Follow the central bridge to the mine, the amber bullion sign to Sell, or the cyan pickaxe to Upgrades. Side paths pass ore wagons, gardens and the stepped waterfall. Both hillside paths climb to the rear cableway trail, where four grounded towers carry three moving ore cars.
 
-The location card's **Music on** button pauses and resumes the instrumental loop. The action dock, menu controls and touch mining button use short bubble pops. [Roblox UI Cute Pop](https://create.roblox.com/store/asset/15675055424) · [Roblox UI Cute Goodbye](https://create.roblox.com/store/asset/15675081158) The music is Jim Condelli's *Another 8 Bit Game* from APM's Roblox catalog. [UI Cute Pop](https://create.roblox.com/store/asset/15675055424) � [UI Cute Goodbye](https://create.roblox.com/store/asset/15675081158) � [Music track](https://create.roblox.com/store/asset/9048374150/Another-8-Bit-Game)
+The music button pauses and resumes Anthony Mawer’s *Prima Bossa Nova*. The buttons use short bubble pops. Each ore has its own break sound, and gold, diamond and emerald add progressively longer rising notes. [Prima Bossa Nova](https://create.roblox.com/store/asset/1837070127) · [UI Cute Pop](https://create.roblox.com/store/asset/15675055424) · [UI Cute Goodbye](https://create.roblox.com/store/asset/15675081158)
 
 ![Workshop menu in Roblox Studio](map/Workshop-preview.jpg)
 
@@ -35,14 +35,14 @@ The harbor has a lift tower, dispatch board, ore museum, pass stall and a leader
 
 ![Friends and Server Miners boards behind spawn](map/Miners-Court.jpg)
 
-Each underground stop has a lit landing, return console and exposed ore seams. The lift unlocks with total blocks mined. The workshop's **Power** upgrade lets the pickaxe cut harder ores.
+Each underground stop has a lit landing, return console and exposed ore seams. The studded ramp spirals from the starter mine to all three landings. The lift unlocks shortcuts with lifetime blocks mined. The workshop's **Power** upgrade lets the pickaxe cut harder ores.
 
-| Destination | Lifetime blocks | Depth | Featured seams |
+| Destination | Blocks to unlock lift | Depth | Featured seams |
 | --- | ---: | ---: | --- |
 | Citrine Harbor | 0 | Surface | Stone and coal in the starter mine |
-| Ember Foundry | 36 | 80 studs | Iron and copper |
-| Prism Arcade | 150 | 168 studs | Diamond and gold |
-| Emerald Vault | 420 | 280 studs | Emerald and diamond |
+| Ember Foundry | 36 | 128 studs | Iron and copper |
+| Prism Arcade | 150 | 448 studs | Diamond and gold |
+| Emerald Vault | 420 | 1,024 studs | Emerald and diamond |
 
 The backpack shows occupied slots, each ore count and the gold the Sell counter will pay for it.
 
@@ -50,11 +50,11 @@ The backpack shows occupied slots, each ore count and the gold the Sell counter 
 
 The seven shift jobs award gold once each. The ore index records the seven ore types independently of your pack, so selling a find preserves its entry. Ranks, job claims and lift unlocks use lifetime mining progress.
 
-The 192 × 224 stud mine extends 352 studs below the entrance. Sunstone Hollow gives way to the Iron Shelf, Prism Grotto, and Emerald Deep. Each 32-stud geological region receives a seeded, tilted ore deposit. Minimum and preferred depths control its composition. Some deep regions contain an oversized precious-metal or gem lode around a hollow pocket. A fixed coal seam makes the opening reproducible.
+The 192 × 224 stud mine extends 1,152 studs below the entrance. Sunstone Hollow gives way to the Iron Shelf, Prism Grotto, and Emerald Deep. Each 32-stud geological region receives a seeded, tilted ore deposit. Minimum and preferred depths control its composition. Some deep regions contain an oversized precious-metal or gem lode around a hollow pocket. A fixed coal seam makes the opening reproducible. The green roof is permanent turf.
 
 The server keeps one byte per grid cell. Only exposed rock needs physical Parts. Within each 8 × 8 × 8 cell chunk, neighbouring exposed cells of the same shade share anchored plastic bricks. Cutting a block rebuilds the affected chunks and exposes the next layer. Excavations are shared for the lifetime of that server.
 
-Mining area upgrades unlock **1×1, 2×1, 2×2, 3×2, 3×3, 4×3, 4×4, and 5×5** face patterns. Each hit takes one layer. Mint borders follow the visible faces of each selected block. A flush wall shows one square. Exposed corners show multiple sides as you move the camera. Holding a target plays a sequence of quick pickaxe swings while one meter fills for the cut. Releasing early or switching targets cancels the stroke. The outlines and on-screen count account for missing blocks, reach, obstructions, power and space in the pack. An almost-full pack selects the nearest blocks to the aim point first. The server checks the same pattern and intersects it with the squares the player saw. If another player takes one, the hit skips that square. Existing profiles retain their upgrade levels.
+Mining area upgrades unlock **1×1, 2×1, 2×2, 3×2, 3×3, 4×3, 4×4, and 5×5** face patterns. Each hit takes one layer. Mint borders follow the visible faces of each selected block. A flush wall shows one square. Exposed corners show multiple sides as you move the camera. A pick cursor marks a valid target. A red no-entry sign marks an ore above your power tier. Cracks spread across the selected blocks as the cut progresses. Each server shares recent hauls in a fading announcement. Holding a target plays a sequence of quick pickaxe swings while one meter fills for the cut. Releasing early or switching targets cancels the stroke. The outlines and on-screen count account for missing blocks, reach, obstructions, power and space in the pack. An almost-full pack selects the nearest blocks to the aim point first. The server checks the same pattern and intersects it with the squares the player saw. If another player takes one, the hit skips that square. Existing profiles retain their upgrade levels.
 
 ![Block borders in three Studio views, exposed, flush with the wall, and covered by another rock](map/Mining-area-preview.jpg)
 
@@ -68,6 +68,7 @@ Mining area upgrades unlock **1×1, 2×1, 2×2, 3×2, 3×3, 4×3, 4×4, and 5×5
 | Vein shapes, rich pockets and the starter seam | `src/server/Geology.luau` |
 | Editable island, signed stations, spawn and bridge | `map/CitrineCove.rbxmx` |
 | Studded brick geometry and face patterns | `src/server/MineBlocks.luau`, `src/shared/BlockPattern.luau` |
+| Footpaths, switchbacks and rock clearance | `src/server/Descent.luau` |
 | Station binding | `src/server/Quarry.luau` |
 | Starting editor camera and lighting | `default.project.json` |
 | Music and button sounds | `src/client/HarborAudio.luau` |

@@ -17,11 +17,12 @@ local Pattern = require(shared.BlockPattern)
 local Hud, Effects, W = require(script.Hud), require(script.Effects), require(script.Widgets)
 local mobile = UIS.PreferredInput == Enum.PreferredInput.Touch
 local hud = Hud.new(player, net, mobile)
+local Audio = require(script.HarborAudio)
 local fx = Effects.new()
 local Swing = require(script.PickSwing)
 local held, firstHaul, rig = nil, false, nil
 local target, targetSide, strokeStart
-local aimPoint, aimSide, aimCount, aimMask
+local aimPoint, aimSide, aimCount, aimMask, aimCells
 local swinging = false
 local params = RaycastParams.new()
 params.FilterType = Enum.RaycastFilterType.Exclude
@@ -38,6 +39,7 @@ local function cancelStroke()
 	end
 	target, targetSide, strokeStart = nil, nil, nil
 	hud.meter.Visible = false
+	fx:damage(nil)
 end
 local function release()
 	held = nil
@@ -119,6 +121,7 @@ net.Feedback.OnClientEvent:Connect(function(kind, a, point, spread)
 				table.insert(lines, string.format("%d %s", n, ore.name))
 			end
 		end
+		Audio.ore(a)
 		fx:burst(point, spread, best)
 		local rare = best.hardness >= 4
 		hud:notice(
@@ -126,6 +129,8 @@ net.Feedback.OnClientEvent:Connect(function(kind, a, point, spread)
 			table.concat(lines, "  +  ") .. (if rare then "  ·  " .. value .. " G" else ""),
 			if rare then best.color else W.white
 		)
+	elseif kind == "haul" then
+		hud:haul(a, point)
 	elseif kind == "milestone" then
 		hud:milestone(a, point, spread)
 	elseif kind == "sale" then
@@ -202,11 +207,12 @@ for _, other in Players:GetPlayers() do
 end
 
 local function sampleAim()
-	aimPoint = nil
+	aimPoint, aimCells = nil, nil
 	local camera = workspace.CurrentCamera
 	local char = player.Character
 	local head = char and char:FindFirstChild("Head")
 	if not head or not camera then
+		hud:aimAt(nil)
 		release()
 		fx:aim(nil)
 		return
@@ -219,6 +225,7 @@ local function sampleAim()
 		else string.upper(Config.layer(depth).name)
 	hud.surface.Visible = depth > 2 or (head.Position - landing).Magnitude > 24
 	if hud.overlay.Visible then
+		hud:aimAt(nil)
 		local station = if hud.menu.page == "Gear" then "Shop" elseif hud.menu.page == "Store" then "Store" else nil
 		if station then
 			local root = char:FindFirstChild("HumanoidRootPart")
@@ -249,7 +256,7 @@ local function sampleAim()
 					then anchorPart
 					else Pattern.visiblePart(head.Position, pos, normal, params)
 				if part and part.Parent:HasTag(Config.MineBlockTag) then
-					return if part.Name == "Turf" then Ores.byName.Stone else Ores.byName[part.Name]
+					return Ores.byName[part.Name]
 				end
 				return nil
 			end
@@ -258,6 +265,7 @@ local function sampleAim()
 	end
 	fx:aim(cells)
 	local valid = mask ~= 0
+	hud:aimAt(screen, valid, locked)
 	hud.reticle.Visible = mobile
 	if mobile then
 		hud.reticle.BackgroundColor3 = if valid then W.aqua else W.white
@@ -272,13 +280,14 @@ local function sampleAim()
 		local help = if mobile then "Hold MINE on the highlighted blocks" else "Hold the left mouse button to mine"
 		local title = if valid
 			then string.format("%d block%s selected", #cells, if #cells == 1 then "" else "s")
+			elseif depth > 2 then "Aim at the studded rock beside the trail"
 			else "Follow the path to the crystal cave"
 		hud:guide(title, help, true)
 	else
 		hud:guide("", "", false)
 	end
 	if valid then
-		aimPoint, aimSide, aimCount, aimMask = center, normal, count, mask
+		aimPoint, aimSide, aimCount, aimMask, aimCells = center, normal, count, mask, cells
 	end
 end
 
@@ -315,8 +324,12 @@ RunService.RenderStepped:Connect(function(dt)
 	local progress = math.clamp((now - strokeStart) / duration, 0, 1)
 	hud.speech.Visible, hud.meter.Visible = true, true
 	hud.swingFill.Size = UDim2.fromScale(progress, 1)
+	hud.cursorPick.Rotation = -14 + 23 * math.sin(progress * math.pi * 6)
+	hud.cursorEdge.Color = W.gold
+	fx:damage(aimCells, aimSide, progress)
 	if progress == 1 then
 		net.Mine:FireServer(target, targetSide, aimCount, aimMask)
+		fx:damage(nil)
 		strokeStart = now
 	end
 end)

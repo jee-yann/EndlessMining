@@ -24,9 +24,13 @@ report.OnServerEvent:Connect(function(player,stage,detail)
 	local n=rep.EndlessMiningNet
 	if stage=="position" then
 		local char=player.Character
-		local x=if player.UserId%2==0 then -3 else 4
+		local x=if player.UserId%2==0 then -3.25 else 1.5
 		char:PivotTo(CFrame.new(n:GetAttribute("Origin")+Vector3.new(x,4,-8)))
 		char.HumanoidRootPart.Anchored=true
+	elseif stage=="foundry" then
+		local dest=require(rep.Shared.Expeditions).byKey.Foundry.floor+n:GetAttribute("Origin")
+		player.Character:PivotTo(CFrame.new(dest+Vector3.new(2,4,-8)))
+		player.Character.HumanoidRootPart.Anchored=true
 	elseif stage=="openPage" then
 		n.Feedback:FireClient(player,"page",detail)
 	elseif stage=="station" then
@@ -69,7 +73,7 @@ local function test()
 	assert(p:GetAttribute("SaveStatus")=="Practice session","local data scope")
 	waitFor(function() return p.Character:FindFirstChild("Harbor pick") end,8,"equipped pickaxe")
 	local harbor=game.SoundService:WaitForChild("Harbor audio",8)
-	local song=harbor:WaitForChild("Another 8 Bit Game",5)
+	local song=harbor:WaitForChild("Prima Bossa Nova",5)
 	waitFor(function() return song.IsLoaded and song.IsPlaying and song.TimePosition>.1 end,20,"soundtrack playback")
 	local audio=require(p.PlayerScripts.Client.HarborAudio)
 	assert(audio.toggleMusic()==false)
@@ -77,6 +81,24 @@ local function test()
 	assert(audio.toggleMusic()==true)
 	waitFor(function() return song.IsPlaying and song.Volume>.1 end,3,"music resume")
 	for _,voice in harbor:GetChildren() do waitFor(function() return voice.IsLoaded end,8,voice.Name.." failed to load") end
+	if r:GetAttribute("CheckSwing") then
+		local seenIds={}
+		for _,ore in require(rep.Shared.Ores).list do
+			local voice=harbor[ore.name.." break"]
+			assert(not seenIds[voice.SoundId], "duplicate ore sound")
+			seenIds[voice.SoundId]=true
+			local played,notes=false,0
+			local strike=voice.Played:Connect(function() played=true end)
+			local flourishes={}
+			for i=1,3 do
+				table.insert(flourishes,harbor["Discovery note "..i].Played:Connect(function() notes+=1 end))
+			end
+			audio.ore({[ore.name]=1})
+			waitFor(function() return played and notes==math.max(0,ore.hardness-3) end,2,ore.name.." break and reward notes")
+			strike:Disconnect()
+			for _,signal in flourishes do signal:Disconnect() end
+		end
+	end
 	local car=workspace.CitrineCove["Citrine Highlands"]["Moving cabins"]["Ore carrier 1"]
 	local start=car:GetPivot().Position
 	waitFor(function() return (car:GetPivot().Position-start).Magnitude>.12 end,4,"tram movement")
@@ -110,8 +132,9 @@ local function test()
 	local origin=n:GetAttribute("Origin")
 	waitFor(function() return (p.Character.Head.Position-origin).Z<0 end,8,"placement")
 	local first=os.clock()
-	local discovered,unlocked
+	local discovered,unlocked,announced
 	n.Feedback.OnClientEvent:Connect(function(kind,title,name)
+		if kind=="haul" then announced=title end
 		if kind=="milestone" then
 			if title=="ORE DISCOVERED" then discovered=name end
 			if title=="LIFT UNLOCKED" then unlocked=name end
@@ -147,6 +170,8 @@ local function test()
 			return true
 		end
 		waitFor(outlined,4,"depth-tested borders on the selected cell")
+		local cursor=p.PlayerGui.QuarryAim["Mining cursor"]
+		assert(cursor.Visible and not cursor["No entry"].Visible, "mineable cursor")
 		assert(game:GetService("StarterPlayer").LoadCharacterAppearance,"account appearance disabled")
 		local pick=p.Character["Harbor pick"]
 		local palm=hand:FindFirstChild("RightGripAttachment")
@@ -157,6 +182,7 @@ local function test()
 		assert(gripError()<.035,"idle hand grip")
 		input:SendMouseButton(xy,Enum.UserInputType.MouseButton1,true)
 		waitFor(function() return meter.Visible and meter.Charge.Size.X.Scale>.1 and hand.Position.Y>defaultY+.4 end,3,"raised pick and progress")
+		assert(workspace.MiningSelection:FindFirstChild("Fractures") and #workspace.MiningSelection.Fractures:GetChildren()>=1, "visible impact cracks")
 		input:SendMouseButton(xy,Enum.UserInputType.MouseButton1,false)
 		waitFor(function() return not meter.Visible and math.abs(hand.Position.Y-defaultY)<.48 end,3,"cancelled swing")
 		assert(p:GetAttribute("Used")==0,"early release spent a block")
@@ -181,6 +207,18 @@ local function test()
 		assert(maxGap<.035,"grip drift: "..maxGap)
 		assert(replicated,"swing start was not replicated")
 		waitFor(function() return not p.Character:GetAttribute("MiningSwing") end,3,"replicated swing release")
+		waitFor(function() return announced and gui.SafeArea["Server haul"].Visible end,4,"server haul announcement")
+		waitFor(function() return not gui.SafeArea["Server haul"].Visible end,4,"announcement fades")
+		r:FireServer("foundry")
+		local landing=require(rep.Shared.Expeditions).byKey.Foundry.floor+origin
+		waitFor(function() return (head.Position-landing).Magnitude<14 end,5,"locked ore fixture")
+		camera.CFrame=CFrame.lookAt(head.Position+Vector3.new(0,1,3),landing+Vector3.new(2,6,-22))
+		waitFor(function() return cursor.Visible and cursor["No entry"].Visible end,5,"locked iron cursor")
+		local collected=p:GetAttribute("Used")
+		input:SendMouseButton(xy,Enum.UserInputType.MouseButton1,true)
+		task.wait(.85)
+		input:SendMouseButton(xy,Enum.UserInputType.MouseButton1,false)
+		assert(p:GetAttribute("Used")==collected and not meter.Visible and not workspace.MiningSelection:FindFirstChild("Fractures"),"locked ore started a cut")
 		return string.format("depth-tested faces, %d swings in one cut, grip error %.4f studs, early release",peaks,maxGap)
 	end
 	local directions={}

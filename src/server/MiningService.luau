@@ -53,6 +53,29 @@ end
 function Mining.start(world, net, sessions, sync)
 	local pending, nextPulse, nextInput, lastHint, queue = {}, {}, {}, {}, {}
 	local credit = Config.BurstCells
+	local totals, miners = {}, {}
+	local function announce(player, loot)
+		local first = next(totals) == nil
+		miners[player] = player.DisplayName
+		for name, count in loot do
+			totals[name] = (totals[name] or 0) + count
+		end
+		if first then
+			task.delay(1.25, function()
+				local participants, name = 0, ""
+				for _, display in miners do
+					participants += 1
+					name = display
+				end
+				net.Feedback:FireAllClients(
+					"haul",
+					totals,
+					if participants == 1 then name else participants .. " miners"
+				)
+				totals, miners = {}, {}
+			end)
+		end
+	end
 	local function hint(player, message, now)
 		if now >= (lastHint[player] or 0) then
 			lastHint[player] = now + 1.4
@@ -140,6 +163,10 @@ function Mining.start(world, net, sessions, sync)
 			return
 		end
 		local loot = world:excavate(selected)
+		if not next(loot) then
+			return
+		end
+		announce(player, loot)
 		local center = selected[1]
 		local spread = math.sqrt(#selected) * Config.Cell
 		local best = Ores.byName.Stone

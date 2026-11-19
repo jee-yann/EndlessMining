@@ -6,7 +6,7 @@ local Blocks = {}
 Blocks.__index = Blocks
 local cell, edge = Config.Cell, Config.Chunk
 local size = (Config.Max - Config.Min) / cell
--- One air cell on every side makes all six neighbour reads valid at the border.
+-- One padding cell on every side makes all six neighbour reads valid at the border.
 local row = size.X + 2
 local plane = row * (size.Y + 2)
 local function index(x, y, z)
@@ -35,7 +35,7 @@ end
 for _, layer in Config.Layers do
 	register(layer.material, "Stone", layer.color, Ores.byName.Stone)
 end
-register(Enum.Material.Grass, "Turf", Color3.fromRGB(124, 204, 84), Ores.byName.Stone)
+register(Enum.Material.Grass, "Turf", Color3.fromRGB(124, 204, 84), nil)
 codes[Enum.Material.Air] = 0
 Blocks.codes, Blocks.kinds = codes, kinds
 
@@ -44,10 +44,25 @@ function Blocks.new(origin, parent)
 	folder.Name = "MineBlocks"
 	folder:AddTag(Config.MineBlockTag)
 	folder.Parent = parent
+	local cells = buffer.create(plane * (size.Z + 2))
+	-- The exterior below the island is unreachable. Treat that padding as solid so
+	-- only the inward-facing bedrock uncovered by miners needs physical bricks.
+	local buriedRows = math.floor((-32 - Config.Min.Y) / cell)
+	for z = -1, size.Z do
+		buffer.fill(cells, index(-1, -1, z), 1, row)
+		if z == -1 or z == size.Z then
+			buffer.fill(cells, index(-1, 0, z), 1, buriedRows * row)
+		else
+			for y = 0, buriedRows - 1 do
+				buffer.writeu8(cells, index(-1, y, z), 1)
+				buffer.writeu8(cells, index(size.X, y, z), 1)
+			end
+		end
+	end
 	return setmetatable({
 		folder = folder,
 		corner = origin + Config.Min,
-		cells = buffer.create(plane * (size.Z + 2)),
+		cells = cells,
 		chunks = {},
 	}, Blocks)
 end
@@ -102,8 +117,13 @@ function Blocks:rebuild(cx, cy, cz)
 					local shade = 0
 					-- Offset courses on cave faces. The outer bedrock can merge into large slabs.
 					if gx > 0 and gx < size.X - 1 and gy > 0 and gz > 0 and gz < size.Z - 1 then
-						local stagger = 2 * (gy % 2)
-						shade = (math.floor((gx + stagger) / 4) + math.floor((gz + stagger) / 4) + gy) % 3
+						if Config.Min.Y + gy * cell < -64 then
+							-- Broad strata let long underground passage walls share a brick.
+							shade = (cx + cz + math.floor(gy / 4)) % 3
+						else
+							local stagger = 2 * (gy % 2)
+							shade = (math.floor((gx + stagger) / 4) + math.floor((gz + stagger) / 4) + gy) % 3
+						end
 					end
 					buffer.writeu8(mask, x + z * edge + y * edge * edge, id * 3 + shade)
 					count += 1

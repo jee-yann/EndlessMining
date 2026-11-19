@@ -3,6 +3,7 @@ local StarterGui = game:GetService("StarterGui")
 local Upgrades, Expeditions = require(Shared.Upgrades), require(Shared.Expeditions)
 local W, Icons, Menu = require(script.Parent.Widgets), require(script.Parent.Icons), require(script.Parent.HarborMenu)
 local Audio = require(script.Parent.HarborAudio)
+local Ores = require(Shared.Ores)
 local Hud = {}
 Hud.__index = Hud
 local function card(parent, name, x, y, w, h, top, bottom)
@@ -121,6 +122,25 @@ function Hud.new(player, net, mobile)
 	W.anchor(self.reticle, 0.5, 0.5, UDim2.fromScale(0.5, 0.5))
 	W.stroke(self.reticle, W.ink, 1.6)
 	self.reticle.Visible = false
+	local badge = W.frame(aimGui, "Mining cursor", 0, 0, 28, 28, W.ink, 14)
+	self.cursor, self.cursorEdge = badge, W.stroke(badge, W.aqua, 2.3)
+	self.cursorPick = Icons.draw(badge, "Power", 2, 2, 24, W.gold)
+	self.denied = W.frame(badge, "No entry", 4, 12, 20, 4, Color3.fromRGB(255, 100, 108), 2)
+	badge.Visible = false
+	local haul = Instance.new("CanvasGroup")
+	haul.Name, haul.AnchorPoint, haul.BackgroundTransparency = "Server haul", Vector2.new(0.5, 0), 1
+	haul.Visible, haul.Parent = false, root
+	self.haulGroup = haul
+	self.haulTitle = W.title(haul, "", 0, 0, 1, 1, 24, W.white)
+	self.haulTitle.Size, self.haulTitle.TextScaled = UDim2.new(1, -4, 0.60, 0), true
+	self.haulDetail = W.text(haul, "", 0, 0, 1, 1, 16, W.white)
+	self.haulDetail.Position, self.haulDetail.Size, self.haulDetail.TextScaled =
+		UDim2.fromScale(0, 0.60), UDim2.fromScale(1, 0.40), true
+	for _, label in { self.haulTitle, self.haulDetail } do
+		W.outlineText(label)
+		local constraint = Instance.new("UITextSizeConstraint")
+		constraint.MaxTextSize, constraint.MinTextSize, constraint.Parent = label.TextSize, 8, label
+	end
 	self.menu = Menu.new(root, player, net, function()
 		self:setShop(false)
 	end)
@@ -140,9 +160,17 @@ function Hud.new(player, net, mobile)
 		if width < 2 or height < 2 then
 			return
 		end
-		local s = math.clamp(math.min((width - 28) / 450, height / 510), 0.55, 1.14)
+		local s = math.clamp(math.min((width - 28) / 434, height / 447), 0.50, 1.36)
 		local ds = math.min(s, (width - 16) / 291)
 		local portrait = self.mobile and width < height
+		local gap = width - 2 * (14 + 215 * s)
+		if gap >= 185 then
+			haul.Position, haul.Size = UDim2.new(0.5, 0, 0, 12), UDim2.fromOffset(math.min(gap, 390), 54)
+		else
+			-- The left column contains Location; the right column clears Discovery.
+			local free = math.max(100, width - 30 - 211 * s)
+			haul.Position, haul.Size = UDim2.new(1, -10 - free / 2, 0, 12 + 142 * s), UDim2.fromOffset(free, 40 * s)
+		end
 		if self.mobile and not portrait then
 			ds = math.min(math.max(ds, 0.78), math.max(0.56, (width - 195) / 291))
 		end
@@ -216,6 +244,53 @@ function Hud:refresh()
 		Upgrades.items.Speed.values[level("Speed")]
 	)
 	self.menu:refresh()
+end
+function Hud:aimAt(screen, valid, locked)
+	self.cursor.Visible = screen ~= nil and (valid or locked ~= nil) and not self.overlay.Visible
+	if not self.cursor.Visible then
+		return
+	end
+	self.cursor.Position = UDim2.fromOffset(screen.X + 12, screen.Y + 10)
+	self.cursorPick.Visible, self.denied.Visible = valid, not valid
+	self.cursorEdge.Color = if valid then W.aqua else self.denied.BackgroundColor3
+	if not self.meter.Visible then
+		self.cursorPick.Rotation = 0
+	end
+end
+function Hud:haul(counts, miners)
+	local finds, best = {}, nil
+	for i = #Ores.list, 1, -1 do
+		local ore = Ores.list[i]
+		if counts[ore.name] then
+			best = best or ore
+			table.insert(finds, counts[ore.name] .. " × " .. ore.name)
+		end
+	end
+	if not best then
+		return
+	end
+	self.haulTitle.Text = miners .. " mined " .. finds[1]
+	table.remove(finds, 1)
+	self.haulTitle.TextColor3 = best.color:Lerp(W.white, 0.48)
+	self.haulDetail.Text = table.concat(finds, "  ·  ")
+	local group = self.haulGroup
+	self.haulSerial = (self.haulSerial or 0) + 1
+	local serial = self.haulSerial
+	if self.haulTween then
+		self.haulTween:Cancel()
+	end
+	group.Visible, group.GroupTransparency = true, 0
+	task.delay(1.6, function()
+		if self.haulSerial ~= serial then
+			return
+		end
+		self.haulTween = W.tween(group, 0.65, { GroupTransparency = 1 })
+		self.haulTween.Completed:Once(function()
+			if self.haulSerial == serial then
+				group.Visible = false
+			end
+		end)
+	end)
 end
 function Hud:milestone(kind, name, color)
 	local serial = (self.ribbonSerial or 0) + 1
