@@ -52,6 +52,13 @@ local function test()
 	end, 18, "loading screen dismisses")
 	monitor:Disconnect()
 	assert(sawReveal and not prematureReveal, "loading fades only after readiness")
+	local ownerVision
+	if p.UserId == 45241447 then
+		ownerVision = p.PlayerGui:WaitForChild("OwnerOreVision", 3)
+		assert(ownerVision and not ownerVision.ResetOnSpawn, "Pixelii receives ore vision")
+	else
+		assert(not p.PlayerGui:FindFirstChild("OwnerOreVision"), "ore vision granted to another player")
+	end
 	local mount = p.Character.HumanoidRootPart:FindFirstChild("Lamp mount")
 	assert(
 		mount and mount:FindFirstChildOfClass("PointLight") and p.Character:GetAttribute("MiningViewReady"),
@@ -61,7 +68,10 @@ local function test()
 	assert(gallery and gallery:FindFirstChildOfClass("PointLight"), "gallery lighting on reveal")
 	local centerLamp = workspace.CitrineCove["Working gallery"]["Center lantern"]
 	local light = centerLamp:FindFirstChildOfClass("SurfaceLight")
-	assert(light and light.Enabled and light.Face == Enum.NormalId.Bottom, "central work light on reveal")
+	assert(
+		light and light.Enabled and light.Face == Enum.NormalId.Bottom and light.Brightness >= 0.94,
+		"central work light on reveal"
+	)
 	local audio = require(p.PlayerScripts.Client.HarborAudio)
 	for _, voice in harbor:GetChildren() do
 		if voice == song then
@@ -334,6 +344,20 @@ local function test()
 				end
 			end
 		end
+		local visionBadge
+		local function pressX()
+			input:SendKey(true, Enum.KeyCode.X)
+			input:SendKey(false, Enum.KeyCode.X)
+		end
+		if ownerVision then
+			visionBadge = gui.SafeArea.Location:WaitForChild("Ore vision status", 3)
+			assert(visionBadge and not visionBadge.Visible, "ore vision starts off")
+			pressX()
+			waitFor(function()
+				return visionBadge.Visible
+			end, 2, "X enables ore vision")
+			assert(not ownerVision:FindFirstChildWhichIsA("BoxHandleAdornment"), "fresh dirt floor marked as ore")
+		end
 		-- Drill the two starter shafts through the real cut protocol before aiming at ore.
 		for _, x in { -2.5, 2.5 } do
 			for _, y in { -2.5, -7.5 } do
@@ -350,6 +374,23 @@ local function test()
 		local startingHaul = p:GetAttribute("Used")
 		local aim, aimNormal = visibleOre("Coal")
 		assert(aim, "expected visible coal in the test field")
+		local coalMarker
+		if ownerVision then
+			waitFor(function()
+				for _, box in ownerVision:GetChildren() do
+					if
+						box:IsA("BoxHandleAdornment")
+						and box.Adornee
+						and box.Adornee.Position == aim
+						and box.AlwaysOnTop
+					then
+						coalMarker = box
+						return true
+					end
+				end
+				return false
+			end, 3, "newly exposed coal marked through walls")
+		end
 		camera.CameraType = Enum.CameraType.Scriptable
 		local root = p.Character.HumanoidRootPart
 		local eye = root.Position + Vector3.yAxis * math.min(1.3, root.Size.Y * 0.6)
@@ -436,6 +477,20 @@ local function test()
 		until p:GetAttribute("Used") > startingHaul or os.clock() > deadline
 		input:SendMouseButton(xy, Enum.UserInputType.MouseButton1, false)
 		assert(p:GetAttribute("Used") == startingHaul + 1, "completed cut")
+		if ownerVision then
+			waitFor(function()
+				return not coalMarker.Parent
+			end, 2, "mined ore marker clears")
+			pressX()
+			waitFor(function()
+				return not visionBadge.Visible and not ownerVision:FindFirstChildWhichIsA("BoxHandleAdornment")
+			end, 2, "X removes remaining ore markers")
+			pressX()
+			waitFor(function()
+				return ownerVision:FindFirstChild("Copper") ~= nil
+			end, 2, "X marks already loaded ore")
+			pressX()
+		end
 		assert(not workspace.CitrineCove.MineBlocks:FindFirstChild("Fractures", true), "completed cracks lingered")
 		assert(peaks >= 2, "expected repeated swings during the first cut, saw " .. peaks)
 		assert(maxGap < 0.035, "grip drift: " .. maxGap)

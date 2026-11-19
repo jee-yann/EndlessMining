@@ -9,6 +9,7 @@ local Passes = require(script.Passes)
 local equipKit = require(script.ProspectorKit)
 local Pickaxe = require(script.Pickaxe)
 local Data, Profile, Mining = require(script.DataService), require(script.Profile), require(script.MiningService)
+local PIXELII_USER_ID = 45241447
 
 local surface = workspace:WaitForChild("CitrineCove")
 local seeds = Random.new()
@@ -196,6 +197,12 @@ local function join(player)
 	sync(player, session.profile)
 	applySkills(player, session.profile)
 	player:SetAttribute("ProfileReady", true)
+	if player.UserId == PIXELII_USER_ID then
+		local gui = Instance.new("ScreenGui")
+		gui.Name, gui.ResetOnSpawn = "OwnerOreVision", false
+		script.OwnerOreVision:Clone().Parent = gui
+		gui.Parent = player:WaitForChild("PlayerGui")
+	end
 end
 local function leave(player)
 	loadingRoots[player] = nil

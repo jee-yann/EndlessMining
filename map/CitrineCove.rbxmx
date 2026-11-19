@@ -14483,7 +14483,7 @@
         <Item class="SurfaceLight" referent="MidLanternBeam">
           <Properties>
             <string name="Name">Work light</string>
-            <float name="Brightness">0.72</float>
+            <float name="Brightness">0.95</float>
             <float name="Range">22</float>
             <Color3 name="Color">
               <R>1</R>
