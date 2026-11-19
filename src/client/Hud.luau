@@ -19,7 +19,7 @@ function Hud.new(player, net, mobile)
 	local self = setmetatable({ player = player, net = net, mobile = mobile }, Hud)
 	local gui = Instance.new("ScreenGui")
 	gui.Name, gui.ResetOnSpawn, gui.ScreenInsets, gui.ZIndexBehavior =
-		"QuarryHUD", false, Enum.ScreenInsets.CoreUISafeInsets, Enum.ZIndexBehavior.Sibling
+		"MiningHUD", false, Enum.ScreenInsets.CoreUISafeInsets, Enum.ZIndexBehavior.Sibling
 	gui.Parent = player:WaitForChild("PlayerGui")
 	gui.DisplayOrder = 2
 	local backdrop = Instance.new("ScreenGui")
@@ -137,7 +137,7 @@ function Hud.new(player, net, mobile)
 	meter.Visible = false
 	self.meter = meter
 	local aimGui = Instance.new("ScreenGui")
-	aimGui.Name, aimGui.ResetOnSpawn, aimGui.ScreenInsets = "QuarryAim", false, Enum.ScreenInsets.None
+	aimGui.Name, aimGui.ResetOnSpawn, aimGui.ScreenInsets = "MiningAim", false, Enum.ScreenInsets.None
 	aimGui.Parent = gui.Parent
 	self.reticle = W.frame(aimGui, "Aim", 0, 0, 8, 8, W.white, 4)
 	W.anchor(self.reticle, 0.5, 0.5, UDim2.fromScale(0.5, 0.5))

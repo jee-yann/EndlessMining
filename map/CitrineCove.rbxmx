@@ -83341,7 +83341,7 @@
         </Item>
         <Item class="Part" referent="RBX70093">
           <Properties>
-            <string name="Name">Quarry crown</string>
+            <string name="Name">Mine crown</string>
             <bool name="Anchored">true</bool>
             <bool name="CanCollide">true</bool>
             <bool name="CastShadow">true</bool>
@@ -83372,7 +83372,7 @@
         </Item>
         <Item class="Part" referent="RBX70094">
           <Properties>
-            <string name="Name">Quarry crown</string>
+            <string name="Name">Mine crown</string>
             <bool name="Anchored">true</bool>
             <bool name="CanCollide">true</bool>
             <bool name="CastShadow">true</bool>
@@ -83465,7 +83465,7 @@
         </Item>
         <Item class="Part" referent="RBX70097">
           <Properties>
-            <string name="Name">Quarry crown</string>
+            <string name="Name">Mine crown</string>
             <bool name="Anchored">true</bool>
             <bool name="CanCollide">true</bool>
             <bool name="CastShadow">true</bool>
@@ -85369,7 +85369,7 @@
         </Item>
         <Item class="Part" referent="RBX70157">
           <Properties>
-            <string name="Name">Dressed quarry stone</string>
+            <string name="Name">Dressed stone</string>
             <bool name="Anchored">true</bool>
             <bool name="CanCollide">true</bool>
             <bool name="CastShadow">true</bool>
@@ -85400,7 +85400,7 @@
         </Item>
         <Item class="Part" referent="RBX70158">
           <Properties>
-            <string name="Name">Dressed quarry stone</string>
+            <string name="Name">Dressed stone</string>
             <bool name="Anchored">true</bool>
             <bool name="CanCollide">true</bool>
             <bool name="CastShadow">true</bool>
@@ -85431,7 +85431,7 @@
         </Item>
         <Item class="Part" referent="RBX70159">
           <Properties>
-            <string name="Name">Dressed quarry stone</string>
+            <string name="Name">Dressed stone</string>
             <bool name="Anchored">true</bool>
             <bool name="CanCollide">true</bool>
             <bool name="CastShadow">true</bool>
@@ -85590,7 +85590,7 @@
         </Item>
         <Item class="Part" referent="RBX70164">
           <Properties>
-            <string name="Name">Dressed quarry stone</string>
+            <string name="Name">Dressed stone</string>
             <bool name="Anchored">true</bool>
             <bool name="CanCollide">true</bool>
             <bool name="CastShadow">true</bool>
@@ -85621,7 +85621,7 @@
         </Item>
         <Item class="Part" referent="RBX70165">
           <Properties>
-            <string name="Name">Dressed quarry stone</string>
+            <string name="Name">Dressed stone</string>
             <bool name="Anchored">true</bool>
             <bool name="CanCollide">true</bool>
             <bool name="CastShadow">true</bool>
@@ -85652,7 +85652,7 @@
         </Item>
         <Item class="Part" referent="RBX70166">
           <Properties>
-            <string name="Name">Dressed quarry stone</string>
+            <string name="Name">Dressed stone</string>
             <bool name="Anchored">true</bool>
             <bool name="CanCollide">true</bool>
             <bool name="CastShadow">true</bool>
@@ -85811,7 +85811,7 @@
         </Item>
         <Item class="Part" referent="RBX70171">
           <Properties>
-            <string name="Name">Dressed quarry stone</string>
+            <string name="Name">Dressed stone</string>
             <bool name="Anchored">true</bool>
             <bool name="CanCollide">true</bool>
             <bool name="CastShadow">true</bool>
@@ -85842,7 +85842,7 @@
         </Item>
         <Item class="Part" referent="RBX70172">
           <Properties>
-            <string name="Name">Dressed quarry stone</string>
+            <string name="Name">Dressed stone</string>
             <bool name="Anchored">true</bool>
             <bool name="CanCollide">true</bool>
             <bool name="CastShadow">true</bool>
@@ -85873,7 +85873,7 @@
         </Item>
         <Item class="Part" referent="RBX70173">
           <Properties>
-            <string name="Name">Dressed quarry stone</string>
+            <string name="Name">Dressed stone</string>
             <bool name="Anchored">true</bool>
             <bool name="CanCollide">true</bool>
             <bool name="CastShadow">true</bool>

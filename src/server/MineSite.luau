@@ -1,6 +1,6 @@
-local Quarry = {}
+local MineSite = {}
 
-function Quarry.bind(map, world)
+function MineSite.bind(map, world)
 	-- The surface is authored in Workspace so it can be explored in edit mode.
 	map:PivotTo(CFrame.new(world.origin))
 	local preview = map:FindFirstChild("EditFace")
@@ -23,4 +23,4 @@ function Quarry.bind(map, world)
 	}
 end
 
-return Quarry
+return MineSite

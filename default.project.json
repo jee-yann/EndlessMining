@@ -5,7 +5,7 @@
     "$ignoreUnknownInstances": true,
     "ReplicatedFirst": {
       "$ignoreUnknownInstances": true,
-      "QuarryLoading": { "$path": "src/first/QuarryLoading.client.luau" }
+      "MiningLoading": { "$path": "src/first/MiningLoading.client.luau" }
     },
     "ReplicatedStorage": {
       "$ignoreUnknownInstances": true,

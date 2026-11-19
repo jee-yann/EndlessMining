@@ -143,7 +143,7 @@ print("PASS region-specific vein odds")
 local surface = workspace.CitrineCove
 local world = World.new(Config.Seed, surface)
 local mapCopy = surface:Clone()
-local site = require(Server.Quarry).bind(mapCopy, world)
+local site = require(Server.MineSite).bind(mapCopy, world)
 assert(mapCopy.PrimaryPart and not mapCopy:FindFirstChild("EditFace"))
 assert(site.spawn:IsA("SpawnLocation") and site.spawn.Neutral)
 assert(site.stations.Sell:IsA("ProximityPrompt") and site.stations.Shop:IsA("ProximityPrompt"))
@@ -389,4 +389,4 @@ for i = 1, 20 do
 	worst, total = math.max(worst, elapsed), total + elapsed
 end
 print(string.format("PASS 20 successive single-block cuts; mean %.2f ms, max %.2f ms", total / 20, worst))
-print("QUARRY_TESTS_PASSED")
+print("MINING_TESTS_PASSED")

@@ -75,7 +75,7 @@ Each completed cut removes the highlighted block. A mint border follows its expo
 | Editable island, signed stations, spawn and bridge | `map/CitrineCove.rbxmx` |
 | Studded brick geometry and visible targets | `src/server/MineBlocks.luau`, `src/shared/BlockPattern.luau` |
 | Region depths and vein weights | `src/shared/GameConfig.luau` |
-| Station binding | `src/server/Quarry.luau` |
+| Station binding | `src/server/MineSite.luau` |
 | Starting editor camera and lighting | `default.project.json` |
 | Music and button sounds | `src/client/HarborAudio.luau` |
 
@@ -103,19 +103,19 @@ The two test scripts live outside the Rojo tree. Use a fresh local build. Studio
 
 ```powershell
 $studioExe = (Get-Process RobloxStudioBeta | Select-Object -First 1).Path
-$quarryPlace = (Resolve-Path '.\EndlessMining.rbxlx').Path
-$terrainTest = (Resolve-Path '.\tests\Quarry.spec.luau').Path
+$miningPlace = (Resolve-Path '.\EndlessMining.rbxlx').Path
+$terrainTest = (Resolve-Path '.\tests\Mine.spec.luau').Path
 $playTest = (Resolve-Path '.\tests\Play.spec.luau').Path
 
-& $studioExe --task RunScript --localPlaceFile $quarryPlace --runScriptFile $terrainTest --outputFile "$env:TEMP\EndlessMining-terrain.log" --quitAfterExecution
+& $studioExe --task RunScript --localPlaceFile $miningPlace --runScriptFile $terrainTest --outputFile "$env:TEMP\EndlessMining-terrain.log" --quitAfterExecution
 ```
 
-Look for a standalone `QUARRY_TESTS_PASSED` output line. The map checks cover the walk from spawn, both market counters, their lights, the outer paths and 360 directions around the rock rim. The mining checks cover save ownership, profile validation, economy, three seeds, shared depletion, server reach and obstructions, single-block selection, ore density and cuts across chunk boundaries. Then run the two-client check in a signed-in Studio session.
+Look for a standalone `MINING_TESTS_PASSED` output line. The map checks cover the walk from spawn, both market counters, their lights, the outer paths and 360 directions around the rock rim. The mining checks cover save ownership, profile validation, economy, three seeds, shared depletion, server reach and obstructions, single-block selection, ore density and cuts across chunk boundaries. Then run the two-client check in a signed-in Studio session.
 
 ```powershell
-& $studioExe --task RunScript --localPlaceFile $quarryPlace --runScriptFile $playTest --outputFile "$env:TEMP\EndlessMining-play.log" --quitAfterExecution
+& $studioExe --task RunScript --localPlaceFile $miningPlace --runScriptFile $playTest --outputFile "$env:TEMP\EndlessMining-play.log" --quitAfterExecution
 ```
 
-The play check first uses a virtual mouse in a solo session to verify depth-tested face borders, the pickaxe grip through repeated swings, the visible cut meter, cancellation and collection. It then uses two clients with real client-to-server requests. Each miner must open all six menus, fill a pack, check its ore counts, visit the Sell counter, upgrade pack capacity, claim a job once, try both Studio passes, and return to the surface. The test checks that remote sales and out-of-range upgrades are declined, ore finds appear at the mined block, effects load and respond to their slider, the soundtrack stays muted during automated playtests, and an ore carrier moves. Look for `QUARRY_PLAYTEST_RESULT PASS` followed by both clients' results.
+The play check first uses a virtual mouse in a solo session to verify depth-tested face borders, the pickaxe grip through repeated swings, the visible cut meter, cancellation and collection. It then uses two clients with real client-to-server requests. Each miner must open all six menus, fill a pack, check its ore counts, visit the Sell counter, upgrade pack capacity, claim a job once, try both Studio passes, and return to the surface. The test checks that remote sales and out-of-range upgrades are declined, ore finds appear at the mined block, effects load and respond to their slider, the soundtrack stays muted during automated playtests, and an ore carrier moves. Look for `MINING_PLAYTEST_RESULT PASS` followed by both clients' results.
 
 For hands-on checks, choose **Server & Clients** in Studio's Test selector and start two players. Mine the same face, compare balances and verify both players see the same missing bricks. Use the device emulator to check the shop, hold/release control, thumbstick and jump in phone landscape and portrait. A persistence round trip requires a separate published test place with Studio API access enabled. Sell ore, buy an upgrade, stop the session and rejoin to verify the balance and level.

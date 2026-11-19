@@ -67,6 +67,7 @@ local function gotCharacter(character)
 		if player.Character == character and workspace.CurrentCamera then
 			workspace.CurrentCamera.CFrame =
 				CFrame.lookAt(root.Position + Vector3.new(0, 7, 16), root.Position + Vector3.new(0, 4, -22))
+			character:SetAttribute("MiningViewReady", true)
 		end
 	end
 end
@@ -263,7 +264,7 @@ local function sampleAim()
 		hud.reticle.BackgroundColor3 = if valid then W.aqua else W.white
 	end
 	if not ready then
-		hud:guide("Opening the quarry…", "Preparing your pack and the mine", true)
+		hud:guide("Opening the mine…", "Preparing your pack and the mine", true)
 	elseif space <= 0 then
 		hud:guide("Backpack full", "Bring your haul to the amber Sell counter", true)
 	elseif not valid and locked then

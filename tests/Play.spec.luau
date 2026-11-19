@@ -3,7 +3,7 @@ local previousTestMute = game.ReplicatedStorage:GetAttribute("MuteTestMusic")
 game.ReplicatedStorage:SetAttribute("MuteTestMusic", true)
 local function driver(class, parent, source)
 	local s = Instance.new(class)
-	s.Name, s.Source, s.Parent = "QuarryPlaytest", source, parent
+	s.Name, s.Source, s.Parent = "MiningPlaytest", source, parent
 end
 driver(
 	"Script",
@@ -19,7 +19,7 @@ task.delay(110,function() finish("FAIL: playtest timeout") end)
 local report=Instance.new("RemoteEvent")
 local inputTest=test:GetTestArgs()=="Pick swing"
 report:SetAttribute("CheckSwing",inputTest)
-report.Name="QuarryTestReport"
+report.Name="MiningTestReport"
 report.Parent=rep
 local done={}
 report.OnServerEvent:Connect(function(player,stage,detail)
@@ -59,7 +59,7 @@ driver(
 	[==[
 local rep=game:GetService("ReplicatedStorage")
 local p=game.Players.LocalPlayer
-local r=rep:WaitForChild("QuarryTestReport")
+local r=rep:WaitForChild("MiningTestReport")
 local function waitFor(check,seconds,msg)
 	local start=os.clock()
 	repeat if check() then return end task.wait(.08) until os.clock()-start>seconds
@@ -69,7 +69,7 @@ local function test()
 	local n=rep:WaitForChild("EndlessMiningNet",25)
 	assert(n,"server bootstrap")
 	waitFor(function() return n:GetAttribute("Ready") and p:GetAttribute("ProfileReady") and p.Character and p.Character:FindFirstChild("Head") end,30,"profile/world readiness")
-	local gui=p.PlayerGui:WaitForChild("QuarryHUD",10)
+	local gui=p.PlayerGui:WaitForChild("MiningHUD",10)
 	assert(gui and gui.SafeArea:FindFirstChild("ShopOverlay"),"HUD did not mount")
 	waitFor(function() return workspace:FindFirstChild("MiningSelection") end,8,"aim controller did not start")
 	assert(p:GetAttribute("SaveStatus")=="Practice session","local data scope")
@@ -77,7 +77,11 @@ local function test()
 	local harbor=game.SoundService:WaitForChild("Harbor audio",8)
 	local song=harbor:WaitForChild("Prima Bossa Nova",5)
 	assert(not song.IsPlaying and song.Volume < 0.1,"test music must stay muted")
-	waitFor(function() return gui:GetAttribute("ControllerReady") and not p.PlayerGui:FindFirstChild("QuarryLoading") end,18,"loading screen dismisses")
+	waitFor(function() return gui:GetAttribute("ControllerReady") and not p.PlayerGui:FindFirstChild("MiningLoading") end,18,"loading screen dismisses")
+	local mount=p.Character.HumanoidRootPart:FindFirstChild("Lamp mount")
+	assert(mount and mount:FindFirstChildOfClass("PointLight") and p.Character:GetAttribute("MiningViewReady"),"spawn camera and character light on reveal")
+	local gallery=workspace.CitrineCove["Citrine Mine"]:FindFirstChild("Gallery glow")
+	assert(gallery and gallery:FindFirstChildOfClass("PointLight"),"gallery lighting on reveal")
 	local audio=require(p.PlayerScripts.Client.HarborAudio)
 	for _,voice in harbor:GetChildren() do if voice==song then continue end waitFor(function() return voice.IsLoaded end,8,voice.Name.." failed to load") end
 	if r:GetAttribute("CheckSwing") then
@@ -205,7 +209,7 @@ local function test()
 			return true
 		end
 		waitFor(outlined,4,"depth-tested borders on the selected cell")
-		local cursor=p.PlayerGui.QuarryAim["Mining cursor"]
+		local cursor=p.PlayerGui.MiningAim["Mining cursor"]
 		assert(cursor.Visible and not cursor["No entry"].Visible, "mineable cursor")
 		assert(game:GetService("StarterPlayer").LoadCharacterAppearance,"account appearance disabled")
 		local pick=p.Character["Harbor pick"]
@@ -347,10 +351,10 @@ r:FireServer(if ok then "passed" else "failed",tostring(result))
 local studio = game:GetService("StudioTestService")
 local ok, why = pcall(function()
 	local swing = studio:ExecutePlayModeAsync("Pick swing")
-	print("QUARRY_SWING_RESULT", swing)
+	print("MINING_SWING_RESULT", swing)
 	assert(type(swing) == "string" and string.sub(swing, 1, 4) == "PASS", tostring(swing))
 	local outcome = studio:ExecuteMultiplayerTestAsync(2, "CitrineCove")
-	print("QUARRY_PLAYTEST_RESULT", outcome)
+	print("MINING_PLAYTEST_RESULT", outcome)
 	assert(type(outcome) == "string" and string.sub(outcome, 1, 4) == "PASS", tostring(outcome))
 end)
 game.ReplicatedStorage:SetAttribute("MuteTestMusic", previousTestMute)

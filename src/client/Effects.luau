@@ -13,7 +13,7 @@ function Effects.new()
 	preview.Name, preview.Parent = "MiningSelection", workspace
 	self.preview = preview
 	local sparkOrigin = Instance.new("Attachment")
-	sparkOrigin.Name, sparkOrigin.Parent = "Quarry discovery", workspace.Terrain
+	sparkOrigin.Name, sparkOrigin.Parent = "Ore discovery", workspace.Terrain
 	local glints = Instance.new("ParticleEmitter")
 	glints.Texture, glints.Rate, glints.LightEmission = "rbxasset://textures/particles/sparkles_main.dds", 0, 1
 	glints.Lifetime, glints.Speed = NumberRange.new(0.28, 0.48), NumberRange.new(2, 8)

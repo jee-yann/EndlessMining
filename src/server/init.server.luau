@@ -1,7 +1,7 @@
 local Players = game:GetService("Players")
 local Rep = game:GetService("ReplicatedStorage")
 local Config, Upgrades = require(Rep.Shared.GameConfig), require(Rep.Shared.Upgrades)
-local World, Quarry = require(script.MineWorld), require(script.Quarry)
+local World, MineSite = require(script.MineWorld), require(script.MineSite)
 local Ores = require(Rep.Shared.Ores)
 local Preferences = require(Rep.Shared.Preferences)
 local Passes = require(script.Passes)
@@ -10,7 +10,7 @@ local Data, Profile, Mining = require(script.DataService), require(script.Profil
 
 local surface = workspace:WaitForChild("CitrineCove")
 local world = World.new(Config.Seed, surface)
-local site = Quarry.bind(surface, world)
+local site = MineSite.bind(surface, world)
 local landing = site.spawn.Position + Vector3.yAxis * 4
 local minePath = surface["Sand path and bridge"]["Mine path"]
 local entrance = minePath.Position + Vector3.yAxis * (minePath.Size.Y / 2 + 3.5)
@@ -52,14 +52,22 @@ local function moveCharacter(character, destination)
 	end
 end
 local function onCharacter(player, character)
-	if not character:WaitForChild("HumanoidRootPart", 10) or player.Character ~= character then
+	local root = character:WaitForChild("HumanoidRootPart", 10)
+	if not root or player.Character ~= character then
 		return
 	end
 	moveCharacter(character, CFrame.new(landing))
+	-- Avatar appearance can replace the head after spawn. Keep the light on the rig.
+	if not root:FindFirstChild("Lamp mount") then
+		local mount = Instance.new("Attachment")
+		local head = character:FindFirstChild("Head")
+		mount.Name = "Lamp mount"
+		mount.Position = if head then root.CFrame:PointToObjectSpace(head.Position) else Vector3.new(0, 1.5, 0)
+		local lamp = Instance.new("PointLight")
+		lamp.Name, lamp.Color, lamp.Range, lamp.Brightness = "Mining lamp", Color3.fromRGB(255, 232, 198), 32, 1.65
+		lamp.Parent, mount.Parent = mount, root
+	end
 	task.spawn(Pickaxe.equip, player, character)
-	local lamp = Instance.new("PointLight")
-	lamp.Name, lamp.Color, lamp.Range, lamp.Brightness = "Mining lamp", Color3.fromRGB(255, 232, 198), 32, 1.65
-	lamp.Parent = character:FindFirstChild("Head") or character.HumanoidRootPart
 end
 local function join(player)
 	if loading[player] or sessions[player] or shuttingDown then
