@@ -20,6 +20,8 @@ local function copy(p)
 		bestDepth = p.bestDepth,
 		levels = table.clone(p.levels),
 		bag = table.clone(p.bag),
+		jobs = p.jobs,
+		discoveries = table.clone(p.discoveries),
 	}
 end
 
@@ -35,7 +37,7 @@ function Data.claim(old, token, now)
 		end
 	end
 	return {
-		profile = if old then old.profile else Profile.new(),
+		profile = if old then Profile.upgradeSave(old.profile) else Profile.new(),
 		owner = token,
 		expires = now + Config.LeaseSeconds,
 	}

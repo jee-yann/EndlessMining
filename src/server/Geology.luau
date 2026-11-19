@@ -1,6 +1,7 @@
 local Shared = game:GetService("ReplicatedStorage").Shared
 local Config = require(Shared.GameConfig)
 local Ores = require(Shared.Ores)
+local Expeditions = require(Shared.Expeditions)
 local Geology = {}
 Geology.__index = Geology
 local air = Enum.Material.Air
@@ -17,8 +18,7 @@ function Geology:vein(a, b, c)
 		return self.veins[key]
 	end
 	local rng = Random.new((self.seed + a * 73856093 + b * 19349663 + c * 83492791) % 2147483647)
-	local x, y, z =
-		a * 32 + rng:NextNumber(10, 22), b * 32 + rng:NextNumber(10, 22), c * 32 + rng:NextNumber(10, 22)
+	local x, y, z = a * 32 + rng:NextNumber(10, 22), b * 32 + rng:NextNumber(10, 22), c * 32 + rng:NextNumber(10, 22)
 	local depth = math.max(0, -y)
 	local lode = depth >= 104 and rng:NextNumber() < 0.075
 	local total, ore = 0, Ores.byName.Coal
@@ -48,6 +48,26 @@ function Geology:vein(a, b, c)
 end
 
 function Geology:sample(x, y, z)
+	local stop = Expeditions.byBand[math.floor(y / 32)]
+	if stop then
+		local p = stop.floor
+		local dx, dy, dz = x - p.X, y - p.Y, z - p.Z
+		if dy >= 0 and dy < 16 and math.abs(dx) < 16 and dz > -20 and dz < 8 then
+			return air, 0
+		end
+		if dz <= -20 and dz > -28 and dy >= 0 and dy < 12 and math.abs(dx) < 12 then
+			if (dx - 3) ^ 2 + (dy - 6) ^ 2 < 42 then
+				return Ores.byName[stop.ore].material, 1
+			end
+			if (dx + 8) ^ 2 + (dy - 5) ^ 2 < 24 then
+				local second = if stop.key == "Foundry"
+					then "Copper"
+					elseif stop.key == "Prism" then "Gold"
+					else "Diamond"
+				return Ores.byName[second].material, 1
+			end
+		end
+	end
 	local top = Config.ridgeHeight(self.seed, x, z)
 	if y > top then
 		return air, 0

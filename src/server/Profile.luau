@@ -1,6 +1,7 @@
 local Shared = game:GetService("ReplicatedStorage").Shared
 local Ores = require(Shared.Ores)
 local Upgrades = require(Shared.Upgrades)
+local Expeditions = require(Shared.Expeditions)
 local Profile = {}
 
 function Profile.new()
@@ -11,6 +12,8 @@ function Profile.new()
 		bag = {},
 		mined = 0,
 		bestDepth = 0,
+		jobs = 0,
+		discoveries = {},
 	}
 end
 
@@ -50,7 +53,42 @@ function Profile.valid(p)
 			return false
 		end
 	end
+	if p.jobs ~= nil and not integer(p.jobs, #Expeditions.jobs) then
+		return false
+	end
+	if p.discoveries ~= nil then
+		if type(p.discoveries) ~= "table" then
+			return false
+		end
+		for name, seen in p.discoveries do
+			if not Ores.byName[name] or seen ~= true then
+				return false
+			end
+		end
+	end
 	return Profile.used(p) <= Profile.stat(p, "Capacity")
+end
+
+function Profile.upgradeSave(p)
+	p.jobs = p.jobs or 0
+	p.discoveries = p.discoveries or {}
+	for name, amount in p.bag do
+		if amount > 0 then
+			p.discoveries[name] = true
+		end
+	end
+	return p
+end
+
+function Profile.claimJob(p, number)
+	local i = p.jobs + 1
+	local job = Expeditions.jobs[i]
+	if number ~= i or not job or p.mined < job.goal then
+		return nil
+	end
+	p.jobs = i
+	p.gold += job.reward
+	return job
 end
 
 function Profile.value(bag)
@@ -61,8 +99,8 @@ function Profile.value(bag)
 	return amount
 end
 
-function Profile.sell(p)
-	local amount = Profile.value(p.bag)
+function Profile.sell(p, multiplier)
+	local amount = Profile.value(p.bag) * (multiplier or 1)
 	p.gold += amount
 	p.bag = {}
 	return amount

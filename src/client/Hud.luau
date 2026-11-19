@@ -1,225 +1,229 @@
 local Shared = game:GetService("ReplicatedStorage").Shared
-local Config = require(Shared.GameConfig)
 local StarterGui = game:GetService("StarterGui")
-local Upgrades = require(Shared.Upgrades)
-local W = require(script.Parent.Widgets)
+local Upgrades, Expeditions = require(Shared.Upgrades), require(Shared.Expeditions)
+local W, Icons, Menu = require(script.Parent.Widgets), require(script.Parent.Icons), require(script.Parent.HarborMenu)
 local Hud = {}
 Hud.__index = Hud
-local function anchor(obj, x, y, pos)
-	obj.AnchorPoint, obj.Position = Vector2.new(x, y), pos
+local function card(parent, name, x, y, w, h)
+	local f = W.frame(parent, name, x, y, w, h, W.panel, 13)
+	W.stroke(f, W.ink, 2)
+	W.gradient(f, Color3.new(1, 1, 1), Color3.fromRGB(201, 216, 232), 20)
+	return f
 end
 function Hud.new(player, net, mobile)
-	local self = setmetatable({}, Hud)
+	local self = setmetatable({ player = player, net = net, mobile = mobile }, Hud)
 	local gui = Instance.new("ScreenGui")
 	gui.Name, gui.ResetOnSpawn, gui.ScreenInsets, gui.ZIndexBehavior =
 		"QuarryHUD", false, Enum.ScreenInsets.CoreUISafeInsets, Enum.ZIndexBehavior.Sibling
 	gui.Parent = player:WaitForChild("PlayerGui")
+	gui.DisplayOrder = 2
+	local backdrop = Instance.new("ScreenGui")
+	backdrop.Name, backdrop.ScreenInsets, backdrop.ResetOnSpawn, backdrop.DisplayOrder =
+		"HarborShade", Enum.ScreenInsets.None, false, 1
+	backdrop.Enabled, backdrop.Parent = false, gui.Parent
+	local dim = W.frame(backdrop, "Dim", 0, 0, 1, 1, W.ink)
+	dim.Size, dim.BackgroundTransparency, dim.Active = UDim2.fromScale(1, 1), 0.23, true
 	local root = W.frame(gui, "SafeArea", 0, 0, 1, 1, W.ink)
 	root.Size, root.BackgroundTransparency = UDim2.fromScale(1, 1), 1
-	local cash = W.frame(root, "Pack", 12, 8, 223, 92, W.chrome, 5)
-	self.cash = cash
-	W.stroke(cash, W.ink, 2)
-	W.bevel(cash)
-	local counter = W.frame(cash, "Gold counter", 6, 6, 211, 40, W.ink, 3)
-	W.goldBrick(counter, 10, 15)
-	self.gold = W.text(counter, "0", 54, 0, 151, 40, 29, W.gold, true)
-	self.gold.Font = Enum.Font.RobotoMono
-	self.pack = W.text(cash, "BACKPACK", 12, 48, 199, 24, 16, W.ink, true)
-	local track = W.frame(cash, "Capacity", 12, 74, 199, 10, W.ink, 2)
-	self.fill = W.frame(track, "Ore", 0, 0, 0, 10, W.green, 2)
-	for i = 1, 7 do
-		local tick = W.frame(track, "Division", 0, 0, 2, 10, W.ink)
-		tick.Position, tick.ZIndex = UDim2.fromScale(i / 8, 0), 2
+	self.root = root
+	StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.PlayerList, false)
+	local wallet = card(root, "Wallet", 0, 0, 211, 79)
+	Icons.draw(wallet, "Coins", 9, 5, 38)
+	self.gold = W.title(wallet, "0", 52, 0, 151, 40, 31, W.gold, true)
+	Icons.draw(wallet, "Capacity", 12, 45, 24)
+	self.pack = W.text(wallet, "", 45, 39, 154, 19, 15, W.white, true)
+	local track = W.frame(wallet, "Capacity", 46, 63, 151, 7, W.ink, 4)
+	self.fill = W.frame(track, "Ore", 0, 0, 0, 7, W.green, 4)
+	self.status = W.text(wallet, "", 0, 80, 211, 15, 12, W.white, true)
+	self.status.TextStrokeTransparency = 0.2
+	local taskCard = card(root, "Current job", 0, 0, 215, 79)
+	W.anchor(taskCard, 1, 0, UDim2.new(1, -12, 0, 9))
+	Icons.draw(taskCard, "Jobs", 8, 7, 27)
+	W.text(taskCard, "SHIFT JOB", 42, 5, 96, 22, 13, W.gold, true)
+	self.reward = W.text(taskCard, "", 139, 5, 67, 22, 13, W.green)
+	self.job = W.title(taskCard, "", 12, 29, 193, 25, 20, W.white, true)
+	self.jobCount = W.text(taskCard, "", 12, 55, 190, 19, 14, W.muted, true)
+	self.ribbon = card(taskCard, "Discovery", 0, 88, 215, 52)
+	self.ribbon.Visible = false
+	self.ribbonType = W.text(self.ribbon, "", 12, 4, 192, 17, 12, W.aqua, true)
+	self.ribbonName = W.title(self.ribbon, "", 12, 22, 192, 25, 20, W.white, true)
+	local jobTap = Instance.new("TextButton")
+	jobTap.Name, jobTap.Text, jobTap.AutoButtonColor, jobTap.BackgroundTransparency = "OpenJob", "", false, 1
+	jobTap.Size, jobTap.ZIndex, jobTap.Parent = UDim2.fromScale(1, 1), 2, taskCard
+	jobTap.Activated:Connect(function()
+		self:openPage("Jobs")
+	end)
+	local loc = card(root, "Location", 0, 0, 211, 76)
+	self.layer = W.text(loc, "CITRINE COVE", 10, 3, 186, 19, 13, W.aqua, true)
+	self.depth = W.title(loc, "Surface", 10, 24, 91, 26, 20, W.white, true)
+	self.surface = W.button(loc, "Surface", 105, 22, 92, 27, W.aqua, "↑ Harbor")
+	self.surface.TextSize = 14
+	self.surface.Activated:Connect(function()
+		net.Action:FireServer("Surface")
+	end)
+	self.stats = W.text(loc, "", 10, 53, 194, 18, 12, W.muted, true)
+	local dock = W.frame(root, "Action dock", 0, 0, 441, 64, W.ink)
+	dock.BackgroundTransparency = 1
+	self.nav = {}
+	for i, key in { "Lift", "Gear", "Jobs", "Book", "Store", "Sell" } do
+		local tint = if key == "Sell" then W.green else Menu.pages[key].color
+		local b = W.button(dock, key, (i - 1) * 74, 0, 69, 61, tint, "")
+		local icon = Icons.draw(b, key, 19, 2, 31, tint)
+		icon.Rotation = if i % 2 == 0 then 4 else -4
+		self.nav[key] = W.title(b, if key == "Book" then "Index" else key, 1, 32, 67, 25, 17, W.ink)
+		if key == "Jobs" then
+			self.jobBadge = W.frame(b, "Reward ready", 53, -5, 20, 20, W.pink, 10)
+			W.stroke(self.jobBadge, W.ink, 2)
+			W.title(self.jobBadge, "!", 0, 0, 20, 20, 15, W.ink)
+		end
+		b.Activated:Connect(function()
+			if key == "Sell" then
+				net.Action:FireServer("Sell")
+			else
+				self:openPage(key)
+			end
+		end)
 	end
-	self.sell = W.button(cash, "Sell", 0, 100, 108, 42, W.gold, "SELL")
-	self.shop = W.button(cash, "Shop", 115, 100, 108, 42, W.aqua, "UPGRADES")
-	self.status = W.text(cash, "", 0, 147, 223, 22, 12, W.white, true)
-	self.status.TextStrokeTransparency = 0.25
-	local info = W.frame(root, "Depth", 0, 0, 193, 97, W.panel, 5)
-	self.info = info
-	W.stroke(info, W.ink, 2)
-	W.bevel(info)
-	local strip = W.frame(info, "Layer strip", 4, 4, 185, 22, W.blue, 2)
-	self.layer = W.text(strip, string.upper(Config.SurfaceName), 4, 0, 177, 22, 13, W.white)
-	self.depth = W.text(info, "Surface", 8, 26, 177, 31, 23, W.white)
-	self.stats = W.text(info, "", 3, 55, 187, 39, 14, W.muted)
-	self.surface = W.button(info, "Surface", 53, 105, 140, 40, W.white, "↑  SURFACE")
-	self.mine = W.button(root, "Mine", 0, 0, 95, 52, W.aqua, "HOLD MINE")
-	anchor(self.mine, 1, 0.5, UDim2.new(1, -16, 0.54, 0))
+	self.mine = W.button(root, "Mine", 0, 0, 98, 46, W.aqua, "Hold mine")
+	W.anchor(self.mine, 1, 0.5, UDim2.new(1, -12, 0.54, 0))
 	self.mine.Visible = mobile
-
-	local speech = W.frame(root, "Message", 0, 0, 350, 52, W.ink, 5)
-	anchor(speech, 0.5, 1, UDim2.new(0.5, 0, 1, -14))
-	speech.BackgroundTransparency = 0.10
-	self.message = W.text(speech, "", 8, 3, 334, 26, 18, W.white)
-	self.detail = W.text(speech, "", 8, 28, 334, 18, 13, W.muted)
+	local speech = card(root, "Feedback", 0, 0, 320, 47)
+	self.message = W.title(speech, "", 5, 1, 310, 25, 18, W.white)
+	self.detail = W.text(speech, "", 5, 25, 310, 18, 13, W.muted)
 	self.speech = speech
 	local aimGui = Instance.new("ScreenGui")
 	aimGui.Name, aimGui.ResetOnSpawn, aimGui.ScreenInsets = "QuarryAim", false, Enum.ScreenInsets.None
 	aimGui.Parent = gui.Parent
-	local reticle = W.frame(aimGui, "Aim", 0, 0, 8, 8, W.white, 4)
-	anchor(reticle, 0.5, 0.5, UDim2.fromScale(0.5, 0.5))
-	W.stroke(reticle, W.ink, 1.6)
-	self.reticle = reticle
-	reticle.Visible = false
-	-- Capture input across the whole modal, including the gaps between rows.
-	local shade = Instance.new("TextButton")
-	shade.Name, shade.Size, shade.BackgroundColor3, shade.BackgroundTransparency =
-		"ShopOverlay", UDim2.fromScale(1, 1), W.ink, 0.22
-	shade.Text, shade.AutoButtonColor, shade.Visible, shade.ZIndex, shade.Parent = "", false, false, 5, root
-	local modal = W.frame(shade, "Workshop", 0, 0, 454, 396, W.chrome, 6)
-	modal.Active = true
-	anchor(modal, 0.5, 0.5, UDim2.fromScale(0.5, 0.5))
-	W.stroke(modal, W.ink, 3)
-	W.bevel(modal)
-	local header = W.frame(modal, "Title bar", 6, 6, 442, 48, W.blue, 3)
-	W.text(header, "WORKSHOP", 12, 0, 235, 48, 23, W.white, true).Font = Enum.Font.Arcade
-	self.wallet = W.text(header, "", 239, 0, 144, 48, 16, W.gold)
-	local close = W.button(header, "Close", 392, 6, 43, 36, W.card, "×")
-	close.TextSize = 25
-	self.rows = {}
-	for i, key in Upgrades.order do
-		local item = Upgrades.items[key]
-		local row = W.frame(modal, key, 12, 65 + (i - 1) * 76, 430, 69, W.card, 4)
-		W.stroke(row, W.line, 1)
-		local tile = W.frame(row, "Icon", 10, 12, 43, 43, item.color, 4)
-		W.bevel(tile)
-		W.text(tile, item.icon, 0, 0, 43, 43, 29, W.ink)
-		local title = W.text(row, item.label or key, 65, 7, 242, 24, 20, W.ink, true)
-		local benefit = W.text(row, "", 65, 35, 251, 22, 15, W.panel, true)
-		local buy = W.button(row, "Purchase", 320, 12, 99, 40, W.green, "")
-		buy.Activated:Connect(function()
-			net.Action:FireServer("Buy", key)
-		end)
-		self.rows[key] = { title = title, benefit = benefit, buy = buy }
-	end
-	self.shopMessage = W.text(modal, "", 12, 367, 430, 23, 14, W.ink)
-	self.overlay = shade
-	self.shop.Activated:Connect(function()
-		self:setShop(true)
-	end)
-	close.Activated:Connect(function()
+	self.reticle = W.frame(aimGui, "Aim", 0, 0, 8, 8, W.white, 4)
+	W.anchor(self.reticle, 0.5, 0.5, UDim2.fromScale(0.5, 0.5))
+	W.stroke(self.reticle, W.ink, 1.6)
+	self.reticle.Visible = false
+	self.menu = Menu.new(root, player, net, function()
 		self:setShop(false)
 	end)
-	self.sell.Activated:Connect(function()
-		net.Action:FireServer("Sell")
-	end)
-	self.surface.Activated:Connect(function()
-		net.Action:FireServer("Surface")
-	end)
-	local hudScales = { W.scale(cash), W.scale(info), W.scale(speech) }
-	local shopScale = W.scale(modal)
-	local function layout()
-		local width, height = root.AbsoluteSize.X, root.AbsoluteSize.Y
-		local scale = math.clamp(math.min((width - 34) / 430, height / 465), 0.54, 1.14)
-		for _, s in hudScales do
-			s.Scale = scale
+	self.overlay = self.menu.overlay
+	self.overlay:GetPropertyChangedSignal("Visible"):Connect(function()
+		local open = self.overlay.Visible
+		backdrop.Enabled = open
+		for _, panel in { wallet, taskCard, loc, dock } do
+			panel.Visible = not open
 		end
-		shopScale.Scale = math.clamp(math.min((width - 24) / 454, (height - 18) / 396), 0.40, 1.18)
-		local crowded = not self.mobile and width < 806 * scale
-		local margin = if self.mobile then 120 * scale elseif crowded then 172 * scale else 14
-		speech.Position = UDim2.new(0.5, 0, 1, -margin)
+		self.speech.Visible = false
+	end)
+	local walletScale, taskScale, locScale, dockScale, speechScale, mineScale =
+		W.scale(wallet), W.scale(taskCard), W.scale(loc), W.scale(dock), W.scale(speech), W.scale(self.mine)
+	self.layout = function()
+		local width, height = root.AbsoluteSize.X, root.AbsoluteSize.Y
+		if width < 2 or height < 2 then
+			return
+		end
+		local s = math.clamp(math.min((width - 28) / 450, height / 510), 0.55, 1.14)
+		local ds = math.min(s, (width - 16) / 441)
+		local portrait = self.mobile and width < height
+		if self.mobile and not portrait then
+			ds = math.min(math.max(ds, 0.78), math.max(0.56, (width - 195) / 441))
+		end
+		walletScale.Scale, taskScale.Scale, locScale.Scale = s, s, s
+		dockScale.Scale, speechScale.Scale, mineScale.Scale = ds, math.min(s, (width - 20) / 320), math.max(0.88, s)
+		self.menu:layout(width, height, self.mobile)
+		W.anchor(wallet, 0, 0, UDim2.fromOffset(10, 9))
+		W.anchor(taskCard, 1, 0, UDim2.new(1, -10, 0, 9))
+		W.anchor(loc, 0, 0, UDim2.fromOffset(10, 12 + 96 * s))
+		local dockOffset = if portrait then 110 else 7
+		W.anchor(dock, 0.5, 1, UDim2.new(0.5, 0, 1, -dockOffset))
+		W.anchor(speech, 0.5, 1, UDim2.new(0.5, 0, 1, -dockOffset - 71 * ds))
 	end
-	self.layout = layout
-	root:GetPropertyChangedSignal("AbsoluteSize"):Connect(layout)
-	self.player, self.net, self.mobile = player, net, mobile
-	self:placePanels(mobile)
-	local function refresh()
+	root:GetPropertyChangedSignal("AbsoluteSize"):Connect(self.layout)
+	self.layout()
+	player.AttributeChanged:Connect(function()
 		self:refresh()
-	end
-	player.AttributeChanged:Connect(refresh)
-	net:GetAttributeChangedSignal("Ready"):Connect(refresh)
+	end)
 	self:refresh()
 	return self
 end
-
 function Hud:placePanels(touch)
-	if touch then
-		anchor(self.cash, 0, 0, UDim2.fromOffset(12, 8))
-		self.sell.Position, self.shop.Position = UDim2.fromOffset(0, 100), UDim2.fromOffset(115, 100)
-		self.status.Position = UDim2.fromOffset(0, 147)
-		anchor(self.info, 0.5, 1, UDim2.new(0.5, 0, 1, -8))
-		self.surface.Parent = self.cash
-		self.surface.Position = UDim2.fromOffset(0, 173)
-	else
-		anchor(self.cash, 0, 1, UDim2.new(0, 12, 1, -12))
-		self.sell.Position, self.shop.Position = UDim2.fromOffset(0, -50), UDim2.fromOffset(115, -50)
-		self.status.Position = UDim2.fromOffset(0, -75)
-		anchor(self.info, 1, 1, UDim2.new(1, -12, 1, -12))
-		self.surface.Parent = self.info
-		self.surface.Position = UDim2.fromOffset(53, -49)
-	end
+	self.mobile = touch
 	self.layout()
 end
-function Hud:setShop(open)
-	if self.overlay.Visible == open then
-		return
-	end
-	if open then
-		self.restoreList = StarterGui:GetCoreGuiEnabled(Enum.CoreGuiType.PlayerList)
-		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.PlayerList, false)
-	elseif self.restoreList then
-		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.PlayerList, true)
-	end
-	self.overlay.Visible = open
-	self.shopMessage.Text = ""
-	self.mine.Visible = self.mobile and not open
+function Hud:openPage(key)
+	self.menu:open(key)
+	self.mine.Visible = self.mobile and not self.overlay.Visible
 	self.reticle.Visible = false
+end
+function Hud:setShop(open)
+	if open then
+		self:openPage("Gear")
+	else
+		self.overlay.Visible = false
+		self.mine.Visible = self.mobile
+	end
 end
 function Hud:refresh()
 	local p = self.player
-	local gold, used = p:GetAttribute("Gold") or 0, p:GetAttribute("Used") or 0
-	local function level(k)
-		return p:GetAttribute(k) or 1
+	local function level(key)
+		return p:GetAttribute(key) or 1
 	end
-	local function stat(k)
-		return Upgrades.items[k].values[level(k)]
+	local used, cap = p:GetAttribute("Used") or 0, Upgrades.items.Capacity.values[level("Capacity")]
+	self.gold.Text = W.number(p:GetAttribute("Gold") or 0)
+	self.pack.Text = "Pack   " .. W.number(used) .. " / " .. W.number(cap)
+	self.fill.BackgroundColor3 = if used >= cap then W.gold else W.green
+	if used ~= self.lastUsed or cap ~= self.lastCap then
+		self.lastUsed, self.lastCap = used, cap
+		W.tween(self.fill, 0.15, { Size = UDim2.fromScale(used / cap, 1) })
 	end
-	local capacity = stat("Capacity")
-	self.gold.Text = W.number(gold)
-	self.wallet.Text = W.number(gold) .. " GOLD"
-	self.pack.Text = string.format("PACK     %s / %s", W.number(used), W.number(capacity))
-	self.fill.BackgroundColor3 = if used >= capacity then W.gold else W.green
-	W.tween(self.fill, 0.15, { Size = UDim2.new(used / capacity, 0, 1, 0) })
-	self.sell.Text = if used > 0
-		then "SELL  " .. W.number(p:GetAttribute("BagValue") or 0) .. " G"
-		else "SELL"
+	local value = (p:GetAttribute("BagValue") or 0) * (if p:GetAttribute("DoubleGold") then 2 else 1)
+	self.nav.Sell.Text = if used > 0 then "Sell " .. W.number(value) else "Sell"
+	self.nav.Sell.TextSize = if #self.nav.Sell.Text > 7 then 13 else 17
+	local status = p:GetAttribute("SaveStatus")
+	self.status.Text = if status == "Saving enabled" then "" else status or "Opening pack…"
+	local mined, done = p:GetAttribute("Mined") or 0, p:GetAttribute("Jobs") or 0
+	local _, rank = Expeditions.rank(mined)
+	local job = Expeditions.jobs[done + 1]
+	self.job.Text = if job then job.title else rank.name
+	self.reward.Text = if job then "+" .. W.number(job.reward) .. " G" else "All done"
+	self.jobCount.Text = if job and mined >= job.goal
+		then "Claim reward  ›"
+		elseif job then string.format("%d / %d blocks mined", mined, job.goal)
+		else W.number(mined) .. " blocks mined"
+	self.jobCount.TextColor3 = if job and mined >= job.goal then W.green else W.muted
+	self.jobBadge.Visible = job ~= nil and mined >= job.goal
 	self.stats.Text = string.format(
-		"Area %s    ·    Power %d\nPulse every %.2fs",
+		"%s  ·  %s  ·  Power %d  ·  %.2fs",
+		rank.name,
 		Upgrades.describe("Radius", level("Radius")),
-		stat("Power"),
-		stat("Speed")
+		level("Power"),
+		Upgrades.items.Speed.values[level("Speed")]
 	)
-	self.status.Text = p:GetAttribute("SaveStatus") or "Opening pack…"
-	if self.status.Text == "Saving enabled" then
-		self.status.Text = ""
-	end
-	for key, row in self.rows do
-		local lvl = level(key)
-		local price = Upgrades.price(key, lvl)
-		row.title.Text = (Upgrades.items[key].label or key) .. "   ·   Lv " .. lvl
-		row.benefit.Text = Upgrades.describe(key, lvl)
-			.. (if price then "  →  " .. Upgrades.describe(key, lvl + 1) else "")
-		row.buy.Text = if price then W.number(price) .. " G" else "MAX"
-		row.buy.BackgroundColor3 = if price and gold >= price then W.green else W.chrome
-		row.buy.Active = price ~= nil
-	end
+	self.menu:refresh()
+end
+function Hud:milestone(kind, name, color)
+	local serial = (self.ribbonSerial or 0) + 1
+	self.ribbonSerial = serial
+	self.ribbonType.Text, self.ribbonType.TextColor3, self.ribbonName.Text = kind, color:Lerp(W.white, 0.36), name
+	self.ribbon.Visible = true
+	self.ribbon.Position = UDim2.fromOffset(18, 88)
+	W.tween(self.ribbon, 0.2, { Position = UDim2.fromOffset(0, 88) })
+	task.delay(3.4, function()
+		if self.ribbonSerial == serial then
+			self.ribbon.Visible = false
+		end
+	end)
 end
 function Hud:notice(title, detail, color)
 	self.untilTime = os.clock() + 2.1
 	self.message.Text, self.message.TextColor3, self.detail.Text = title, color or W.white, detail or ""
 	if self.overlay.Visible then
-		self.shopMessage.Text = title
+		self.menu.status.Text = title
 	end
-	self.message.TextTransparency = 0.32
+	self.speech.Visible = not self.overlay.Visible
+	self.message.TextTransparency = 0.35
 	W.tween(self.message, 0.16, { TextTransparency = 0 })
 end
-function Hud:guide(t, sub, visible)
+function Hud:guide(title, detail, visible)
 	if os.clock() < (self.untilTime or 0) then
-		self.speech.Visible = true
 		return
 	end
 	self.speech.Visible = visible
-	self.message.Text, self.message.TextColor3, self.detail.Text = t, W.white, sub
+	self.message.Text, self.message.TextColor3, self.detail.Text = title, W.white, detail
 end
 return Hud

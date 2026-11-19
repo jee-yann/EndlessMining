@@ -9,7 +9,7 @@ local shared = Rep:WaitForChild("Shared")
 for _, name in { "Mine", "Action", "Feedback", "Dust" } do
 	net:WaitForChild(name)
 end
-for _, name in { "BlockPattern", "GameConfig", "Ores", "Upgrades" } do
+for _, name in { "BlockPattern", "GameConfig", "Ores", "Upgrades", "Expeditions", "PassCatalog" } do
 	shared:WaitForChild(name)
 end
 local Config, Ores, Upgrades = require(shared.GameConfig), require(shared.Ores), require(shared.Upgrades)
@@ -59,10 +59,7 @@ UIS.InputBegan:Connect(function(input, processed)
 	end
 end)
 hud.mine.InputBegan:Connect(function(input)
-	if
-		input.UserInputType == Enum.UserInputType.Touch
-		or input.UserInputType == Enum.UserInputType.MouseButton1
-	then
+	if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
 		held, tapPending = input, true
 	end
 end)
@@ -91,6 +88,7 @@ end)
 net.Feedback.OnClientEvent:Connect(function(kind, a, point, spread)
 	if kind == "loot" then
 		firstHaul = true
+		fx:swing(player)
 		local best = Ores.byName.Stone
 		local pieces, value, lines = 0, 0, {}
 		for _, ore in Ores.list do
@@ -109,6 +107,8 @@ net.Feedback.OnClientEvent:Connect(function(kind, a, point, spread)
 			table.concat(lines, "  +  ") .. (if rare then "  ·  " .. value .. " G" else ""),
 			if rare then best.color else W.white
 		)
+	elseif kind == "milestone" then
+		hud:milestone(a, point, spread)
 	elseif kind == "sale" then
 		if a > 0 then
 			fx:chime(1.2)
@@ -120,6 +120,14 @@ net.Feedback.OnClientEvent:Connect(function(kind, a, point, spread)
 		)
 	elseif kind == "shop" then
 		hud:setShop(true)
+	elseif kind == "page" then
+		hud:openPage(a)
+	elseif kind == "travel" then
+		hud:setShop(false)
+		hud:notice(a, "Lift arrived", W.aqua)
+	elseif kind == "job" then
+		fx:chime(1.65)
+		hud:notice("+" .. W.number(point) .. " gold", a .. " completed", W.gold)
 	elseif kind == "upgrade" then
 		fx:chime(1.55)
 		hud:notice(a, "Workshop upgrade fitted", W.green)
@@ -127,7 +135,8 @@ net.Feedback.OnClientEvent:Connect(function(kind, a, point, spread)
 		hud:notice(a, "", W.gold)
 	end
 end)
-net.Dust.OnClientEvent:Connect(function(point, spread, ore)
+net.Dust.OnClientEvent:Connect(function(point, spread, ore, miner)
+	fx:swing(miner)
 	fx:burst(point, spread, Ores.byName[ore], true)
 end)
 
@@ -195,9 +204,7 @@ RunService.RenderStepped:Connect(function(dt)
 	elseif not valid and locked then
 		hud:guide(locked.name .. " needs Power " .. locked.hardness, "Upgrade Power at the workshop", true)
 	elseif valid or not firstHaul then
-		local help = if mobile
-			then "Hold MINE on the highlighted blocks"
-			else "Hold the left mouse button to mine"
+		local help = if mobile then "Hold MINE on the highlighted blocks" else "Hold the left mouse button to mine"
 		local title = if valid
 			then string.format("%d block%s selected", #cells, if #cells == 1 then "" else "s")
 			else "Follow the path to the crystal cave"

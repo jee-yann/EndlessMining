@@ -25,6 +25,10 @@ report.OnServerEvent:Connect(function(player,stage,detail)
 		local x=if player.UserId%2==0 then -3 else 4
 		char:PivotTo(CFrame.new(n:GetAttribute("Origin")+Vector3.new(x,4,-8)))
 		char.HumanoidRootPart.Anchored=true
+	elseif stage=="openPage" then
+		n.Feedback:FireClient(player,"page",detail)
+	elseif stage=="closePage" then
+		n.Feedback:FireClient(player,"travel","Citrine Harbor")
 	elseif stage=="passed" then
 		done[player]=detail
 		local results={}
@@ -54,10 +58,31 @@ local function test()
 	assert(gui and gui.SafeArea:FindFirstChild("ShopOverlay"),"HUD did not mount")
 	waitFor(function() return workspace:FindFirstChild("MiningSelection") end,8,"aim controller did not start")
 	assert(p:GetAttribute("SaveStatus")=="Practice session","local data scope")
+	waitFor(function() return p.Character:FindFirstChild("Harbor pick") end,8,"equipped pickaxe")
+	local overlay=gui.SafeArea.ShopOverlay
+	local menu=overlay["Harbor menu"]
+	for _,page in {"Lift","Gear","Jobs","Book","Store"} do
+		r:FireServer("openPage",page)
+		local listing=({Lift="Citrine Harbor",Gear="Mining area",Jobs="First strike",Book="Stone",Store="Double Gold"})[page]
+		waitFor(function() return overlay.Visible and menu.Listings:FindFirstChild(listing) end,5,"open "..page)
+		local left,top=menu.AbsolutePosition.X,menu.AbsolutePosition.Y
+		local safe=gui.SafeArea
+		assert(left>=safe.AbsolutePosition.X-1 and top>=safe.AbsolutePosition.Y-1,"menu origin")
+		assert(menu.AbsoluteSize.X<=safe.AbsoluteSize.X+1 and menu.AbsoluteSize.Y<=safe.AbsoluteSize.Y+1,"menu bounds")
+	end
+	r:FireServer("closePage")
+	waitFor(function() return not overlay.Visible end,5,"close")
 	r:FireServer("position")
 	local origin=n:GetAttribute("Origin")
 	waitFor(function() return (p.Character.Head.Position-origin).Z<0 end,8,"placement")
 	local first=os.clock()
+	local discovered,unlocked
+	n.Feedback.OnClientEvent:Connect(function(kind,title,name)
+		if kind=="milestone" then
+			if title=="ORE DISCOVERED" then discovered=name end
+			if title=="LIFT UNLOCKED" then unlocked=name end
+		end
+	end)
 	local params=RaycastParams.new()
 	params.FilterType=Enum.RaycastFilterType.Include
 	params.FilterDescendantsInstances={workspace.CitrineCove:WaitForChild("MineBlocks")}
@@ -86,6 +111,7 @@ local function test()
 		task.wait(.12)
 	end
 	assert(p:GetAttribute("Used")==36,"starter pack incomplete: "..tostring(p:GetAttribute("Used")))
+	waitFor(function() return discovered and unlocked=="Ember Foundry" end,4,"ore and lift notifications")
 	local value=p:GetAttribute("BagValue")
 	assert(value>=72,"ore valuation")
 	n.Action:FireServer("Sell")
@@ -100,11 +126,35 @@ local function test()
 		task.wait(.12)
 	end
 	assert(p:GetAttribute("Used")==2,"the 2x1 upgrade should mine both highlighted cells")
+	assert(p:GetAttribute("OreIndex")>0 and p:GetAttribute("Mined")==38,"ore discovery and lifetime blocks")
+	n.Action:FireServer("Job",1)
+	waitFor(function() return p:GetAttribute("Jobs")==1 end,5,"first reward")
+	local afterJob=p:GetAttribute("Gold")
+	assert(afterJob==value-24+25)
+	task.wait(.25)
+	n.Action:FireServer("Job",1)
+	task.wait(.3)
+	assert(p:GetAttribute("Gold")==afterJob,"repeat claim")
+	n.Action:FireServer("PreviewPass","DoubleGold")
+	waitFor(function() return p:GetAttribute("DoubleGold") end,5,"studio pass preview")
+	local double=p:GetAttribute("BagValue")*2
+	n.Action:FireServer("Sell")
+	waitFor(function() return p:GetAttribute("Gold")==afterJob+double end,5,"double sale")
+	task.wait(.3)
+	n.Action:FireServer("PreviewPass","PrismTrail")
+	waitFor(function() return p.Character.HumanoidRootPart:FindFirstChild("Prism Ribbon") end,5,"equipped trail")
+	n.Action:FireServer("Travel","Foundry")
+	local foundry=require(rep.Shared.Expeditions).byKey.Foundry.floor+origin
+	waitFor(function() return (p.Character.HumanoidRootPart.Position-foundry).Magnitude<10 end,5,"foundry lift")
+	task.wait(.3)
+	n.Action:FireServer("Travel","Deep")
+	task.wait(.4)
+	assert((p.Character.HumanoidRootPart.Position-foundry).Magnitude<10,"locked vault")
 	task.wait(.25)
 	n.Action:FireServer("Surface")
 	local landing=n:GetAttribute("Landing")
 	waitFor(function() return (p.Character.HumanoidRootPart.Position-landing).Magnitude<8 end,5,"surface recall")
-	return string.format("36 ore, %d gold sale, area 1×1→2×1, surface recall (%.1fs)",value,os.clock()-first)
+	return string.format("38 ore, %d gold sale, area 1×1→2×1, five menus, jobs, both passes, lift gates, recall (%.1fs)",value,os.clock()-first)
 end
 local ok,result=pcall(test)
 r:FireServer(if ok then "passed" else "failed",tostring(result))

@@ -21,8 +21,7 @@ function Effects.new()
 	local sparkOrigin = Instance.new("Attachment")
 	sparkOrigin.Name, sparkOrigin.Parent = "Quarry discovery", workspace.Terrain
 	local glints = Instance.new("ParticleEmitter")
-	glints.Texture, glints.Rate, glints.LightEmission =
-		"rbxasset://textures/particles/sparkles_main.dds", 0, 1
+	glints.Texture, glints.Rate, glints.LightEmission = "rbxasset://textures/particles/sparkles_main.dds", 0, 1
 	glints.Lifetime, glints.Speed = NumberRange.new(0.28, 0.48), NumberRange.new(2, 8)
 	glints.SpreadAngle, glints.Size = Vector2.new(120, 120), NumberSequence.new(0.75, 0)
 	glints.Parent = sparkOrigin
@@ -32,6 +31,17 @@ end
 function Effects:chime(pitch)
 	self.coin.PlaybackSpeed = pitch
 	SoundService:PlayLocalSound(self.coin)
+end
+function Effects:swing(miner)
+	local character = miner and miner.Character
+	local model = character and character:FindFirstChild("Harbor pick")
+	local handle = model and model.PrimaryPart
+	local motor = handle and handle:FindFirstChild("Grip")
+	local rest = handle and handle:GetAttribute("Rest")
+	if motor and rest then
+		motor.C0 = rest * CFrame.Angles(math.rad(-62), 0, 0)
+		Tween:Create(motor, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { C0 = rest }):Play()
+	end
 end
 function Effects:aim(cells, normal)
 	local count = if cells then #cells else 0
@@ -51,11 +61,9 @@ function Effects:aim(cells, normal)
 			marker.Name, marker.Anchored, marker.CastShadow = "Selected face", true, false
 			marker.CanCollide, marker.CanTouch, marker.CanQuery = false, false, false
 			marker.Size = Vector3.new(Config.Cell - 0.10, Config.Cell - 0.10, 0.045)
-			marker.Color, marker.Material, marker.Transparency =
-				Color3.fromRGB(94, 255, 218), Enum.Material.Neon, 0.77
+			marker.Color, marker.Material, marker.Transparency = Color3.fromRGB(94, 255, 218), Enum.Material.Neon, 0.77
 			local outline = Instance.new("SelectionBox")
-			outline.Adornee, outline.Color3, outline.LineThickness =
-				marker, Color3.fromRGB(156, 255, 233), 0.048
+			outline.Adornee, outline.Color3, outline.LineThickness = marker, Color3.fromRGB(156, 255, 233), 0.048
 			outline.SurfaceTransparency, outline.Parent = 1, marker
 			self.markers[i] = marker
 		end
@@ -104,8 +112,7 @@ function Effects:burst(point, spread, ore, quiet)
 		chip.Destroying:Once(function()
 			self.activeChips -= 1
 		end)
-		local finish = CFrame.new(start + drift * 3 + outward * 3 + Vector3.yAxis)
-			* CFrame.Angles(i * 0.4, i, i * 0.7)
+		local finish = CFrame.new(start + drift * 3 + outward * 3 + Vector3.yAxis) * CFrame.Angles(i * 0.4, i, i * 0.7)
 		Tween:Create(
 			chip,
 			TweenInfo.new(0.32, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),

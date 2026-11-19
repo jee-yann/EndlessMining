@@ -2,8 +2,10 @@ local Players = game:GetService("Players")
 local Rep = game:GetService("ReplicatedStorage")
 local Config, Upgrades = require(Rep.Shared.GameConfig), require(Rep.Shared.Upgrades)
 local World, Quarry = require(script.MineWorld), require(script.Quarry)
-local Data, Profile, Mining =
-	require(script.DataService), require(script.Profile), require(script.MiningService)
+local Expeditions, Ores = require(Rep.Shared.Expeditions), require(Rep.Shared.Ores)
+local Passes = require(script.Passes)
+local Pickaxe = require(script.Pickaxe)
+local Data, Profile, Mining = require(script.DataService), require(script.Profile), require(script.MiningService)
 
 local surface = workspace:WaitForChild("CitrineCove")
 local world = World.new(Config.Seed, surface)
@@ -26,6 +28,15 @@ local function sync(player, p)
 	player:SetAttribute("Gold", p.gold)
 	player:SetAttribute("Used", Profile.used(p))
 	player:SetAttribute("BagValue", Profile.value(p.bag))
+	player:SetAttribute("Mined", p.mined)
+	player:SetAttribute("Jobs", p.jobs)
+	local found = 0
+	for i, ore in Ores.list do
+		if p.discoveries[ore.name] then
+			found = bit32.bor(found, bit32.lshift(1, i - 1))
+		end
+	end
+	player:SetAttribute("OreIndex", found)
 	for _, key in Upgrades.order do
 		player:SetAttribute(key, p.levels[key])
 	end
@@ -44,9 +55,9 @@ local function onCharacter(player, character)
 		return
 	end
 	toSurface(player, character)
+	task.spawn(Pickaxe.equip, player, character)
 	local lamp = Instance.new("PointLight")
-	lamp.Name, lamp.Color, lamp.Range, lamp.Brightness =
-		"Mining lamp", Color3.fromRGB(255, 232, 198), 32, 1.65
+	lamp.Name, lamp.Color, lamp.Range, lamp.Brightness = "Mining lamp", Color3.fromRGB(255, 232, 198), 32, 1.65
 	lamp.Parent = character:FindFirstChild("Head") or character.HumanoidRootPart
 end
 local function join(player)
@@ -54,6 +65,7 @@ local function join(player)
 		return
 	end
 	loading[player] = true
+	Passes.join(player)
 	player.RespawnLocation = site.spawn
 	player.CharacterAdded:Connect(function(char)
 		onCharacter(player, char)
@@ -94,7 +106,14 @@ local function action(player, key, option)
 		return
 	end
 	local now = os.clock()
-	if key ~= "Surface" and key ~= "Sell" and key ~= "Buy" then
+	if
+		key ~= "Surface"
+		and key ~= "Sell"
+		and key ~= "Buy"
+		and key ~= "Travel"
+		and key ~= "Job"
+		and key ~= "PreviewPass"
+	then
 		return
 	end
 	local times = nextAction[player]
@@ -111,33 +130,77 @@ local function action(player, key, option)
 		toSurface(player, player.Character)
 	elseif key == "Sell" then
 		-- The HUD calls the exchange from any depth, just like the physical counter.
-		local gold = Profile.sell(p)
+		local gold = Profile.sell(p, if player:GetAttribute("DoubleGold") then 2 else 1)
 		sync(player, p)
 		net.Feedback:FireClient(player, "sale", gold)
 	elseif key == "Buy" and type(option) == "string" and Upgrades.items[option] then
 		local ok, msg = Profile.buy(p, option)
 		sync(player, p)
 		net.Feedback:FireClient(player, if ok then "upgrade" else "hint", msg)
+	elseif key == "Job" then
+		local job = Profile.claimJob(p, option)
+		if job then
+			sync(player, p)
+			net.Feedback:FireClient(player, "job", job.title, job.reward)
+		end
+	elseif key == "PreviewPass" then
+		Passes.preview(player, option)
+	elseif key == "Travel" and type(option) == "string" then
+		local stop = Expeditions.byKey[option]
+		local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+		if not stop or not root then
+			return
+		end
+		if not world.ready then
+			net.Feedback:FireClient(player, "hint", "The lift is warming up")
+			return
+		end
+		if p.mined < stop.goal then
+			net.Feedback:FireClient(player, "hint", "Mine " .. stop.goal .. " blocks to unlock this stop")
+			return
+		end
+		if not stop.floor then
+			toSurface(player, player.Character)
+		else
+			root.AssemblyLinearVelocity, root.AssemblyAngularVelocity = Vector3.zero, Vector3.zero
+			player.Character:PivotTo(CFrame.new(world.origin + stop.floor + Vector3.new(0, 4.7, 2)))
+		end
+		net.Feedback:FireClient(player, "travel", stop.name)
 	end
 end
 net.Action.OnServerEvent:Connect(action)
 for name, prompt in site.stations do
 	prompt.Triggered:Connect(function(player)
 		local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-		if
-			not root
-			or (root.Position - prompt.Parent.Position).Magnitude > prompt.MaxActivationDistance + 4
-		then
+		if not root or (root.Position - prompt.Parent.Position).Magnitude > prompt.MaxActivationDistance + 4 then
 			return
 		end
 		if name == "Sell" then
 			action(player, "Sell")
-		else
+		elseif name == "Shop" then
 			net.Feedback:FireClient(player, "shop")
+		else
+			net.Feedback:FireClient(player, "page", if string.sub(name, 1, 4) == "Lift" then "Lift" else name)
 		end
 	end)
 end
 Mining.start(world, net, sessions, sync)
+task.spawn(function()
+	while task.wait(4) do
+		local rows = {}
+		for player, s in sessions do
+			table.insert(rows, { name = player.DisplayName, score = s.profile.mined })
+		end
+		table.sort(rows, function(a, b)
+			return a.score > b.score or (a.score == b.score and a.name < b.name)
+		end)
+		local lines = {}
+		for i = 1, math.min(#rows, 3) do
+			table.insert(lines, string.format("%d.   %s    ·    %d", i, rows[i].name, rows[i].score))
+		end
+		site.board.Text = if #lines > 0 then table.concat(lines, "\n") else "Waiting for miners"
+	end
+end)
 Players.PlayerAdded:Connect(join)
 Players.PlayerRemoving:Connect(leave)
 for _, player in Players:GetPlayers() do

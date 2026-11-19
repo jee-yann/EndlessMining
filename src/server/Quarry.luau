@@ -8,12 +8,21 @@ function Quarry.bind(map, world)
 		preview:Destroy()
 	end
 	local market = map["Shore market"]
+	local harbor = map["Harbor Plaza"]
+	local stations = {
+		Sell = market.Sell["Service mat"].Service,
+		Shop = market.Upgrades["Service mat"].Service,
+	}
+	for _, name in { "Jobs", "Store", "Book", "Lift" } do
+		stations[name] = harbor[name].Counter.Service
+	end
+	for _, deck in map["Lift Landings"]:GetChildren() do
+		stations["Lift" .. deck.Name] = deck.Console.Service
+	end
 	return {
 		spawn = map["Sand path and bridge"].Landing,
-		stations = {
-			Sell = market.Sell["Service mat"].Service,
-			Shop = market.Upgrades["Service mat"].Service,
-		},
+		stations = stations,
+		board = harbor.Ranking.Standings.Lettering.List,
 	}
 end
 

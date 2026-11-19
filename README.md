@@ -8,8 +8,10 @@ Citrine Cove is a multiplayer Roblox mining simulator. Aim at a cave wall or flo
 
 1. Open `EndlessMining.rbxlx` from this folder in Roblox Studio, or use the existing **Endless Mining** Studio place connected to this project's Rojo server.
 2. Press **F5**. The island is already visible in edit mode. Play generates studded plastic bricks behind the cave mouth. Cross the bridge and walk beneath the golden crystal marked **MINE**. Aim at the dark starter seam and hold the left mouse button. On a touch device, aim with the center dot and hold **HOLD MINE**.
-3. Select **SELL**, then **UPGRADES → Mining area**. The backpack and price are visible before purchase. The ore exchange and workshop also have proximity prompts. Both HUD actions work underground.
-4. Use **↑ SURFACE** to return from the mine. Falling outside the quarry also recalls the character. Press **Shift+F5** to end the session.
+3. After eight blocks, open **Jobs** and claim **First strike** for 25 gold. Open **Gear → Mining area** and spend 24 gold to cut two blocks per hit. **Sell** cashes out the ore in your pack. Both the dock buttons and the harbor counters work.
+4. At 36 lifetime blocks, open **Lift → Ember Foundry → Travel**. Use **↑ Harbor** to return from underground. Press **Shift+F5** to end the session.
+
+![Player spawn and mining HUD in Roblox Studio](map/Harbor-HUD.jpg)
 
 To rebuild the local place after editing, run the following command in the project directory.
 
@@ -20,6 +22,17 @@ rojo build default.project.json -o EndlessMining.rbxlx
 For live editing, run `rojo serve default.project.json` here if this project's server is stopped. In Studio, use **Plugins → Rojo → Connect** and select **EndlessMining** at `localhost:34872`. A built place can be played directly without connecting the plugin.
 
 ## World and balance
+
+The harbor has a lift tower, dispatch board, ore museum, pass stall and a board showing the three most productive miners in the current server. Each underground stop has a lit landing, return console and exposed ore seams. The lift unlocks with total blocks mined. The workshop's **Power** upgrade lets the pickaxe cut harder ores.
+
+| Destination | Lifetime blocks | Depth | Featured seams |
+| --- | ---: | ---: | --- |
+| Citrine Harbor | 0 | Surface | Stone and coal in the starter mine |
+| Ember Foundry | 36 | 80 studs | Iron and copper |
+| Prism Arcade | 150 | 168 studs | Diamond and gold |
+| Emerald Vault | 420 | 280 studs | Emerald and diamond |
+
+The seven shift jobs award gold once each. The ore index records the seven ore types independently of your pack, so selling a find preserves its entry. Ranks, job claims and lift unlocks use lifetime mining progress.
 
 The 192 × 224 stud mine extends 352 studs below the entrance. Sunstone Hollow gives way to the Iron Shelf, Prism Grotto, and Emerald Deep. Each 32-stud geological region receives a seeded, tilted ore deposit. Minimum and preferred depths control its composition. Some deep regions contain an oversized precious-metal or gem lode around a hollow pocket. A fixed coal seam makes the opening reproducible.
 
@@ -34,6 +47,8 @@ Mining area upgrades unlock **1×1, 2×1, 2×2, 3×2, 3×3, 4×3, 4×4, and 5×5
 | Seed, site, layers, reach, save interval and work budget | `src/shared/GameConfig.luau` |
 | Ore appearance, value, hardness and depth weighting | `src/shared/Ores.luau` |
 | Upgrade values, level caps and cost curves | `src/shared/Upgrades.luau` |
+| Jobs, ranks and lift destinations | `src/shared/Expeditions.luau` |
+| Game pass IDs and perks | `src/shared/PassCatalog.luau`, `src/server/Passes.luau` |
 | Vein shapes, rich pockets and the starter seam | `src/server/Geology.luau` |
 | Editable island, signed stations, spawn and bridge | `map/CitrineCove.rbxmx` |
 | Studded brick geometry and face patterns | `src/server/MineBlocks.luau`, `src/shared/BlockPattern.luau` |
@@ -44,11 +59,19 @@ Mining area upgrades unlock **1×1, 2×1, 2×2, 3×2, 3×3, 4×3, 4×4, and 5×5
 
 Rojo owns the scripts under `ReplicatedStorage.Shared`, `ServerScriptService.Server` and `StarterPlayer.StarterPlayerScripts.Client`, plus the authored `Workspace.CitrineCove` model and the lighting listed in `default.project.json`. To keep island edits in the source project, export the selected CitrineCove model from Studio as `map/CitrineCove.rbxmx` before rebuilding. Keep additional Studio-only models as siblings in Workspace. The server starts the mine at the island’s SiteOrigin and checks for unrelated parts and existing terrain before choosing a dig site. If the site is occupied, it relocates the island and mine together for that session. Existing terrain palettes are preserved.
 
-During Play the edit-mode cave face gives way to the shared block grid. Remotes, HUD and headlamps are created at runtime. Player profiles contain gold, ore still in the pack, upgrade levels, lifetime ore mined and best depth. The server uses DataStore `EndlessMining_v1` with separate Studio and live scopes, conditional session ownership, periodic saves, and leave/shutdown saves. A failed load or unsupported record opens an explicitly labeled temporary session with writes disabled. An unpublished local build or a simulated test user gets a practice session.
+During Play the edit-mode cave face gives way to the shared block grid. Remotes, HUD and headlamps are created at runtime. Player profiles contain gold, ore still in the pack, upgrade levels, lifetime ore mined, best depth, completed jobs and discovered ore types. The server uses DataStore `EndlessMining_v1` with separate Studio and live scopes, conditional session ownership, periodic saves, and leave/shutdown saves. A failed load or unsupported record opens an explicitly labeled temporary session with writes disabled. An unpublished local build or a simulated test user gets a practice session.
 
 ## Visual references
 
 Three local Roblox captures in `%LOCALAPPDATA%\Roblox\tmp-capture-storage` informed the island. The beach scene ending in `1795063278721` supplied the sea, sand-path and studded-lawn palette. The grass ledges in `1795062944957` informed the layered bluffs. The striped tool stand in `1795063226069` informed the small coral and teal market stalls. The citrine outcrop and island geometry use native Studio parts.
+
+The two newer lobby captures ending in `1795070093346` and `1795070096049` informed the oversized signs, colored icon dock and visible job tracker. The harbor, pickaxe and HUD icons are built from native Roblox objects.
+
+## Outfitters and Robux
+
+**Double Gold** doubles ore-sale proceeds. **Prism Trail** equips a cosmetic rainbow trail that returns after respawn. **Store → Try in Studio** previews either perk in an unpublished practice session. A trial ends when the player leaves.
+
+To turn on real sales after publishing, create two passes for this experience under **Creator Dashboard → Monetization → Passes**, put them on sale, and enter their pass asset IDs in `src/shared/PassCatalog.luau`. Publish the updated build. The shop requests the player's current price from Roblox, and checkout opens after the player selects the price. The server checks ownership on join and grants successful purchases. [Roblox pass setup](https://create.roblox.com/docs/production/monetization/passes) · [Regional pricing](https://create.roblox.com/docs/production/monetization/regional-pricing)
 
 ## Reproduce the checks
 
@@ -69,6 +92,6 @@ Look for a standalone `QUARRY_TESTS_PASSED` output line. This checks save owners
 & $studioExe --task RunScript --localPlaceFile $quarryPlace --runScriptFile $playTest --outputFile "$env:TEMP\EndlessMining-play.log" --quitAfterExecution
 ```
 
-The two-client check uses real client-to-server requests. Both simulated players must fill their packs, sell, upgrade, and return to the surface. Look for `QUARRY_PLAYTEST_RESULT PASS` followed by both clients' results.
+The two-client check uses real client-to-server requests. Each miner must open all five menus, fill a pack, sell it, upgrade to a two-block cut, claim a job once, try both Studio passes, travel to the Foundry, and return to the surface. The test also checks that the Vault stays locked. Look for `QUARRY_PLAYTEST_RESULT PASS` followed by both clients' results.
 
 For hands-on checks, choose **Server & Clients** in Studio's Test selector and start two players. Mine the same face, compare balances and verify both players see the same missing bricks. Use the device emulator to check the shop, hold/release control, thumbstick and jump in phone landscape and portrait. A persistence round trip requires a separate published test place with Studio API access enabled. Sell ore, buy an upgrade, stop the session and rejoin to verify the balance and level.

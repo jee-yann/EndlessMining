@@ -1,10 +1,10 @@
 local TweenService = game:GetService("TweenService")
 local W = {}
 local rgb = Color3.fromRGB
-W.ink, W.panel, W.card, W.line = rgb(33, 41, 49), rgb(54, 65, 73), rgb(232, 233, 221), rgb(114, 124, 129)
+W.ink, W.panel, W.card, W.line = rgb(18, 24, 44), rgb(30, 41, 65), rgb(48, 61, 89), rgb(77, 95, 127)
 W.white, W.muted, W.gold, W.aqua, W.green =
-	rgb(255, 253, 236), rgb(206, 213, 210), rgb(255, 210, 74), rgb(149, 207, 255), rgb(147, 214, 103)
-W.chrome, W.blue = rgb(184, 192, 194), rgb(39, 85, 148)
+	rgb(255, 253, 245), rgb(206, 220, 234), rgb(255, 209, 76), rgb(88, 224, 252), rgb(110, 236, 150)
+W.pink, W.violet, W.orange = rgb(255, 128, 191), rgb(186, 149, 255), rgb(255, 165, 90)
 local off = UDim2.fromOffset
 function W.round(obj, r)
 	local c = Instance.new("UICorner")
@@ -13,6 +13,12 @@ end
 function W.stroke(obj, color, width)
 	local s = Instance.new("UIStroke")
 	s.ApplyStrokeMode, s.Color, s.Thickness, s.Parent = Enum.ApplyStrokeMode.Border, color, width, obj
+	return s
+end
+function W.gradient(obj, top, bottom, angle)
+	local g = Instance.new("UIGradient")
+	g.Color, g.Rotation, g.Parent = ColorSequence.new(top, bottom), angle or 90, obj
+	return g
 end
 function W.frame(parent, name, x, y, w, h, color, r)
 	local f = Instance.new("Frame")
@@ -31,29 +37,18 @@ function W.text(parent, value, x, y, w, h, size, color, left)
 	l.Position, l.Size, l.Parent = off(x, y), off(w, h), parent
 	return l
 end
-function W.bevel(obj)
-	local top = W.frame(obj, "Top edge", 3, 2, 1, 1, Color3.new(1, 1, 1))
-	top.Size, top.BackgroundTransparency = UDim2.new(1, -6, 0, 1), 0.40
-	local bottom = W.frame(obj, "Bottom edge", 3, 0, 1, 2, W.ink)
-	bottom.Position, bottom.Size, bottom.BackgroundTransparency =
-		UDim2.new(0, 3, 1, -3), UDim2.new(1, -6, 0, 2), 0.52
-end
-function W.goldBrick(parent, x, y)
-	local face = W.frame(parent, "Gold brick", x, y, 32, 17, W.gold, 2)
-	W.stroke(face, W.ink, 1)
-	W.bevel(face)
-	for _, left in { 4, 19 } do
-		local stud = W.frame(face, "Stud", left, -4, 8, 5, W.gold, 1)
-		W.stroke(stud, W.ink, 1)
-	end
+function W.title(parent, value, x, y, w, h, size, color, left)
+	local l = W.text(parent, value, x, y, w, h, size, color, left)
+	l.Font = Enum.Font.FredokaOne
+	return l
 end
 function W.button(parent, name, x, y, w, h, tint, label)
 	local b = Instance.new("TextButton")
 	b.Name, b.Position, b.Size, b.BackgroundColor3, b.BorderSizePixel = name, off(x, y), off(w, h), tint, 0
-	b.Text, b.TextColor3, b.TextSize, b.Font = label, W.ink, 16, Enum.Font.BuilderSansExtraBold
-	W.round(b, 4)
+	b.Text, b.TextColor3, b.TextSize, b.Font = label, W.ink, 16, Enum.Font.FredokaOne
+	W.round(b, 10)
 	W.stroke(b, W.ink, 2)
-	W.bevel(b)
+	W.gradient(b, Color3.new(1, 1, 1), rgb(215, 221, 234))
 	b.Parent = parent
 	return b
 end
@@ -62,9 +57,11 @@ function W.scale(obj)
 	s.Parent = obj
 	return s
 end
+function W.anchor(obj, x, y, pos)
+	obj.AnchorPoint, obj.Position = Vector2.new(x, y), pos
+end
 function W.tween(obj, d, props)
-	local t =
-		TweenService:Create(obj, TweenInfo.new(d, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), props)
+	local t = TweenService:Create(obj, TweenInfo.new(d, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), props)
 	t:Play()
 	return t
 end

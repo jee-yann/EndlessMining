@@ -28,14 +28,22 @@ for _, key in require(Shared.Upgrades).order do
 	end
 	assert(p.levels[key] == #require(Shared.Upgrades).items[key].values)
 end
-assert(
-	Profile.stat(p, "Speed") == 0.20
-		and Profile.stat(p, "Power") == 6
-		and Profile.stat(p, "Capacity") == 7200
-)
+assert(Profile.stat(p, "Speed") == 0.20 and Profile.stat(p, "Power") == 6 and Profile.stat(p, "Capacity") == 7200)
 p.bag.Stone = 7201
 assert(not Profile.valid(p))
 print("PASS sale, costs, level caps, upgrade effects, profile capacity validation")
+local legacy = Profile.new()
+legacy.jobs, legacy.discoveries, legacy.bag, legacy.mined = nil, nil, { Coal = 3 }, 36
+local upgraded = Data.claim({ profile = legacy }, "harbor", 0).profile
+assert(upgraded.discoveries.Coal and upgraded.jobs == 0)
+assert(not Profile.claimJob(upgraded, 2))
+assert(Profile.claimJob(upgraded, 1).reward == 25 and not Profile.claimJob(upgraded, 1))
+assert(Profile.claimJob(upgraded, 2).reward == 80 and not Profile.claimJob(upgraded, 3))
+assert(Profile.sell(upgraded, 2) == 30 and upgraded.gold == 135 and upgraded.discoveries.Coal)
+local snapshot = Data.commit({ owner = "harbor" }, "harbor", upgraded, 100, true)
+local loaded = Data.claim(snapshot, "again", 101).profile
+assert(Profile.valid(loaded) and loaded.jobs == 2 and loaded.discoveries.Coal)
+print("PASS legacy ore collection, job order, duplicate claims, doubled sales and reload")
 
 local hashes = {}
 for _, seed in { 11, 73129, 91003, 73129 } do
@@ -88,7 +96,7 @@ local function floorAt(x, z)
 end
 for _, x in { -3, 0, 3 } do
 	local lastY = world.origin.Y
-	for z = 53, 0, -0.5 do
+	for z = 70, 0, -0.5 do
 		local floor = floorAt(x, z)
 		assert(floor and math.abs(floor.Position.Y - lastY) < 1, "Landing-to-mine path at " .. z)
 		lastY = floor.Position.Y
@@ -100,9 +108,26 @@ assert(
 	not workspace:Raycast(world.origin + Vector3.new(0, 6, -6), Vector3.new(0, 0, -42), onMap),
 	"The starter seam must be clear of scenery"
 )
-for _, prompt in site.stations do
+for _, name in { "Sell", "Shop" } do
+	local prompt = site.stations[name]
 	local pad = prompt.Parent.Position - world.origin
 	assert(floorAt(pad.X, pad.Z) and math.abs(pad.Z - 15) < prompt.MaxActivationDistance)
+end
+for _, name in { "Jobs", "Book", "Store", "Lift" } do
+	local pad = site.stations[name].Parent.Position - world.origin
+	assert(floorAt(pad.X, pad.Z), name)
+end
+assert(site.board:IsA("TextLabel"))
+for _, stop in require(Shared.Expeditions).stops do
+	if stop.floor then
+		local base = world.origin + stop.floor
+		local hit = workspace:Raycast(base + Vector3.new(0, 5, 2), -Vector3.yAxis * 7, onMap)
+		assert(hit and math.abs(hit.Position.Y - base.Y) < 1, stop.name .. " floor")
+		assert((site.stations["Lift" .. stop.key].Parent.Position - base).Magnitude < 9)
+		local geology = Geology.new(Config.Seed)
+		assert(geology:sample(stop.floor.X + 2, stop.floor.Y + 6, stop.floor.Z + 2) == Enum.Material.Air)
+		assert(geology:sample(stop.floor.X + 2, stop.floor.Y + 6, stop.floor.Z - 22) == Ores.byName[stop.ore].material)
+	end
 end
 mapCopy:Destroy()
 print("PASS authored surface, continuous bridge crossing, both service pads and edit-face removal")
@@ -111,9 +136,7 @@ world:generate()
 local bricks = world.grid.folder:GetChildren()
 assert(#bricks > 0 and #bricks < 3500, "Starting brick count: " .. #bricks)
 for _, part in bricks do
-	assert(
-		part:IsA("Part") and part.Material == Enum.Material.Plastic and part.Anchored and part.CanCollide
-	)
+	assert(part:IsA("Part") and part.Material == Enum.Material.Plastic and part.Anchored and part.CanCollide)
 	assert(part.TopSurface == Enum.SurfaceType.Studs and part.BackSurface == Enum.SurfaceType.Studs)
 end
 assert(workspace.Terrain:CountCells() == terrainCells)
@@ -123,8 +146,7 @@ local rig = Instance.new("Model")
 local human = Instance.new("Humanoid")
 human.Parent = rig
 local head = Instance.new("Part")
-head.Name, head.Anchored, head.Position, head.Parent =
-	"Head", true, world.origin + Vector3.new(0, 6, -8), rig
+head.Name, head.Anchored, head.Position, head.Parent = "Head", true, world.origin + Vector3.new(0, 6, -8), rig
 rig.Parent = workspace
 local face = workspace:Raycast(head.Position + Vector3.new(0, 0, -2), Vector3.new(0, 0, -32))
 assert(face and face.Instance.Parent == world.grid.folder)
@@ -174,18 +196,9 @@ for _, n in { Vector3.xAxis, -Vector3.xAxis, Vector3.yAxis, -Vector3.yAxis, Vect
 			assert((pos - center):Dot(n) == 0 and not unique[pos])
 			unique[pos] = true
 		end
-		local permitted, permMask, locked = Pattern.select(
-			world.origin,
-			center,
-			n,
-			count,
-			1,
-			7200,
-			nil,
-			function()
-				return Ores.byName.Diamond
-			end
-		)
+		local permitted, permMask, locked = Pattern.select(world.origin, center, n, count, 1, 7200, nil, function()
+			return Ores.byName.Diamond
+		end)
 		assert(#permitted == 0 and permMask == 0 and locked == Ores.byName.Diamond)
 	end
 end

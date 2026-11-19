@@ -3,6 +3,7 @@ local RunService = game:GetService("RunService")
 local Shared = game:GetService("ReplicatedStorage").Shared
 local Config, Ores = require(Shared.GameConfig), require(Shared.Ores)
 local Pattern = require(Shared.BlockPattern)
+local Expeditions = require(Shared.Expeditions)
 local Profile = require(script.Parent.Profile)
 local Mining = {}
 
@@ -14,19 +15,14 @@ function Mining.target(world, character, point, normal)
 	if not Mining.validPoint(point) or typeof(normal) ~= "Vector3" or not character then
 		return nil
 	end
-	if
-		normal:Abs() ~= Vector3.xAxis
-		and normal:Abs() ~= Vector3.yAxis
-		and normal:Abs() ~= Vector3.zAxis
-	then
+	if normal:Abs() ~= Vector3.xAxis and normal:Abs() ~= Vector3.yAxis and normal:Abs() ~= Vector3.zAxis then
 		return nil
 	end
 	local head, human = character:FindFirstChild("Head"), character:FindFirstChildOfClass("Humanoid")
 	if not head or not human or human.Health <= 0 then
 		return nil
 	end
-	local anchor = world.origin
-		+ (((point - world.origin) / Config.Cell):Floor() + Vector3.one * 0.5) * Config.Cell
+	local anchor = world.origin + (((point - world.origin) / Config.Cell):Floor() + Vector3.one * 0.5) * Config.Cell
 	if (anchor - point).Magnitude > 0.03 or not Config.inside(anchor - world.origin) then
 		return nil
 	end
@@ -120,7 +116,13 @@ function Mining.start(world, net, sessions, sync)
 		local center = selected[1]
 		local spread = math.sqrt(#selected) * Config.Cell
 		local best = Ores.byName.Stone
+		local before, discovery = profile.mined, nil
 		for name, count in loot do
+			local ore = Ores.byName[name]
+			if not profile.discoveries[name] and (not discovery or ore.value > discovery.value) then
+				discovery = ore
+			end
+			profile.discoveries[name] = true
 			profile.bag[name] = (profile.bag[name] or 0) + count
 			profile.mined += count
 			if Ores.byName[name].value > best.value then
@@ -129,10 +131,21 @@ function Mining.start(world, net, sessions, sync)
 		end
 		sync(player, profile)
 		net.Feedback:FireClient(player, "loot", loot, center, spread)
+		local unlocked
+		for _, stop in Expeditions.stops do
+			if before < stop.goal and profile.mined >= stop.goal then
+				unlocked = stop
+			end
+		end
+		if unlocked then
+			net.Feedback:FireClient(player, "milestone", "LIFT UNLOCKED", unlocked.name, unlocked.color)
+		elseif discovery then
+			net.Feedback:FireClient(player, "milestone", "ORE DISCOVERED", discovery.name, discovery.color)
+		end
 		for _, other in Players:GetPlayers() do
 			local root = other.Character and other.Character:FindFirstChild("HumanoidRootPart")
 			if other ~= player and root and (root.Position - center).Magnitude < 72 then
-				net.Dust:FireClient(other, center, spread, best.name)
+				net.Dust:FireClient(other, center, spread, best.name, player)
 			end
 		end
 	end
