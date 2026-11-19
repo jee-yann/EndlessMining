@@ -125,7 +125,8 @@ function Podiums.new(viewer)
 							id = nil
 						end
 						if
-							id and (
+							id
+							and (
 								slot.id ~= id or (not slot.model and not slot.busy and os.clock() >= (slot.retry or 0))
 							)
 						then
@@ -135,8 +136,12 @@ function Podiums.new(viewer)
 						end
 						if slot.model and slot.label then
 							local name = if row then row.name else base:GetAttribute("StandingName")
-							local depth = if row then row.score else base:GetAttribute("StandingDepth")
-							slot.label.Text = string.format("%s  ·  %d blocks", name or "", depth or 0)
+							local depth = if row then row.score else base:GetAttribute("StandingLevel")
+							slot.label.Text = string.format(
+								if row then "%s  ·  %d blocks" else "%s  ·  Lv %d",
+								name or "",
+								depth or 0
+							)
 						end
 					end
 				end

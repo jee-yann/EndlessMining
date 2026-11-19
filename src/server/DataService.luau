@@ -18,6 +18,11 @@ local function copy(p)
 		gold = p.gold,
 		mined = p.mined,
 		xp = p.xp,
+		title = p.title,
+		skills = table.clone(p.skills),
+		counts = table.clone(p.counts),
+		pet = p.pet,
+		petName = p.petName,
 		bestDepth = p.bestDepth,
 		levels = table.clone(p.levels),
 		preferences = table.clone(p.preferences),
@@ -31,7 +36,9 @@ end
 function Data.readDepth(userId)
 	local record = getStore():GetAsync("miner_" .. userId)
 	if type(record) == "table" and type(record.profile) == "table" and type(record.profile.bestDepth) == "number" then
-		return Config.depthInBlocks(record.profile.bestDepth)
+		return if record.profile.counts == nil
+			then math.floor(record.profile.bestDepth / 4)
+			else Config.depthInBlocks(record.profile.bestDepth)
 	end
 	return nil
 end

@@ -58,7 +58,15 @@ function MineSite.bind(map, world)
 	for key, prompt in stations do
 		markCounter(prompt.Parent, counterStyles[key])
 	end
+	local function door(name, size, pos)
+		local part = Instance.new("Part")
+		part.Name, part.Size, part.Position = name, size, world.origin + pos
+		part.Anchored, part.Transparency, part.CanCollide, part.CanQuery = true, 1, false, false
+		part.Parent = map["Working gallery"]
+		return part
+	end
 	return {
+		down = door("Mine threshold", Vector3.new(14, 8, 2), Vector3.new(0, 3, -3)),
 		spawn = map["Sand path and bridge"].Landing,
 		stations = stations,
 		court = harbor["Miners Court"],

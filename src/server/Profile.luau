@@ -3,6 +3,7 @@ local Ores = require(Shared.Ores)
 local Upgrades = require(Shared.Upgrades)
 local Expeditions = require(Shared.Expeditions)
 local Preferences = require(Shared.Preferences)
+local Guide = require(Shared.FieldGuide)
 local Profile = {}
 
 function Profile.new()
@@ -13,6 +14,10 @@ function Profile.new()
 		bag = {},
 		mined = 0,
 		xp = 0,
+		counts = {},
+		skills = {},
+		pet = "",
+		petName = "Pebble",
 		bestDepth = 0,
 		jobs = 0,
 		discoveries = {},
@@ -62,6 +67,35 @@ function Profile.valid(p)
 	if p.xp ~= nil and not integer(p.xp, 9e15) then
 		return false
 	end
+	if p.title ~= nil and not (integer(p.title, #Expeditions.ranks) and p.title >= 1) then
+		return false
+	end
+	if p.pet ~= nil and p.pet ~= "" and p.pet ~= "Rock" then
+		return false
+	end
+	if p.petName ~= nil and (type(p.petName) ~= "string" or #p.petName > 100 or not utf8.len(p.petName)) then
+		return false
+	end
+	if p.counts ~= nil then
+		if type(p.counts) ~= "table" then
+			return false
+		end
+		for ore, v in p.counts do
+			if not Ores.byName[ore] or not integer(v, 9e15) then
+				return false
+			end
+		end
+	end
+	if p.skills ~= nil then
+		if type(p.skills) ~= "table" then
+			return false
+		end
+		for id, owned in p.skills do
+			if not Guide.byId[id] or owned ~= true then
+				return false
+			end
+		end
+	end
 	if p.jobs ~= nil and not integer(p.jobs, #Expeditions.jobs) then
 		return false
 	end
@@ -94,7 +128,19 @@ function Profile.upgradeSave(p)
 		p.gold += math.floor(24 * 2.5 ^ (level - 1) + 0.5)
 	end
 	p.levels.Radius = nil
-	p.xp = p.xp or p.mined * 2
+	if p.xp == nil then
+		p.xp = 0
+		for name, count in p.bag do
+			p.xp += Ores.byName[name].xp * count
+		end
+	end
+	p.skills = p.skills or {}
+	if p.counts == nil then
+		-- Earlier fields measured records in four-stud blocks.
+		p.bestDepth = math.floor(p.bestDepth / 4) * 5
+		p.counts = table.clone(p.bag)
+	end
+	p.pet, p.petName = p.pet or "", p.petName or "Pebble"
 	p.preferences = p.preferences or {}
 	for key, value in Preferences.defaults do
 		if p.preferences[key] == nil then
@@ -111,6 +157,21 @@ function Profile.upgradeSave(p)
 	return p
 end
 
+function Profile.learn(p, id)
+	local node = Guide.byId[id]
+	if not node or p.skills[id] or (node.parent and not p.skills[node.parent]) or Guide.points(p.xp, p.skills) < 1 then
+		return false
+	end
+	p.skills[id] = true
+	return true
+end
+function Profile.equipTitle(p, id)
+	if not integer(id, #Expeditions.ranks) or id < 1 or Expeditions.ranks[id].level > Expeditions.level(p.xp) then
+		return false
+	end
+	p.title = id
+	return true
+end
 function Profile.claimJob(p, number)
 	local i = p.jobs + 1
 	local job = Expeditions.jobs[i]

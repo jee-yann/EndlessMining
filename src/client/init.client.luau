@@ -9,7 +9,7 @@ local shared = Rep:WaitForChild("Shared")
 for _, name in { "Mine", "Action", "Feedback", "Dust", "Swing" } do
 	net:WaitForChild(name)
 end
-for _, name in { "BlockPattern", "GameConfig", "Ores", "Upgrades", "Expeditions", "PassCatalog" } do
+for _, name in { "BlockPattern", "GameConfig", "Ores", "Upgrades", "Expeditions", "PassCatalog", "FieldGuide" } do
 	shared:WaitForChild(name)
 end
 local Config, Ores, Upgrades = require(shared.GameConfig), require(shared.Ores), require(shared.Upgrades)
@@ -83,7 +83,10 @@ local function gotCharacter(character)
 			end
 			task.wait(0.05)
 		end
-		if player.Character == character and workspace.CurrentCamera then
+		while player.Character == character and not workspace.CurrentCamera do
+			RunService.PreRender:Wait()
+		end
+		if player.Character == character then
 			workspace.CurrentCamera.CFrame =
 				CFrame.lookAt(root.Position + Vector3.new(0, 7, 16), root.Position + Vector3.new(0, 4, -22))
 			character:SetAttribute("MiningViewReady", true)
@@ -96,6 +99,14 @@ if player.Character then
 end
 
 UIS.InputBegan:Connect(function(input, processed)
+	if not processed and input.KeyCode == Enum.KeyCode.Tab and not player.PlayerGui:FindFirstChild("MiningLoading") then
+		if hud.overlay.Visible and hud.menu.page == "Crew" then
+			hud.menu:close()
+		else
+			hud:openPage("Crew")
+		end
+		return
+	end
 	if processed or player.PlayerGui:FindFirstChild("MiningLoading") or hud.overlay.Visible or passage.active then
 		return
 	end
@@ -134,7 +145,9 @@ UIS:GetPropertyChangedSignal("PreferredInput"):Connect(function()
 end)
 
 net.Feedback.OnClientEvent:Connect(function(kind, a, point, spread, finds, normal)
-	if kind == "loot" then
+	if kind == "achievement" then
+		hud:milestone("ACHIEVEMENT", a, W.gold)
+	elseif kind == "loot" then
 		firstHaul = true
 		local best = Ores.byName.Dirt
 		for name in a do
@@ -191,7 +204,7 @@ net.Feedback.OnClientEvent:Connect(function(kind, a, point, spread, finds, norma
 	end
 end)
 net.Dust.OnClientEvent:Connect(function(point, spread, ore, finds, normal, loot)
-	fx:labels(finds, loot, normal)
+	fx:labels(finds, loot, normal, true)
 	fx:burst(point, spread, Ores.byName[ore], true)
 end)
 
@@ -230,6 +243,7 @@ for _, other in Players:GetPlayers() do
 	end
 end
 
+require(script.RockCompanions)()
 local lastCoordinates
 local function sampleAim()
 	aimPoint, aimPart = nil, nil
@@ -272,7 +286,8 @@ local function sampleAim()
 	local ready = net:GetAttribute("Ready") and player:GetAttribute("ProfileReady")
 	local screen = if mobile then camera.ViewportSize * 0.5 else UIS:GetMouseLocation()
 	local ray = camera:ViewportPointToRay(screen.X, screen.Y)
-	local hit = workspace:Raycast(ray.Origin, ray.Direction * (Config.Reach + 48), params)
+	local reach = char:GetAttribute("PickReach") or Config.Reach
+	local hit = workspace:Raycast(ray.Origin, ray.Direction * (reach + 48), params)
 	local cap = Upgrades.items.Capacity.values[player:GetAttribute("Capacity") or 1]
 	local space = cap - (player:GetAttribute("Used") or 0)
 	local power = Upgrades.items.Power.values[player:GetAttribute("Power") or 1]
@@ -280,7 +295,7 @@ local function sampleAim()
 	if ready and space > 0 and hit and hit.Instance.Parent:HasTag(Config.MineBlockTag) then
 		normal = hit.Normal
 		center = Config.blockCenter(origin, hit.Position, normal)
-		local anchorPart = Pattern.visiblePart(head.Position, center, normal, params)
+		local anchorPart = Pattern.visiblePart(head.Position, center, normal, params, reach)
 		if anchorPart and anchorPart.Parent:HasTag(Config.MineBlockTag) then
 			cells, locked, required = Pattern.select(origin, center, Ores.byName[anchorPart.Name], power, space)
 		end
@@ -297,14 +312,27 @@ local function sampleAim()
 	elseif space <= 0 then
 		hud:guide("Backpack full", "Bring your haul to the amber Sell counter", true)
 	elseif not valid and locked then
-		hud:guide(locked.name .. " needs Power " .. required, "Upgrade Power at the workshop", true)
+		hud:guide(
+			(if locked.secret and not player:GetAttribute("Found" .. locked.name) then "???" else locked.name)
+				.. " needs Power "
+				.. required,
+			"Upgrade Power at the workshop",
+			true
+		)
 	elseif valid or not firstHaul then
 		local help = if mobile then "Hold MINE on the highlighted blocks" else "Hold the left mouse button to mine"
 		if valid then
-			help = "Hold to mine  ·  Rock hardness " .. Config.strength(center.Y - origin.Y)
+			local ore = Ores.byName[hit.Instance.Name]
+			local worth = if ore.secret and not player:GetAttribute("Found" .. ore.name)
+				then "???"
+				else W.number(ore.value * (if player:GetAttribute("DoubleGold") then 2 else 1)) .. " G"
+			help = "Hold to mine  ·  Hardness " .. Config.strength(center.Y - origin.Y) .. "  ·  " .. worth
 		end
 		local title = if valid
-			then "Mine " .. string.lower(hit.Instance.Name)
+			then "Mine " .. (if Ores.byName[hit.Instance.Name].secret
+					and not player:GetAttribute("Found" .. hit.Instance.Name)
+				then "???"
+				else string.lower(hit.Instance.Name))
 			elseif localPos.Y < -2 then "Aim at the wall or floor to keep digging"
 			else "Follow the path to the crystal cave"
 		hud:guide(title, help, true)
@@ -343,7 +371,8 @@ RunService.RenderStepped:Connect(function(dt)
 		swinging = true
 	end
 	local duration = Ores.cutTime(
-		Upgrades.items.Speed.values[player:GetAttribute("Speed") or 1],
+		Upgrades.items.Speed.values[player:GetAttribute("Speed") or 1]
+			* (if player:GetAttribute("SkillTempo") then 0.9 else 1),
 		aimOre,
 		Config.strength(target.Y - origin.Y)
 	)

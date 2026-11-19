@@ -4,6 +4,7 @@ local Shared = game:GetService("ReplicatedStorage").Shared
 local Config, Ores = require(Shared.GameConfig), require(Shared.Ores)
 local Pattern = require(Shared.BlockPattern)
 local Profile = require(script.Parent.Profile)
+local Guide = require(Shared.FieldGuide)
 local Mining = {}
 
 function Mining.validPoint(v)
@@ -27,7 +28,7 @@ function Mining.target(world, character, point, normal)
 	end
 	local params = RaycastParams.new()
 	params.FilterDescendantsInstances = { character }
-	local part = Pattern.visiblePart(head.Position, anchor, normal, params)
+	local part = Pattern.visiblePart(head.Position, anchor, normal, params, character:GetAttribute("PickReach"))
 	if not part or part.Parent ~= world.grid.folder then
 		return nil
 	end
@@ -71,8 +72,11 @@ function Mining.start(world, net, sessions, sync)
 			strokes[player] = nil
 			return
 		end
-		local duration =
-			Ores.cutTime(Profile.stat(p, "Speed"), world:oreAt(point), Config.strength(point.Y - world.origin.Y))
+		local duration = Ores.cutTime(
+			Profile.stat(p, "Speed") * (if p.skills.Tempo then 0.9 else 1),
+			world:oreAt(point),
+			Config.strength(point.Y - world.origin.Y)
+		)
 		strokes[player] = {
 			point = point,
 			normal = normal,
@@ -162,6 +166,13 @@ function Mining.start(world, net, sessions, sync)
 			profile.bag[name] = (profile.bag[name] or 0) + count
 			profile.mined += count
 			profile.xp += count * ore.xp
+			local old = profile.counts[name] or 0
+			profile.counts[name] = old + count
+			for _, award in Guide.achievements do
+				if award.ore == name and old < award.goal and old + count >= award.goal then
+					net.Feedback:FireClient(player, "achievement", award.name)
+				end
+			end
 			if Ores.byName[name].value > best.value then
 				best = Ores.byName[name]
 			end

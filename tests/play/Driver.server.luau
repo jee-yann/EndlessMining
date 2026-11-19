@@ -21,15 +21,21 @@ report.Parent = rep
 local done = {}
 report.OnServerEvent:Connect(function(player, stage, detail)
 	local n = rep.EndlessMiningNet
-	if stage == "position" then
+	if stage == "gateApproach" then
+		local char = player.Character
+		char.HumanoidRootPart.Anchored = false
+		char:PivotTo(CFrame.new(n:GetAttribute("Origin") + Vector3.new(0, 3, 2)))
+	elseif stage == "position" then
 		local char = player.Character
 		local x = if player.UserId % 2 == 0 then -3.25 else 1.5
-		char:PivotTo(CFrame.new(n:GetAttribute("Origin") + Vector3.new(x, -60.5, -139)))
+		char:PivotTo(CFrame.new(n:GetAttribute("Origin") + Vector3.new(x, -46.5, -12)))
 		char.HumanoidRootPart.Anchored = true
 	elseif stage == "depthSample" then
 		local root = player.Character.HumanoidRootPart
 		root.Anchored = true
-		root.CFrame = CFrame.new(n:GetAttribute("Origin") + Vector3.new(-1, -60.5, -138))
+		root.CFrame = CFrame.new(n:GetAttribute("Origin") + Vector3.new(-1, -46.5, -18))
+	elseif stage == "walk" then
+		player.Character.HumanoidRootPart.Anchored = false
 	elseif stage == "openPage" then
 		n.Feedback:FireClient(player, "page", detail)
 	elseif stage == "station" then

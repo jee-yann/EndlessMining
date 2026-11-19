@@ -51,7 +51,7 @@ local function inGallery(p)
 	return math.abs(x) < Config.HallHalfWidth
 		and z >= Config.HallBack
 		and z < Config.HallFront
-		and p.Y >= (if z < Config.BenchFront then -Config.BenchRows else 0)
+		and p.Y >= -Config.BenchRows
 end
 function Blocks:oreAt(p)
 	local chunk, index = self:slot(p, false)
@@ -127,7 +127,7 @@ function Blocks:openHall()
 	local open = {}
 	for x = -Config.HallHalfWidth / cell, Config.HallHalfWidth / cell - 1 do
 		for z = Config.HallBack / cell, Config.HallFront / cell - 1 do
-			local rows = if z < Config.BenchFront / cell then Config.BenchRows else 0
+			local rows = Config.BenchRows
 			self:expose(Vector3.new(x, -rows - 1, z), Enum.NormalId.Top.Value, open)
 			for y = -rows, -1 do
 				table.insert(open, Vector3.new(x, y, z))

@@ -5,7 +5,7 @@ local list = {
 		name = "Dirt",
 		rarity = "Common",
 		value = 1,
-		xp = 1,
+		xp = 0,
 		hardness = 1,
 		material = Enum.Material.Mud,
 		color = rgb(200, 140, 93),
@@ -17,7 +17,7 @@ local list = {
 		host = true,
 		rarity = "Common",
 		value = 2,
-		xp = 2,
+		xp = 0,
 		hardness = 1,
 		material = Enum.Material.Concrete,
 		color = rgb(151, 153, 158),
@@ -83,6 +83,28 @@ local list = {
 		color = rgb(65, 204, 63),
 		flash = "Legendary emerald!",
 	},
+	{
+		name = "Emberglass",
+		rarity = "Mythic",
+		value = 3600,
+		xp = 48,
+		hardness = 6,
+		material = Enum.Material.CrackedLava,
+		color = rgb(255, 86, 128),
+		flash = "Emberglass",
+		secret = true,
+	},
+	{
+		name = "Starfall",
+		rarity = "Celestial",
+		value = 14000,
+		xp = 160,
+		hardness = 6,
+		material = Enum.Material.Foil,
+		color = rgb(181, 133, 255),
+		flash = "Starfall",
+		secret = true,
+	},
 }
 local byName, byMaterial = {}, {}
 for _, ore in list do
@@ -92,8 +114,18 @@ end
 for _, m in { Enum.Material.Rock, Enum.Material.Slate, Enum.Material.Basalt } do
 	byMaterial[m] = byName.Stone
 end
-local effort =
-	{ Dirt = 0.72, Stone = 1, Coal = 1.15, Copper = 1.4, Iron = 1.7, Gold = 2.05, Diamond = 2.5, Emerald = 3 }
+local effort = {
+	Dirt = 0.72,
+	Stone = 1,
+	Coal = 1.15,
+	Copper = 1.4,
+	Iron = 1.7,
+	Gold = 2.05,
+	Diamond = 2.5,
+	Emerald = 3,
+	Emberglass = 4,
+	Starfall = 5.5,
+}
 local function cutTime(base, ore, strength)
 	return base * effort[ore.name] * (1 + 0.45 * ((strength or 1) - 1))
 end

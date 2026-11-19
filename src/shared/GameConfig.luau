@@ -2,16 +2,15 @@ local Config = {
 	LandscapeSeed = 73129,
 	ResetAfter = 2400,
 	ResetWarning = 20,
-	-- Grid coordinates are relative to the entrance. One voxel is four studs.
-	Cell = 4,
+	-- Grid coordinates are relative to the entrance. Mining blocks are five studs.
+	Cell = 5,
 	Chunk = 8,
-	FloorY = -48,
-	DirtLayers = 3,
-	HallHalfWidth = 40,
-	HallFront = -80,
-	HallBack = -152,
-	BenchFront = -120,
-	BenchRows = 4,
+	FloorY = -35,
+	DirtLayers = 2,
+	HallHalfWidth = 10,
+	HallFront = 0,
+	HallBack = -25,
+	BenchRows = 3,
 	MineBlockTag = "EndlessMiningBlockFolder",
 	SiteMin = Vector3.new(-96, -112, -168),
 	SiteMax = Vector3.new(96, 40, 0),
@@ -53,9 +52,25 @@ Config.Layers = {
 	{
 		depthBlocks = 185,
 		name = "Emerald Deep",
-		oreChances = { Coal = 2, Copper = 3, Iron = 7, Gold = 8, Diamond = 5, Emerald = 2 },
+		oreChances = { Coal = 2, Copper = 3, Iron = 7, Gold = 8, Diamond = 5, Emerald = 2, Emberglass = 0.12 },
 		material = Enum.Material.Basalt,
 		color = Color3.fromRGB(96, 100, 108),
+	},
+	{
+		depthBlocks = 260,
+		name = "Midnight Fault",
+		oreChances = {
+			Coal = 2,
+			Copper = 3,
+			Iron = 5,
+			Gold = 6,
+			Diamond = 6,
+			Emerald = 3,
+			Emberglass = 0.22,
+			Starfall = 0.025,
+		},
+		material = Enum.Material.Basalt,
+		color = Color3.fromRGB(89, 84, 105),
 	},
 }
 function Config.depthInBlocks(depthStuds)
@@ -98,15 +113,6 @@ function Config.inHall(p)
 	return math.abs(p.X) < Config.HallHalfWidth and p.Z >= Config.HallBack and p.Z < Config.HallFront
 end
 function Config.inMine(p)
-	if p.Y < Config.FloorY then
-		return true
-	end
-	if Config.inHall(p) then
-		return p.Y < Config.FloorY + 16
-	end
-	return p.Z <= 0
-		and p.Z >= Config.HallFront
-		and math.abs(p.X) < 9
-		and math.abs(p.Y - p.Z * Config.FloorY / Config.HallFront - 4) < 8
+	return p.Y < Config.FloorY + 1
 end
 return Config

@@ -32,7 +32,8 @@
     "StarterPlayer": {
       "$ignoreUnknownInstances": true,
       "$properties": {
-        "LoadCharacterAppearance": true
+        "LoadCharacterAppearance": true,
+        "CameraMaxZoomDistance": 28
       },
       "StarterPlayerScripts": {
         "$ignoreUnknownInstances": true,

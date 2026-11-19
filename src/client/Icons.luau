@@ -59,6 +59,27 @@ function Icons.draw(parent, key, x, y, size, tint)
 		shape("Pack", 5, 8, 22, 21, W.orange, 5, 0, true)
 		shape("Fold", 7, 8, 18, 7, W.gold, 3, 0, true)
 		shape("Pocket", 9, 19, 14, 6, W.gold, 2, 0, true)
+	elseif key == "Skills" then
+		shape("Stem", 15, 9, 3, 16, W.panel, 1)
+		shape("Fork", 6, 17, 20, 3, W.panel, 1)
+		for _, p in { { 12, 3 }, { 2, 16 }, { 21, 16 }, { 12, 23 } } do
+			shape("Talent", p[1], p[2], 8, 8, W.green, 3, 0, true)
+		end
+	elseif key == "Pets" then
+		shape("Rock", 3, 10, 26, 17, W.muted, 6, -5, true)
+		shape("Crown", 7, 6, 18, 7, light, 3, -4, true)
+		for _, xx in { 9, 21 } do
+			shape("Eye", xx, 14, 3, 4, W.ink, 1)
+		end
+		shape("Smile", 14, 20, 4, 2, W.ink, 1)
+	elseif key == "Achievements" or key == "Titles" then
+		shape("Ribbon", 9, 15, 6, 15, W.pink, 2, 19, true)
+		shape("Ribbon", 18, 15, 6, 15, W.pink, 2, -19, true)
+		shape("Medal", 6, 2, 20, 20, W.gold, 10, 0, true)
+		shape("Star", 12, 8, 8, 8, light, 2, 45)
+	elseif key == "Crew" then
+		shape("Head", 10, 4, 12, 12, W.gold, 6, 0, true)
+		shape("Coat", 5, 18, 22, 11, W.aqua, 5, 0, true)
 	elseif key == "Speed" then
 		for _, xx in { 8, 19 } do
 			shape("Upper chevron", xx, 5, 6, 14, W.gold, 2, -40, true)

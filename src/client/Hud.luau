@@ -4,7 +4,7 @@ local StarterGui = game:GetService("StarterGui")
 local Upgrades, Expeditions = require(Shared.Upgrades), require(Shared.Expeditions)
 local W, Icons, Menu = require(script.Parent.Widgets), require(script.Parent.Icons), require(script.Parent.HarborMenu)
 local Audio = require(script.Parent.HarborAudio)
-local rarityRank = { Common = 1, Uncommon = 2, Rare = 3, Epic = 4, Legendary = 5 }
+local rarityRank = { Common = 1, Uncommon = 2, Rare = 3, Epic = 4, Legendary = 5, Mythic = 6, Celestial = 7 }
 local Hud = {}
 Hud.__index = Hud
 local function card(parent, name, x, y, w, h, top, bottom)
@@ -55,7 +55,7 @@ function Hud.new(player, net, mobile)
 		local row = W.frame(haul, ore.name, 10, 38, 195, 20, W.panel)
 		row.BackgroundTransparency = 1
 		W.text(row, ore.name, 0, 0, 75, 20, 15, ore.color:Lerp(W.white, 0.48), true)
-		W.text(row, ore.rarity, 76, 0, 74, 20, 12, W.muted, true)
+		W.text(row, "", 76, 0, 77, 20, 12, W.gold, true).Name = "UnitValue"
 		local quantity = W.text(row, "", 150, 0, 45, 20, 15, W.white)
 		quantity.Name, quantity.TextXAlignment = "Quantity", Enum.TextXAlignment.Right
 		self.rows[ore.name] = row
@@ -88,39 +88,44 @@ function Hud.new(player, net, mobile)
 	jobTap.Activated:Connect(function()
 		self:openPage("Jobs")
 	end)
-	local loc = card(root, "Location", 0, 0, 211, 108, Color3.fromRGB(19, 142, 153), Color3.fromRGB(24, 68, 119))
-	self.layer = W.text(loc, "CITRINE COVE", 10, 3, 186, 19, 13, W.aqua, true)
+	local loc = W.frame(root, "Location", 0, 0, 260, 49, W.ink, 12)
+	loc.BackgroundTransparency = 0.12
+	W.stroke(loc, W.line, 1.5)
+	self.layer = W.title(loc, "CITRINE COVE", 4, 1, 172, 26, 17, W.gold)
 	self.layer.Name = "Region"
-	self.depth = W.title(loc, "Surface", 10, 22, 99, 26, 18, W.white, true)
+	self.depth = W.title(loc, "Surface", 171, 3, 84, 22, 15, W.white)
 	self.depth.Name = "Depth"
-	self.surface = W.button(loc, "Surface", 113, 22, 85, 27, W.aqua, "↑ Surface", "Select")
-	self.surface.TextSize = 14
+	self.coordinates = W.text(loc, "", 5, 26, 250, 18, 14, W.muted)
+	self.coordinates.Name = "Coordinates"
+	self.surface = W.button(loc, "Surface", 72, 52, 116, 26, W.gold, "↑ Surface", "Select")
 	self.surface.Activated:Connect(function()
 		net.Action:FireServer("Surface")
 	end)
-	self.coordinates = W.text(loc, "", 10, 50, 191, 20, 15, W.white, true)
-	self.coordinates.Name = "Coordinates"
-	self.toolTitle = W.title(loc, "Field Pick", 10, 70, 112, 17, 14, W.gold, true)
-	self.titles = W.button(loc, "Titles", 122, 68, 78, 21, W.gold, "Titles ›", "Select")
-	self.titles.TextSize = 13
-	self.titles.Activated:Connect(function()
-		self:openPage("Titles")
-	end)
-	self.stats = W.text(loc, "", 10, 87, 194, 16, 12, W.muted, true)
-	local dock = W.frame(root, "Action dock", 0, 0, 217, 64, W.ink)
+	local gear = W.frame(wallet, "Equipment", 0, -61, 224, 44, W.ink, 10)
+	self.gearChips = {}
+	for i, key in { "Power", "Speed", "Capacity" } do
+		local tint = Upgrades.items[key].color
+		local chip = W.frame(gear, key, 3 + (i - 1) * 74, 3, 70, 38, tint, 8)
+		W.text(chip, if key == "Capacity" then "PACK" else key:upper(), 0, 1, 70, 15, 11, W.ink)
+		self.gearChips[key] = W.title(chip, "Lv 1", 0, 14, 70, 23, 18, W.ink)
+	end
+	local dock = W.frame(root, "Action dock", 0, 0, 291, 64, W.ink)
 	dock.BackgroundTransparency = 1
 	self.nav = {}
 	local cues = { Settings = "Open", Jobs = "Job", Book = "Open" }
-	for i, key in { "Jobs", "Book", "Settings" } do
+	for i, key in { "Inventory", "Skills", "Book", "Settings" } do
 		local tint = Menu.pages[key].color
 		local b = W.button(dock, key, (i - 1) * 74, 0, 69, 61, tint, "", cues[key])
 		local badge = W.frame(b, "Medallion", 15, -6, 39, 39, tint:Lerp(W.white, 0.62), 13)
 		W.stroke(badge, W.ink, 2)
-		local icon = Icons.draw(badge, key, 3, 3, 33, tint)
+		local icon = Icons.draw(badge, if key == "Inventory" then "Pack" else key, 3, 3, 33, tint)
 		icon.Rotation = if i % 2 == 0 then 4 else -4
 		self.nav[key] = W.title(b, if key == "Book" then "Index" else key, 1, 33, 67, 25, 18, W.white)
+		if key == "Inventory" then
+			self.nav[key].TextSize = 14
+		end
 		W.outlineText(self.nav[key])
-		if key == "Jobs" then
+		if key == "Skills" then
 			self.jobBadge = W.frame(b, "Reward ready", 53, -5, 20, 20, W.pink, 10)
 			W.stroke(self.jobBadge, W.ink, 2)
 			W.title(self.jobBadge, "!", 0, 0, 20, 20, 15, W.ink)
@@ -192,8 +197,11 @@ function Hud.new(player, net, mobile)
 		walletScale.Scale, taskScale.Scale, haulScale.Scale, locScale.Scale, dockScale.Scale = s, s, s, s, s
 		speechScale.Scale, mineScale.Scale = math.min(s, (width - 20) / 320), math.max(0.82, s)
 		self.menu:layout(width, height, self.mobile)
-		W.anchor(taskCard, 1, 0, UDim2.new(1, -10, 0, 9))
-		W.anchor(haul, 1, 0, UDim2.new(1, -10, 0, if showJob then 16 + 86 * s else 9))
+		local crowded = width < (260 + 215 * 2 + 40) * s
+		local topInset = if crowded then 85 * s else 9
+		W.anchor(loc, 0.5, 0, UDim2.new(0.5, 0, 0, 3))
+		W.anchor(taskCard, 1, 0, UDim2.new(1, -10, 0, topInset))
+		W.anchor(haul, 1, 0, UDim2.new(1, -10, 0, if showJob then topInset + 92 * s else topInset))
 		if self.mobile then
 			-- Stack below chat and reserve the lower-left quadrant for the thumbstick.
 			local chat = game:GetService("TextChatService"):FindFirstChildOfClass("ChatWindowConfiguration")
@@ -201,14 +209,14 @@ function Hud.new(player, net, mobile)
 			local top = math.min(math.max(18, chatSize.Y + 12), height * 0.39)
 			local colScale = math.min(s, (height * 0.72 - top - 30) / 180, (width * 0.49 - 14) / 224)
 			colScale = math.clamp(colScale, 0.49, s)
-			locScale.Scale, walletScale.Scale = colScale, colScale
-			W.anchor(loc, 0, 0, UDim2.fromOffset(10, top))
-			W.anchor(wallet, 0, 0, UDim2.fromOffset(10, top + 108 * colScale + 22))
+			walletScale.Scale = colScale
+
+			W.anchor(wallet, 0, 0, UDim2.fromOffset(10, math.max(top, topInset) + 64 * colScale))
 		else
 			W.anchor(wallet, 0, 1, UDim2.new(0, 10, 1, -shelf))
-			W.anchor(loc, 0, 1, UDim2.new(0, 10, 1, -shelf - 86 * s))
 		end
 		if compact then
+			dockScale.Scale = math.min(s, (width * (if self.mobile then 0.85 else 0.53) - 12) / 291)
 			W.anchor(dock, 1, 1, UDim2.new(1, -10, 1, -shelf))
 		else
 			W.anchor(dock, 0.5, 1, UDim2.new(0.5, 0, 1, -shelf))
@@ -292,6 +300,7 @@ function Hud:refresh()
 		local row = self.rows[ore.name]
 		row.Visible = amount > 0
 		if row.Visible then
+			row.UnitValue.Text = W.number(ore.value * (if p:GetAttribute("DoubleGold") then 2 else 1)) .. " G each"
 			row.Quantity.Text = "×" .. amount
 			table.insert(held, { ore = ore, amount = amount, row = row })
 		end
@@ -321,7 +330,7 @@ function Hud:refresh()
 	local mined, done = p:GetAttribute("Mined") or 0, p:GetAttribute("Jobs") or 0
 	local minerLevel = Expeditions.level(p:GetAttribute("MiningXP") or 0)
 	local tier, rank = Expeditions.rank(minerLevel)
-	self.titles.Text = "Lv " .. minerLevel .. " · Titles"
+	self.nav.Inventory.Text = "Inventory"
 	if self.rankTier and tier > self.rankTier and self.player:GetAttribute("ProfileReady") then
 		self:milestone("TITLE UNLOCKED", rank.name, W.gold)
 	end
@@ -335,10 +344,10 @@ function Hud:refresh()
 		elseif job then string.format("%d / %d blocks mined", mined, job.goal)
 		else W.number(mined) .. " blocks mined"
 	self.jobCount.TextColor3 = if job and mined >= job.goal then W.green else W.muted
-	self.jobBadge.Visible = job ~= nil and mined >= job.goal
-	self.toolTitle.Text = Upgrades.pickNames[level("Power")]
-	self.stats.Text =
-		string.format("Power %d   ·   Speed %d   ·   Pack %d", level("Power"), level("Speed"), level("Capacity"))
+	self.jobBadge.Visible = (p:GetAttribute("SkillPoints") or 0) > 0
+	for _, key in Upgrades.order do
+		self.gearChips[key].Text = "Lv " .. level(key)
+	end
 	self.menu:refresh()
 end
 function Hud:aimAt(screen, valid, locked)

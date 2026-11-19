@@ -7,10 +7,10 @@ function Pattern.axes(normal)
 	return Vector3.yAxis:Cross(normal), Vector3.yAxis
 end
 -- Both ends trace to the centre of each face, including obstructions and reach.
-function Pattern.visiblePart(eye, center, normal, params)
+function Pattern.visiblePart(eye, center, normal, params, reach)
 	local face = center + normal * (Config.Cell / 2)
 	local delta = face - eye
-	if delta.Magnitude < 0.05 or delta.Magnitude > Config.Reach or delta:Dot(normal) >= 0 then
+	if delta.Magnitude < 0.05 or delta.Magnitude > (reach or Config.Reach) or delta:Dot(normal) >= 0 then
 		return nil
 	end
 	local hit = workspace:Raycast(eye, delta.Unit * (delta.Magnitude + 0.16), params)

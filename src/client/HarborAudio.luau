@@ -74,6 +74,8 @@ local signatures = {
 	{ "Gold", 9113849492, 0.19, 1.18, 0.48 },
 	{ "Diamond", 9116394545, 0.20, 1.34, 0.70 },
 	{ "Emerald", 9116395089, 0.22, 1.08, 0.85 },
+	{ "Emberglass", 9116394545, 0.23, 0.90, 0.75 },
+	{ "Starfall", 9116395089, 0.24, 1.6, 0.90 },
 }
 local dirt = sound("Dirt break", "rbxassetid://15675081158", 0.46, 0.68)
 
@@ -85,7 +87,7 @@ for _, cue in signatures do
 	oreVoices[cue[1]] = s
 end
 local notes = {}
-for i = 1, 3 do
+for i = 1, 5 do
 	local voice = voices.Reward:Clone()
 	voice.Name, voice.PlaybackSpeed, voice.Parent = "Discovery note " .. i, 1.15 * 2 ^ ((i * 4) / 12), bus
 	notes[i] = voice

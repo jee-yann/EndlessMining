@@ -2,6 +2,7 @@ local Players = game:GetService("Players")
 local Rep = game:GetService("ReplicatedStorage")
 local Config, Upgrades = require(Rep.Shared.GameConfig), require(Rep.Shared.Upgrades)
 local World, MineSite = require(script.MineWorld), require(script.MineSite)
+local E, Guide = require(Rep.Shared.Expeditions), require(Rep.Shared.FieldGuide)
 local Ores = require(Rep.Shared.Ores)
 local Preferences = require(Rep.Shared.Preferences)
 local Passes = require(script.Passes)
@@ -31,7 +32,37 @@ net.Parent = Rep
 
 local sessions, loading, closing, nextAction = {}, {}, {}, {}
 local shuttingDown = false
+local function applySkills(player, p)
+	local char = player.Character
+	if not char then
+		return
+	end
+	local human = char:FindFirstChildOfClass("Humanoid")
+	if not human then
+		return
+	end
+	char:SetAttribute(
+		"PickReach",
+		Config.Reach + (if p.skills.Reach then 5 else 0) + (if p.skills.ReachII then 5 else 0)
+	)
+	human.WalkSpeed = 16 + (if p.skills.Stride then 3 else 0) + (if p.skills.Scout then 3 else 0)
+	human.JumpHeight = game.StarterPlayer.CharacterJumpHeight * (if p.skills.Spring then 1.25 else 1)
+	human.JumpPower = game.StarterPlayer.CharacterJumpPower * (if p.skills.Spring then math.sqrt(1.25) else 1)
+	local lamp = char:FindFirstChild("Mining lamp", true)
+	if lamp then
+		lamp.Range = 20 + (if p.skills.Lamp then 8 else 0) + (if p.skills.Lantern then 8 else 0)
+	end
+end
 local function sync(player, p)
+	player:SetAttribute("Level", E.level(p.xp))
+	player:SetAttribute("EquippedTitle", Guide.selectedTitle(p))
+	player:SetAttribute("Pet", p.pet)
+	player:SetAttribute("PetName", p.petName)
+	player:SetAttribute("SkillPoints", Guide.points(p.xp, p.skills))
+	for _, node in Guide.skills do
+		player:SetAttribute("Skill" .. node.id, p.skills[node.id] == true)
+	end
+	player.leaderstats.Level.Value = E.level(p.xp)
 	player:SetAttribute("Gold", p.gold)
 	player:SetAttribute("Used", Profile.used(p))
 	player:SetAttribute("BagValue", Profile.value(p.bag))
@@ -39,6 +70,7 @@ local function sync(player, p)
 	player:SetAttribute("MiningXP", p.xp)
 	player:SetAttribute("Jobs", p.jobs)
 	for _, ore in Ores.list do
+		player:SetAttribute("Lifetime" .. ore.name, p.counts[ore.name] or 0)
 		player:SetAttribute("Held" .. ore.name, p.bag[ore.name] or 0)
 		player:SetAttribute("Found" .. ore.name, p.discoveries[ore.name] == true)
 	end
@@ -64,6 +96,39 @@ local function enter(player)
 	end
 	loadingRoots[player] = nil
 end
+local function mineFit(char, inside)
+	local base = char:GetAttribute("SurfaceScale")
+	if inside and not base then
+		base = char:GetScale()
+		local head = char:FindFirstChild("Head")
+		local foot = char:FindFirstChild("LeftFoot") or char:FindFirstChild("Left Leg")
+		if head and foot then
+			local height = head.Position.Y + head.Size.Y / 2 - foot.Position.Y + foot.Size.Y / 2
+			char:SetAttribute("SurfaceScale", base)
+			char:ScaleTo(base * math.min(1, 4.50 / math.max(height, 4.5)))
+		end
+	elseif not inside and base then
+		char:ScaleTo(base)
+		char:SetAttribute("SurfaceScale", nil)
+	end
+end
+site.down.Touched:Connect(function(hit)
+	local char = hit:FindFirstAncestorOfClass("Model")
+	local player = char and Players:GetPlayerFromCharacter(char)
+	local session = player and sessions[player]
+	if not session or not world.ready or os.clock() < (session.doorAt or 0) then
+		return
+	end
+	local root = char:FindFirstChild("HumanoidRootPart")
+	if not root or (root.Position - site.down.Position).Magnitude > 12 then
+		return
+	end
+	session.doorAt = os.clock() + 0.6
+	mineFit(char, true)
+	local at = world.origin + Vector3.new(0, Config.FloorY - Config.BenchRows * Config.Cell + 3, -8)
+	moveCharacter(char, CFrame.lookAt(at, at - Vector3.zAxis))
+	applySkills(player, session.profile)
+end)
 local function onCharacter(player, character)
 	local root = character:WaitForChild("HumanoidRootPart", 10)
 	if not root or player.Character ~= character then
@@ -89,6 +154,9 @@ local function onCharacter(player, character)
 		lamp.Name, lamp.Color, lamp.Range, lamp.Brightness = "Mining lamp", Color3.fromRGB(255, 232, 198), 20, 0.75
 		lamp.Shadows = true
 		lamp.Parent, mount.Parent = mount, root
+	end
+	if sessions[player] then
+		applySkills(player, sessions[player].profile)
 	end
 	task.spawn(equipKit, player, character)
 	task.spawn(Pickaxe.equip, player, character)
@@ -118,7 +186,7 @@ local function join(player)
 	end
 	local board = Instance.new("Folder")
 	board.Name = "leaderstats"
-	for _, name in { "Gold", "Depth" } do
+	for _, name in { "Level", "Gold", "Depth" } do
 		local stat = Instance.new("IntValue")
 		stat.Name, stat.Parent = name, board
 	end
@@ -128,6 +196,7 @@ local function join(player)
 		player:SetAttribute(key, value)
 	end
 	sync(player, session.profile)
+	applySkills(player, session.profile)
 	player:SetAttribute("ProfileReady", true)
 end
 local function leave(player)
@@ -166,6 +235,8 @@ local function action(player, key, option, value)
 		if travel and travel.id == option then
 			s.travel = nil
 			if player.Character == travel.character then
+				mineFit(travel.character, false)
+				applySkills(player, s.profile)
 				moveCharacter(travel.character, CFrame.lookAt(entrance, entrance + Vector3.zAxis))
 			end
 			net.Feedback:FireClient(player, "arrive", option)
@@ -186,6 +257,10 @@ local function action(player, key, option, value)
 		and key ~= "Buy"
 		and key ~= "Job"
 		and key ~= "PreviewPass"
+		and key ~= "Title"
+		and key ~= "Skill"
+		and key ~= "Pet"
+		and key ~= "PetName"
 		and key ~= "Pass"
 	then
 		return
@@ -205,7 +280,52 @@ local function action(player, key, option, value)
 		return
 	end
 	local p = s.profile
-	if key == "Surface" then
+	if key == "Title" then
+		if Profile.equipTitle(p, option) then
+			sync(player, p)
+		end
+	elseif key == "Skill" then
+		if type(option) == "string" and Profile.learn(p, option) then
+			sync(player, p)
+			applySkills(player, p)
+		end
+	elseif key == "Pet" then
+		if option == "Rock" or option == "" then
+			p.pet = option
+			sync(player, p)
+		end
+	elseif key == "PetName" then
+		if type(option) ~= "string" or #option > 80 then
+			return
+		end
+		local name = option:match("^%s*(.-)%s*$")
+		local length = utf8.len(name)
+		if not length or length < 1 or length > 20 then
+			net.Feedback:FireClient(player, "hint", "Choose a name with 1–20 characters")
+			return
+		end
+		if s.filteringPetName then
+			return
+		end
+		if not Guide.petNames[name] then
+			s.filteringPetName = true
+			local ok, filtered = pcall(function()
+				local result = game:GetService("TextService"):FilterStringAsync(name, player.UserId)
+				return result:GetNonChatStringForBroadcastAsync()
+			end)
+			s.filteringPetName = nil
+			if sessions[player] ~= s then
+				return
+			end
+			if not ok or not filtered or filtered == "" or filtered:find("#", 1, true) then
+				net.Feedback:FireClient(player, "hint", "Try another name, or choose a suggested name")
+				return
+			end
+			name = filtered
+		end
+		p.petName = name
+		sync(player, p)
+	elseif key == "Surface" then
 		local character = player.Character
 		local root = character and character:FindFirstChild("HumanoidRootPart")
 		if s.travel or not root then
@@ -287,6 +407,7 @@ task.spawn(function()
 			local char = player.Character
 			local root = char and char:FindFirstChild("HumanoidRootPart")
 			if root and Config.inMine(root.Position - world.origin) then
+				mineFit(char, false)
 				moveCharacter(char, CFrame.lookAt(entrance, entrance - Vector3.zAxis))
 			end
 		end
@@ -323,6 +444,8 @@ task.spawn(function()
 				or localPos.Z > Config.SurfaceMax.Z + 12
 				or localPos.Z < Config.SiteMin.Z - 25
 			then
+				mineFit(player.Character, false)
+				applySkills(player, s.profile)
 				moveCharacter(player.Character, CFrame.new(landing))
 			end
 		end

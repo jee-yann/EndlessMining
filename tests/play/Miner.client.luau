@@ -30,7 +30,7 @@ local function test()
 		return p.Character:FindFirstChild("Harbor pick")
 	end, 8, "equipped pickaxe")
 	local kit = p.Character:FindFirstChild("Prospector kit", true)
-	assert(kit and kit["Miner title"].TextLabel.Text == "Noob Miner", "starter backpack and title")
+	assert(kit and kit["Miner title"].TextLabel.Text:find("Noob Miner", 1, true), "starter backpack and title")
 	local packSize = kit["Field pack"].Size
 	local harbor = game.SoundService:WaitForChild("Harbor audio", 8)
 	local song = harbor:WaitForChild("Prima Bossa Nova", 5)
@@ -58,14 +58,14 @@ local function test()
 		local seenIds = {}
 		for _, ore in require(rep.Shared.Ores).list do
 			local voice = harbor[ore.name .. " break"]
-			assert(not seenIds[voice.SoundId], "duplicate ore sound")
-			seenIds[voice.SoundId] = true
+			assert(not seenIds[voice.SoundId .. voice.PlaybackSpeed], "duplicate ore sound")
+			seenIds[voice.SoundId .. voice.PlaybackSpeed] = true
 			local played, notes = false, 0
 			local strike = voice.Played:Connect(function()
 				played = true
 			end)
 			local flourishes = {}
-			for i = 1, 3 do
+			for i = 1, 5 do
 				table.insert(
 					flourishes,
 					harbor["Discovery note " .. i].Played:Connect(function()
@@ -75,7 +75,12 @@ local function test()
 			end
 			audio.ore({ [ore.name] = 1 })
 			waitFor(function()
-				return played and notes == math.max(0, ore.hardness - 3)
+				return played
+					and notes
+						== (if ore.name == "Starfall"
+							then 5
+							elseif ore.name == "Emberglass" then 4
+							else math.max(0, ore.hardness - 3))
 			end, 2, ore.name .. " break and reward notes")
 			strike:Disconnect()
 			for _, signal in flourishes do
@@ -110,7 +115,9 @@ local function test()
 			pad.Service:InputHoldEnd()
 		end
 	end
-	for _, page in { "Pack", "Settings", "Titles", "Gear", "Jobs", "Book", "Store" } do
+	for _, page in
+		{ "Pack", "Settings", "Inventory", "Pets", "Skills", "Achievements", "Crew", "Gear", "Jobs", "Book", "Store" }
+	do
 		if counters[page] then
 			visit(page, true)
 		else
@@ -118,7 +125,11 @@ local function test()
 		end
 		local listing = ({
 			Settings = "Music volume",
-			Titles = "Prismatic Excavator",
+			Inventory = "Prismatic Excavator",
+			Pets = "Pocket Rock",
+			Skills = "Skill map",
+			Achievements = "Second Opinion",
+			Crew = p.DisplayName,
 			Gear = "Speed",
 			Jobs = "First strike",
 			Book = "Stone",
@@ -128,6 +139,21 @@ local function test()
 		waitFor(function()
 			return overlay.Visible and menu.Listings:FindFirstChild(listing)
 		end, 5, "open " .. page)
+		if page == "Pets" then
+			n.Action:FireServer("Pet", "Rock")
+			waitFor(function()
+				return workspace["Rock companions"]:FindFirstChild("Pocket rock")
+			end, 4, "equipped follower")
+			n.Action:FireServer("PetName", "Flint")
+			waitFor(function()
+				return p:GetAttribute("PetName") == "Flint"
+			end, 3, "renamed rock")
+			n.Action:FireServer("Pet", "")
+		elseif page == "Inventory" then
+			n.Action:FireServer("Title", 6)
+			task.wait(0.2)
+			assert(p:GetAttribute("EquippedTitle") == 1)
+		end
 		if page == "Book" then
 			assert(menu.Listings["Iron Shelf"].Depth.Text == "27 blocks", "index depth in blocks")
 			assert(menu.Listings:FindFirstChild("Rock hardness"), "index depth and Power guide")
@@ -149,18 +175,30 @@ local function test()
 		r:FireServer("depthSample")
 		local location = gui.SafeArea.Location
 		waitFor(function()
-			return location.Coordinates.Text == "X -1    Y -3    Z -35"
-				and location.Depth.Text == "3 blocks"
+			return location.Coordinates.Text == "X -1    Y -2    Z -4"
+				and location.Depth.Text == "2 blocks"
 				and location.Region.Text == "SUNSTONE HOLLOW"
-				and p.leaderstats.Depth.Value >= 3
+				and p.leaderstats.Depth.Value >= 2
 		end, 8, "block coordinates, region and personal best at the lower bench")
 		assert(location.Coordinates.TextFits and location.Depth.TextFits, "location readout clipped")
+	end
+	if r:GetAttribute("CheckSwing") then
+		assert(p.CameraMaxZoomDistance <= 28)
+		r:FireServer("gateApproach")
+		local origin = n:GetAttribute("Origin")
+		waitFor(function()
+			return (p.Character.HumanoidRootPart.Position - origin - Vector3.new(0, 3, 2)).Magnitude < 5
+		end, 5, "approach")
+		p.Character.Humanoid:MoveTo(origin + Vector3.new(0, 0, -6))
+		waitFor(function()
+			return p.Character.HumanoidRootPart.Position.Y < origin.Y - 35
+		end, 5, "walk through the narrow gate")
 	end
 	r:FireServer("position")
 	local origin = n:GetAttribute("Origin")
 	waitFor(function()
 		local pos = p.Character.Head.Position - origin
-		return pos.Z < 0 and math.abs(pos.Y + 59) < 4
+		return pos.Z < 0 and math.abs(pos.Y + 45) < 4
 	end, 8, "placement at starter seam")
 	local first = os.clock()
 	local discovered
@@ -221,7 +259,7 @@ local function test()
 		local painter = require(p.PlayerScripts.Client.Effects).new()
 		local cube = Instance.new("Part")
 		cube.Anchored, cube.Size, cube.Position, cube.Parent =
-			true, Vector3.one * 4, head.Position + Vector3.yAxis * 48, workspace
+			true, Vector3.one * 5, head.Position + Vector3.yAxis * 48, workspace
 		cube:SetAttribute("OpenFaces", 63)
 		painter:damage(cube, 0.15)
 		local overlays = cube.Fractures:GetChildren()
@@ -229,12 +267,12 @@ local function test()
 		for _, surface in overlays do
 			local growing = 0
 			for _, line in surface:GetChildren() do
-				if line.Visible then
+				if line.Visible and line.Name == "Vein" then
 					growing += 1
 				end
 			end
 			assert(
-				growing == 4 and not surface.AlwaysOnTop and surface.ZOffset == 0 and surface.Adornee == cube,
+				growing == 3 and not surface.AlwaysOnTop and surface.ZOffset == 0 and surface.Adornee == cube,
 				"early cracks did not radiate together"
 			)
 		end
@@ -246,7 +284,7 @@ local function test()
 					visible += 1
 				end
 			end
-			assert(visible == 16)
+			assert(visible >= 48)
 		end
 		cube:Destroy()
 		for _, surface in overlays do
@@ -274,7 +312,7 @@ local function test()
 		camera.CameraType = Enum.CameraType.Scriptable
 		local root = p.Character.HumanoidRootPart
 		local eye = root.Position + Vector3.yAxis * math.min(1.3, root.Size.Y * 0.6)
-		local face = aim + aimNormal * 2
+		local face = aim + aimNormal * 2.5
 		local intoWall = CFrame.lookAt(face - aimNormal * 1.5, eye)
 		local render = game:GetService("RunService")
 		local attempted = false
@@ -286,7 +324,7 @@ local function test()
 			return attempted and (camera.CFrame.Position - face):Dot(aimNormal) > 0.15
 		end, 3, "camera clipped through an exposed face")
 		render:UnbindFromRenderStep("Test wall camera")
-		camera.CFrame = CFrame.lookAt(head.Position, aim + aimNormal * 2)
+		camera.CFrame = CFrame.lookAt(head.Position, aim + aimNormal * 2.5)
 		local xy = camera.ViewportSize * 0.5
 		input:SendMousePosition(xy)
 		local meter = gui.SafeArea.Feedback["Mining progress"]
@@ -359,7 +397,7 @@ local function test()
 			return popup and popup:FindFirstChild("Ore popup")
 		end, 2, "world ore popup")
 		assert(
-			(popup.WorldPosition - aim).Magnitude < 2.1 and popup["Ore popup"].TextLabel.Text == "+1 Coal",
+			(popup.WorldPosition - aim).Magnitude < 2.6 and popup["Ore popup"].TextLabel.Text == "+1 Coal",
 			"popup location and label"
 		)
 		waitFor(function()
@@ -367,7 +405,7 @@ local function test()
 		end, 2, "popup fades out")
 		local copper, copperNormal = visibleOre("Copper")
 		assert(copper, "visible locked copper")
-		camera.CFrame = CFrame.lookAt(head.Position, copper + copperNormal * 2)
+		camera.CFrame = CFrame.lookAt(head.Position, copper + copperNormal * 2.5)
 		waitFor(function()
 			return cursor.Visible and cursor["No entry"].Visible
 		end, 5, "locked copper cursor")
@@ -381,6 +419,37 @@ local function test()
 				and not workspace.CitrineCove.MineBlocks:FindFirstChild("Fractures", true),
 			"locked ore started a cut"
 		)
+		local blocks = workspace.CitrineCove.MineBlocks
+		local target
+		for _, part in blocks:GetChildren() do
+			local offset = part.Position - origin
+			local ore = ores.byName[part.Name]
+			if math.abs(offset.X) < 10 and offset.Y == -47.5 and offset.Z == -27.5 and ore and ore.hardness == 1 then
+				target = part
+				break
+			end
+		end
+		assert(target, "starter wall needs an accessible ground-level cut")
+		r:FireServer("walk")
+		local root = p.Character.HumanoidRootPart
+		waitFor(function()
+			return not root.Anchored
+		end, 3, "walking enabled")
+		local at = target.Position
+		p.Character.Humanoid:MoveTo(at + Vector3.zAxis * 6)
+		waitFor(function()
+			return (root.Position - at - Vector3.zAxis * 6).Magnitude < 2
+		end, 5, "at workface")
+		n.Swing:FireServer(true, at, Vector3.zAxis)
+		task.wait(ores.cutTime(0.8, ores.byName[target.Name]) + 0.15)
+		n.Mine:FireServer(at, Vector3.zAxis, 1, 1)
+		waitFor(function()
+			return not target.Parent
+		end, 3, "single block doorway")
+		p.Character.Humanoid:MoveTo(at)
+		waitFor(function()
+			return (root.Position - at).Magnitude < 1.8
+		end, 5, "avatar fits one five-stud cut")
 		return string.format(
 			"depth-tested faces, %d swings in one cut, grip error %.4f studs, early release",
 			peaks,
@@ -453,7 +522,7 @@ local function test()
 	assert(quantity == 36 and total == value, "pack quantities and value")
 	assert(p:GetAttribute("MiningXP") == earnedXP, "XP from each material in the first haul")
 	local level = require(rep.Shared.Expeditions).level(earnedXP)
-	assert(gui.SafeArea.Location.Titles.Text == "Lv " .. level .. " · Titles", "title button reflects earned level")
+	assert(p:GetAttribute("Level") == level and gui.SafeArea.Wallet.Equipment.Power.Visible, "level and equipment HUD")
 	n.Action:FireServer("Sell")
 	task.wait(0.4)
 	assert(p:GetAttribute("Used") == 36 and p:GetAttribute("Gold") == 0, "exchange must require a visit")
@@ -525,7 +594,7 @@ local function test()
 	end, 5, "equipped trail")
 	r:FireServer("depthSample")
 	waitFor(function()
-		return gui.SafeArea.Location.Depth.Text == "3 blocks"
+		return gui.SafeArea.Location.Depth.Text == "2 blocks"
 	end, 4, "return starting depth")
 	n.Action:FireServer("Surface")
 	local passage = p.PlayerGui.SurfaceReturn

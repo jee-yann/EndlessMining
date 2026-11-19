@@ -3,7 +3,7 @@ local DSS = game:GetService("DataStoreService")
 local Data = require(script.Parent.DataService)
 local Standings = {}
 
-function Standings.top(scores)
+function Standings.top(scores, levels)
 	local rows = {}
 	for id, entry in scores do
 		table.insert(rows, { id = id, name = entry.name, score = entry.score })
@@ -14,7 +14,9 @@ function Standings.top(scores)
 	local lines = {}
 	for i = 1, math.min(5, #rows) do
 		local row = rows[i]
-		lines[i] = string.format("%d.   %s     ·     %d blocks", i, row.name, row.score)
+		lines[i] = if levels
+			then string.format("%d.   %s     ·     Lv %d", i, row.name, row.score)
+			else string.format("%d.   %s     ·     %d blocks", i, row.name, row.score)
 	end
 	return lines, rows
 end
@@ -91,12 +93,19 @@ function Standings.start(court, event)
 					scores[p.UserId] = { name = p.DisplayName, score = p.leaderstats.Depth.Value }
 				end
 			end
-			local lines, ranked = Standings.top(scores)
+			local levels = {}
+			for _, p in Players:GetPlayers() do
+				if scores[p.UserId] then
+					levels[p.UserId] = { name = p.DisplayName, score = p:GetAttribute("Level") or 1 }
+				end
+			end
+			local lines, ranked = Standings.top(levels, true)
+			court.Server.Standings.Lettering.Title.Text = "HIGHEST LEVEL"
 			for rank = 1, 3 do
 				local stand = court.Server["Podium " .. rank]
 				local row = ranked[rank]
 				stand:SetAttribute("StandingName", row and row.name)
-				stand:SetAttribute("StandingDepth", row and row.score)
+				stand:SetAttribute("StandingLevel", row and row.score)
 				stand:SetAttribute("StandingId", row and row.id)
 			end
 			for i = 1, 5 do

@@ -3,12 +3,17 @@ local Market = game:GetService("MarketplaceService")
 local RunService = game:GetService("RunService")
 local Upgrades, Expeditions, Ores = require(Shared.Upgrades), require(Shared.Expeditions), require(Shared.Ores)
 local Settings = require(script.Parent.Settings)
-local Config = require(Shared.GameConfig)
 local Catalog = require(Shared.PassCatalog)
 local W, Icons = require(script.Parent.Widgets), require(script.Parent.Icons)
+local Field = require(script.Parent.FieldPages)
 local Menu = {}
 Menu.__index = Menu
 Menu.pages = {
+	Inventory = { name = "Inventory", color = W.gold },
+	Pets = { name = "Pets", color = W.violet },
+	Skills = { name = "Skill tree", color = W.green },
+	Achievements = { name = "Achievements", color = W.orange },
+	Crew = { name = "Server miners", color = W.aqua },
 	Titles = { name = "Miner titles", color = W.gold },
 	Settings = { name = "Settings", color = Color3.fromRGB(120, 185, 255) },
 	Gear = { name = "Workshop", color = W.aqua },
@@ -56,13 +61,31 @@ function Menu.new(root, player, net, close)
 	local footer = W.frame(modal, "Status", 11, 371, 458, 28, W.ink, 8)
 	self.footer = footer
 	self.status = W.text(footer, "", 8, 0, 442, 28, 14, W.muted)
+	local tabs = W.frame(modal, "Inventory tabs", 11, 85, 458, 32, W.ink, 8)
+	self.tabs = tabs
+	self.tabButtons = {}
+	local tabX = 4
+	for _, key in { "Inventory", "Pets", "Skills", "Achievements", "Crew" } do
+		local caption = ({ Inventory = "Titles", Crew = "Miners" })[key] or key
+		local width = if key == "Achievements" then 122 else 78
+		local b = W.button(tabs, key, tabX, 2, width, 28, Menu.pages[key].color, caption, "Select")
+		tabX += width + 4
+		self.tabButtons[key] = b
+		b.Activated:Connect(function()
+			self:open(key)
+		end)
+	end
+	tabs.Visible = false
 	return self
 end
 function Menu:layout(width, height, touch)
 	local designHeight = if touch and width > height then math.clamp(height - 14, 270, 408) else 408
 	self.scale.Scale = math.clamp(math.min((width - 18) / 480, (height - 14) / designHeight), 0.3, 1.38)
 	self.modal.Size = UDim2.fromOffset(480, designHeight)
-	self.list.Size = UDim2.fromOffset(458, designHeight - 135)
+	local extra = if self.tabs.Visible then 35 else 0
+	self.designHeight = designHeight
+	self.list.Position = UDim2.fromOffset(11, 89 + extra)
+	self.list.Size = UDim2.fromOffset(458, designHeight - 135 - extra)
 	self.footer.Position = UDim2.fromOffset(11, designHeight - 37)
 end
 function Menu:row(i, name, icon, color)
@@ -130,65 +153,23 @@ function Menu:jobs()
 	end
 	return #Expeditions.jobs
 end
-function Menu:book()
-	local pack = self.page == "Pack"
+function Menu:pack()
 	for i, ore in Ores.list do
-		local col, row = (i - 1) % 2, math.floor((i - 1) / 2)
-		local card = W.frame(self.list, ore.name, 1 + col * 226, 1 + row * 69, 219, 62, W.card, 11)
-		W.enamel(card, ore.color:Lerp(W.panel, 0.50), W.panel)
-		local tile = W.frame(card, "Specimen", 7, 9, 43, 43, ore.color, 9)
-		Icons.draw(tile, "Crystal", 5, 5, 33, ore.color:Lerp(W.white, 0.14))
-		W.title(card, ore.name, 59, 3, 153, 25, 19, W.white, true)
-		local state = W.text(card, "", 60, 26, 151, 16, 13, W.muted, true)
-		local worth = W.text(card, ore.value .. " G  ·  Power " .. ore.hardness, 60, 43, 152, 15, 12, W.muted, true)
+		local title, detail, b = self:row(i, ore.name, "Crystal", ore.color)
+		b.Interactable = false
 		table.insert(self.updates, function()
-			if pack then
-				local held = self.player:GetAttribute("Held" .. ore.name) or 0
-				local multiplier = if self.player:GetAttribute("DoubleGold") then 2 else 1
-				state.Text = string.format("×%d in pack", held)
-				state.TextColor3 = if held > 0 then W.white else W.muted
-				worth.Text = W.number(held * ore.value * multiplier) .. " G at Sell"
-				return
-			end
-			local found = self.player:GetAttribute("Found" .. ore.name)
-			state.Text, state.TextColor3 =
-				if found then ore.rarity .. "  ✓" else "Undiscovered", if found then W.green else W.muted
+			local held = self.player:GetAttribute("Held" .. ore.name) or 0
+			local hidden = ore.secret and not self.player:GetAttribute("Found" .. ore.name)
+			title.Text = if hidden then "???" else ore.name
+			local each = ore.value * (if self.player:GetAttribute("DoubleGold") then 2 else 1)
+			detail.Text = if hidden
+				then "Undiscovered"
+				else string.format("%d G each  ·  %s G in pack", each, W.number(held * each))
+			b.Text = "×" .. held
+			title.Parent.Visible = not hidden
 		end)
 	end
-	local rows = math.ceil(#Ores.list / 2)
-	if not pack then
-		for i, layer in Config.Layers do
-			local row = W.frame(self.list, layer.name, 1, 1 + (rows + i - 1) * 69, 447, 62, W.card, 10)
-			W.frame(row, "Stratum", 0, 8, 5, 46, layer.color, 3)
-			W.title(row, layer.name, 12, 3, 273, 23, 18, W.white, true)
-			local depth = W.text(row, layer.depthBlocks .. " blocks", 294, 4, 143, 21, 15, W.aqua)
-			depth.Name = "Depth"
-			local total = 0
-			for _, v in layer.oreChances do
-				total += v
-			end
-			local chances = { "Stone " .. (100 - total) .. "%" }
-			for _, ore in Ores.list do
-				local weight = layer.oreChances[ore.name]
-				if weight then
-					table.insert(chances, string.format("%s %g%%", ore.name, weight))
-				end
-			end
-			local odds = W.text(row, table.concat(chances, "  ·  "), 12, 25, 420, 34, 13, W.muted, true)
-			odds.TextWrapped = true
-		end
-		rows += #Config.Layers
-		local card = W.frame(self.list, "Rock hardness", 1, 1 + rows * 69, 447, 62, W.card, 10)
-		W.title(card, "Power needed at depth", 12, 3, 420, 23, 18, W.white, true)
-		local tiers = {}
-		for power, depth in Config.HardnessDepths do
-			table.insert(tiers, string.format("P%d at %d blocks", power, depth))
-		end
-		local levels = W.text(card, table.concat(tiers, "   ·   "), 12, 25, 420, 34, 13, W.muted, true)
-		levels.TextWrapped = true
-		rows += 1
-	end
-	return rows
+	return #Ores.list
 end
 function Menu:store()
 	for i, item in Catalog do
@@ -237,40 +218,37 @@ function Menu:store()
 	end
 	return #Catalog
 end
-function Menu:titles()
-	for i, title in Expeditions.ranks do
-		local _, detail, b = self:row(i, title.name, "Titles", W.gold)
-		detail.Text = "Unlocks at level " .. title.level
-		table.insert(self.updates, function()
-			local level = Expeditions.level(self.player:GetAttribute("MiningXP") or 0)
-			local current = Expeditions.rank(level)
-			setButton(
-				b,
-				if i == current then "Equipped" elseif i < current then "Unlocked" else "Locked",
-				if i == current then W.green else W.muted,
-				false
-			)
-		end)
-	end
-	return #Expeditions.ranks
-end
 local builders = {
 	Gear = Menu.gear,
-	Titles = Menu.titles,
+	Inventory = Field.titles,
+	Pets = Field.pets,
+	Skills = Field.skills,
+	Achievements = Field.achievements,
+	Crew = Field.crew,
 	Settings = function(self)
 		return self.preferences:build(self)
 	end,
 	Jobs = Menu.jobs,
-	Book = Menu.book,
-	Pack = Menu.book,
+	Book = Field.index,
+	Pack = Menu.pack,
 	Store = Menu.store,
 }
 function Menu:open(key)
+	if key == "Titles" then
+		key = "Inventory"
+	end
 	local page = Menu.pages[key]
 	if not page then
 		return
 	end
 	self.updates = {}
+	self.tabs.Visible = self.tabButtons[key] ~= nil
+	for k, b in self.tabButtons do
+		b.BackgroundColor3 = if key == k then W.white else Menu.pages[k].color
+	end
+	local extra = if self.tabs.Visible then 35 else 0
+	self.list.Position = UDim2.fromOffset(11, 89 + extra)
+	self.list.Size = UDim2.fromOffset(458, (self.designHeight or 408) - 135 - extra)
 	self.list:ClearAllChildren()
 	if self.icon then
 		self.icon:Destroy()
@@ -282,11 +260,15 @@ function Menu:open(key)
 			and RunService:IsStudio()
 			and game.GameId == 0
 		then "Studio trials last for this session."
-		elseif key == "Titles" then "Mine blocks to earn XP. Ore earns more."
+		elseif key == "Inventory" then "Select an unlocked title to wear it."
+		elseif key == "Pets" then "Equip one companion at a time."
+		elseif key == "Skills" then "Earn one point per level. Follow the connected branches."
+		elseif key == "Achievements" then "Achievements unlock as you mine."
+		elseif key == "Crew" then "Ranked by miner level."
 		elseif key == "Pack" then "Take your haul to the amber Sell counter."
 		elseif key == "Jobs" then "Claim each job in order to collect its gold."
 		elseif key == "Settings" then "Changes take effect immediately."
-		elseif key == "Book" then "First 3 layers are dirt. Scroll for stone and ore odds."
+		elseif key == "Book" then "The first two layers are dirt. Odds apply to solid rock."
 		elseif key == "Store" then "Permanent passes for this experience."
 		else "Upgrades stay equipped between visits."
 	local rows = builders[key](self)
@@ -330,7 +312,7 @@ function Menu:refresh()
 		return
 	end
 	local p = self.player
-	if self.page == "Titles" then
+	if self.page == "Inventory" then
 		local xp = p:GetAttribute("MiningXP") or 0
 		local level = Expeditions.level(xp)
 		self.sub.Text = string.format(
@@ -340,6 +322,20 @@ function Menu:refresh()
 			W.number(Expeditions.levelXP(level + 1) - Expeditions.levelXP(level)),
 			level + 1
 		)
+	elseif self.page == "Skills" then
+		self.sub.Text = string.format(
+			"Level %d    ·    %d skill points",
+			p:GetAttribute("Level") or 1,
+			p:GetAttribute("SkillPoints") or 0
+		)
+	elseif self.page == "Pets" then
+		self.sub.Text = if p:GetAttribute("Pet") == "Rock"
+			then "Equipped   ·   " .. (p:GetAttribute("PetName") or "Pebble")
+			else "Your companions"
+	elseif self.page == "Achievements" then
+		self.sub.Text = "Lifetime mining collection"
+	elseif self.page == "Crew" then
+		self.sub.Text = string.format("%d connected", #game.Players:GetPlayers())
 	elseif self.page == "Pack" then
 		local cap = Upgrades.items.Capacity.values[p:GetAttribute("Capacity") or 1]
 		local value = (p:GetAttribute("BagValue") or 0) * (if p:GetAttribute("DoubleGold") then 2 else 1)

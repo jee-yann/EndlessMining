@@ -19,7 +19,7 @@ local function emptyRegion(bottom, top, surface)
 	for y = bottom.Y, top.Y - 1, chunk do
 		local region =
 			Region3.new(Vector3.new(bottom.X, y, bottom.Z), Vector3.new(top.X, math.min(y + chunk, top.Y), top.Z))
-		local _, occupancy = terrain:ReadVoxels(region, cell)
+		local _, occupancy = terrain:ReadVoxels(region:ExpandToGrid(4), 4)
 		-- ReadVoxels includes a named Size field alongside its indexed X planes.
 		for _, plane in ipairs(occupancy) do
 			for _, row in plane do
@@ -35,9 +35,7 @@ local function emptyRegion(bottom, top, surface)
 end
 
 function World.new(seed, surface)
-	local origin = if surface
-		then (surface:GetPivot().Position / cell + Vector3.one * 0.5):Floor() * cell
-		else Config.Origin
+	local origin = if surface then surface:GetPivot().Position else Config.Origin
 	for _ = 1, 32 do
 		if
 			emptyRegion(origin + Config.SiteMin, origin + Config.SiteMax, surface)

@@ -13364,153 +13364,60 @@
         </Properties>
       </Item>
     </Item>
-    <Item class="Model" referent="FieldHall1">
+    <Item class="Model" referent="FieldHall501">
       <Properties>
         <string name="Name">Working gallery</string>
       </Properties>
-      <Item class="Part" referent="FieldHall2">
+      <Item class="Part" referent="FieldHall502">
         <Properties>
-          <string name="Name">Entrance grade</string>
+          <string name="Name">Entrance sill</string>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">true</bool>
           <bool name="CanTouch">false</bool>
-          <Color3uint8 name="Color3uint8">4288641877</Color3uint8>
+          <Color3uint8 name="Color3uint8">4286140214</Color3uint8>
           <token name="Material">256</token>
           <token name="TopSurface">3</token>
           <token name="BottomSurface">0</token>
           <Vector3 name="size">
-            <X>16</X>
-            <Y>0.56</Y>
-            <Z>93.320965</Z>
+            <X>15</X>
+            <Y>0.64</Y>
+            <Z>8</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>0</X>
-            <Y>-0.2150318</Y>
-            <Z>-35.8558309</Z>
+            <Y>23.78</Y>
+            <Z>0.1</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
             <R10>0</R10>
-            <R11>0.8572565</R11>
-            <R12>0.5148897</R12>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
             <R20>0</R20>
-            <R21>-0.5148897</R21>
-            <R22>0.8572565</R22>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
           </CoordinateFrame>
         </Properties>
       </Item>
-      <Item class="Part" referent="FieldHall3">
+      <Item class="Part" referent="FieldHall503">
         <Properties>
-          <string name="Name">Passage lining</string>
+          <string name="Name">Portal shadow</string>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">true</bool>
           <bool name="CanTouch">false</bool>
-          <Color3uint8 name="Color3uint8">4285289544</Color3uint8>
+          <Color3uint8 name="Color3uint8">4282533457</Color3uint8>
           <token name="Material">256</token>
           <token name="TopSurface">0</token>
           <token name="BottomSurface">0</token>
           <Vector3 name="size">
-            <X>1.2</X>
-            <Y>12</Y>
-            <Z>93.6952303</Z>
-          </Vector3>
-          <CoordinateFrame name="CFrame">
-            <X>-8.6</X>
-            <Y>5.4</Y>
-            <Z>-36</Z>
-            <R00>1</R00>
-            <R01>0</R01>
-            <R02>0</R02>
-            <R10>0</R10>
-            <R11>0.8574929</R11>
-            <R12>0.5144958</R12>
-            <R20>0</R20>
-            <R21>-0.5144958</R21>
-            <R22>0.8574929</R22>
-          </CoordinateFrame>
-        </Properties>
-      </Item>
-      <Item class="Part" referent="FieldHall4">
-        <Properties>
-          <string name="Name">Passage lining</string>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">true</bool>
-          <bool name="CanTouch">false</bool>
-          <Color3uint8 name="Color3uint8">4285289544</Color3uint8>
-          <token name="Material">256</token>
-          <token name="TopSurface">0</token>
-          <token name="BottomSurface">0</token>
-          <Vector3 name="size">
-            <X>1.2</X>
-            <Y>12</Y>
-            <Z>93.6952303</Z>
-          </Vector3>
-          <CoordinateFrame name="CFrame">
-            <X>8.6</X>
-            <Y>5.4</Y>
-            <Z>-36</Z>
-            <R00>1</R00>
-            <R01>0</R01>
-            <R02>0</R02>
-            <R10>0</R10>
-            <R11>0.8574929</R11>
-            <R12>0.5144958</R12>
-            <R20>0</R20>
-            <R21>-0.5144958</R21>
-            <R22>0.8574929</R22>
-          </CoordinateFrame>
-        </Properties>
-      </Item>
-      <Item class="Part" referent="FieldHall5">
-        <Properties>
-          <string name="Name">Passage roof</string>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">true</bool>
-          <bool name="CanTouch">false</bool>
-          <Color3uint8 name="Color3uint8">4285225296</Color3uint8>
-          <token name="Material">256</token>
-          <token name="TopSurface">0</token>
-          <token name="BottomSurface">0</token>
-          <Vector3 name="size">
-            <X>18.3</X>
-            <Y>1.3</Y>
-            <Z>93.2952303</Z>
+            <X>14.70</X>
+            <Y>11</Y>
+            <Z>0.7</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>0</X>
-            <Y>11.3</Y>
-            <Z>-36</Z>
-            <R00>1</R00>
-            <R01>0</R01>
-            <R02>0</R02>
-            <R10>0</R10>
-            <R11>0.8574929</R11>
-            <R12>0.5144958</R12>
-            <R20>0</R20>
-            <R21>-0.5144958</R21>
-            <R22>0.8574929</R22>
-          </CoordinateFrame>
-        </Properties>
-      </Item>
-      <Item class="Part" referent="FieldHall6">
-        <Properties>
-          <string name="Name">Gallery side</string>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">true</bool>
-          <bool name="CanTouch">false</bool>
-          <Color3uint8 name="Color3uint8">4285289544</Color3uint8>
-          <token name="Material">256</token>
-          <token name="TopSurface">0</token>
-          <token name="BottomSurface">0</token>
-          <Vector3 name="size">
-            <X>1.3</X>
-            <Y>16</Y>
-            <Z>72</Z>
-          </Vector3>
-          <CoordinateFrame name="CFrame">
-            <X>-40.65</X>
-            <Y>-16</Y>
-            <Z>-112</Z>
+            <Y>29.05</Y>
+            <Z>-3.6</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -13523,25 +13430,25 @@
           </CoordinateFrame>
         </Properties>
       </Item>
-      <Item class="Part" referent="FieldHall7">
+      <Item class="Part" referent="FieldHall504">
         <Properties>
-          <string name="Name">Gallery side</string>
+          <string name="Name">Gate return</string>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">true</bool>
           <bool name="CanTouch">false</bool>
-          <Color3uint8 name="Color3uint8">4285289544</Color3uint8>
+          <Color3uint8 name="Color3uint8">4286140214</Color3uint8>
           <token name="Material">256</token>
           <token name="TopSurface">0</token>
           <token name="BottomSurface">0</token>
           <Vector3 name="size">
-            <X>1.3</X>
-            <Y>16</Y>
-            <Z>72</Z>
+            <X>0.65</X>
+            <Y>10.5</Y>
+            <Z>7.4</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>40.65</X>
-            <Y>-16</Y>
-            <Z>-112</Z>
+            <X>-7.25</X>
+            <Y>28.95</Y>
+            <Z>0</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -13554,25 +13461,25 @@
           </CoordinateFrame>
         </Properties>
       </Item>
-      <Item class="Part" referent="FieldHall8">
+      <Item class="Part" referent="FieldHall505">
         <Properties>
-          <string name="Name">Gallery back</string>
+          <string name="Name">Gate return</string>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">true</bool>
           <bool name="CanTouch">false</bool>
-          <Color3uint8 name="Color3uint8">4285289544</Color3uint8>
+          <Color3uint8 name="Color3uint8">4286140214</Color3uint8>
           <token name="Material">256</token>
           <token name="TopSurface">0</token>
           <token name="BottomSurface">0</token>
           <Vector3 name="size">
-            <X>82.6</X>
-            <Y>16</Y>
-            <Z>1.1</Z>
+            <X>0.65</X>
+            <Y>10.5</Y>
+            <Z>7.4</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>0</X>
-            <Y>-16</Y>
-            <Z>-148.55</Z>
+            <X>7.25</X>
+            <Y>28.95</Y>
+            <Z>0</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -13585,87 +13492,25 @@
           </CoordinateFrame>
         </Properties>
       </Item>
-      <Item class="Part" referent="FieldHall9">
+      <Item class="Part" referent="FieldHall506">
         <Properties>
-          <string name="Name">Portal return</string>
+          <string name="Name">Seam roof</string>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">true</bool>
           <bool name="CanTouch">false</bool>
-          <Color3uint8 name="Color3uint8">4285289544</Color3uint8>
+          <Color3uint8 name="Color3uint8">4284763715</Color3uint8>
           <token name="Material">256</token>
           <token name="TopSurface">0</token>
           <token name="BottomSurface">0</token>
           <Vector3 name="size">
-            <X>31.82</X>
-            <Y>16</Y>
-            <Z>1.1</Z>
-          </Vector3>
-          <CoordinateFrame name="CFrame">
-            <X>-24</X>
-            <Y>-16</Y>
-            <Z>-75.45</Z>
-            <R00>1</R00>
-            <R01>0</R01>
-            <R02>0</R02>
-            <R10>0</R10>
-            <R11>1.0</R11>
-            <R12>0.0</R12>
-            <R20>0</R20>
-            <R21>-0.0</R21>
-            <R22>1.0</R22>
-          </CoordinateFrame>
-        </Properties>
-      </Item>
-      <Item class="Part" referent="FieldHall10">
-        <Properties>
-          <string name="Name">Portal return</string>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">true</bool>
-          <bool name="CanTouch">false</bool>
-          <Color3uint8 name="Color3uint8">4285289544</Color3uint8>
-          <token name="Material">256</token>
-          <token name="TopSurface">0</token>
-          <token name="BottomSurface">0</token>
-          <Vector3 name="size">
-            <X>31.82</X>
-            <Y>16</Y>
-            <Z>1.1</Z>
-          </Vector3>
-          <CoordinateFrame name="CFrame">
-            <X>24</X>
-            <Y>-16</Y>
-            <Z>-75.45</Z>
-            <R00>1</R00>
-            <R01>0</R01>
-            <R02>0</R02>
-            <R10>0</R10>
-            <R11>1.0</R11>
-            <R12>0.0</R12>
-            <R20>0</R20>
-            <R21>-0.0</R21>
-            <R22>1.0</R22>
-          </CoordinateFrame>
-        </Properties>
-      </Item>
-      <Item class="Part" referent="FieldHall11">
-        <Properties>
-          <string name="Name">Portal lintel</string>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">true</bool>
-          <bool name="CanTouch">false</bool>
-          <Color3uint8 name="Color3uint8">4285289544</Color3uint8>
-          <token name="Material">256</token>
-          <token name="TopSurface">0</token>
-          <token name="BottomSurface">0</token>
-          <Vector3 name="size">
-            <X>16</X>
-            <Y>5.3</Y>
-            <Z>1.1</Z>
+            <X>20.4</X>
+            <Y>1</Y>
+            <Z>25.4</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>0</X>
-            <Y>-10.65</Y>
-            <Z>-75.45</Z>
+            <Y>-10.45</Y>
+            <Z>-8.5</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -13678,25 +13523,26 @@
           </CoordinateFrame>
         </Properties>
       </Item>
-      <Item class="Part" referent="FieldHall12">
+      <Item class="Part" referent="FieldHall507">
         <Properties>
-          <string name="Name">Gallery roof</string>
+          <string name="Name">Lantern hook</string>
           <bool name="Anchored">true</bool>
-          <bool name="CanCollide">true</bool>
+          <bool name="CanCollide">false</bool>
           <bool name="CanTouch">false</bool>
-          <Color3uint8 name="Color3uint8">4285225296</Color3uint8>
+          <bool name="CanQuery">false</bool>
+          <Color3uint8 name="Color3uint8">4282533457</Color3uint8>
           <token name="Material">256</token>
           <token name="TopSurface">0</token>
           <token name="BottomSurface">0</token>
           <Vector3 name="size">
-            <X>82.6</X>
+            <X>0.24</X>
             <Y>1.2</Y>
-            <Z>74.2</Z>
+            <Z>0.27</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>0</X>
-            <Y>-7.4</Y>
-            <Z>-112</Z>
+            <X>-8.9</X>
+            <Y>-11.7</Y>
+            <Z>1.5</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -13709,805 +13555,26 @@
           </CoordinateFrame>
         </Properties>
       </Item>
-      <Item class="Part" referent="FieldHall13">
+      <Item class="Part" referent="FieldHall508">
         <Properties>
-          <string name="Name">Lower workface grade</string>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">true</bool>
-          <bool name="CanTouch">false</bool>
-          <Color3uint8 name="Color3uint8">4288641877</Color3uint8>
-          <token name="Material">256</token>
-          <token name="TopSurface">3</token>
-          <token name="BottomSurface">0</token>
-          <Vector3 name="size">
-            <X>10</X>
-            <Y>0.56</Y>
-            <Z>28.8444102</Z>
-          </Vector3>
-          <CoordinateFrame name="CFrame">
-            <X>33</X>
-            <Y>-32.2329741</Y>
-            <Z>-127.8446839</Z>
-            <R00>1</R00>
-            <R01>0</R01>
-            <R02>0</R02>
-            <R10>0</R10>
-            <R11>0.8320503</R11>
-            <R12>0.5547002</R12>
-            <R20>0</R20>
-            <R21>-0.5547002</R21>
-            <R22>0.8320503</R22>
-          </CoordinateFrame>
-        </Properties>
-      </Item>
-      <Item class="Part" referent="FieldHall14">
-        <Properties>
-          <string name="Name">Survey lantern</string>
+          <string name="Name">Survey lamp</string>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CanQuery">false</bool>
-          <Color3uint8 name="Color3uint8">4293113693</Color3uint8>
-          <token name="Material">256</token>
-          <token name="TopSurface">0</token>
-          <token name="BottomSurface">0</token>
-          <Vector3 name="size">
-            <X>0.55</X>
-            <Y>0.65</Y>
-            <Z>0.5</Z>
-          </Vector3>
-          <CoordinateFrame name="CFrame">
-            <X>-7.65</X>
-            <Y>19.4</Y>
-            <Z>-12</Z>
-            <R00>1</R00>
-            <R01>0</R01>
-            <R02>0</R02>
-            <R10>0</R10>
-            <R11>1.0</R11>
-            <R12>0.0</R12>
-            <R20>0</R20>
-            <R21>-0.0</R21>
-            <R22>1.0</R22>
-          </CoordinateFrame>
-        </Properties>
-        <Item class="PointLight" referent="FieldHall15">
-          <Properties>
-            <string name="Name">Lamplight</string>
-            <float name="Brightness">0.62</float>
-            <float name="Range">22</float>
-            <Color3 name="Color">
-              <R>1</R>
-              <G>0.8</G>
-              <B>0.58</B>
-            </Color3>
-          </Properties>
-        </Item>
-      </Item>
-      <Item class="Part" referent="FieldHall16">
-        <Properties>
-          <string name="Name">Survey lantern</string>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">false</bool>
-          <bool name="CanTouch">false</bool>
-          <bool name="CanQuery">false</bool>
-          <Color3uint8 name="Color3uint8">4293113693</Color3uint8>
-          <token name="Material">256</token>
-          <token name="TopSurface">0</token>
-          <token name="BottomSurface">0</token>
-          <Vector3 name="size">
-            <X>0.55</X>
-            <Y>0.65</Y>
-            <Z>0.5</Z>
-          </Vector3>
-          <CoordinateFrame name="CFrame">
-            <X>-7.65</X>
-            <Y>2.6</Y>
-            <Z>-40</Z>
-            <R00>1</R00>
-            <R01>0</R01>
-            <R02>0</R02>
-            <R10>0</R10>
-            <R11>1.0</R11>
-            <R12>0.0</R12>
-            <R20>0</R20>
-            <R21>-0.0</R21>
-            <R22>1.0</R22>
-          </CoordinateFrame>
-        </Properties>
-        <Item class="PointLight" referent="FieldHall17">
-          <Properties>
-            <string name="Name">Lamplight</string>
-            <float name="Brightness">0.62</float>
-            <float name="Range">22</float>
-            <Color3 name="Color">
-              <R>1</R>
-              <G>0.8</G>
-              <B>0.58</B>
-            </Color3>
-          </Properties>
-        </Item>
-      </Item>
-      <Item class="Part" referent="FieldHall18">
-        <Properties>
-          <string name="Name">Survey lantern</string>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">false</bool>
-          <bool name="CanTouch">false</bool>
-          <bool name="CanQuery">false</bool>
-          <Color3uint8 name="Color3uint8">4293113693</Color3uint8>
-          <token name="Material">256</token>
-          <token name="TopSurface">0</token>
-          <token name="BottomSurface">0</token>
-          <Vector3 name="size">
-            <X>0.55</X>
-            <Y>0.65</Y>
-            <Z>0.5</Z>
-          </Vector3>
-          <CoordinateFrame name="CFrame">
-            <X>-7.65</X>
-            <Y>-13.6</Y>
-            <Z>-67</Z>
-            <R00>1</R00>
-            <R01>0</R01>
-            <R02>0</R02>
-            <R10>0</R10>
-            <R11>1.0</R11>
-            <R12>0.0</R12>
-            <R20>0</R20>
-            <R21>-0.0</R21>
-            <R22>1.0</R22>
-          </CoordinateFrame>
-        </Properties>
-        <Item class="PointLight" referent="FieldHall19">
-          <Properties>
-            <string name="Name">Lamplight</string>
-            <float name="Brightness">0.62</float>
-            <float name="Range">22</float>
-            <Color3 name="Color">
-              <R>1</R>
-              <G>0.8</G>
-              <B>0.58</B>
-            </Color3>
-          </Properties>
-        </Item>
-      </Item>
-      <Item class="Part" referent="FieldHall20">
-        <Properties>
-          <string name="Name">Survey rib</string>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">false</bool>
-          <bool name="CanTouch">false</bool>
-          <bool name="CanQuery">false</bool>
-          <Color3uint8 name="Color3uint8">4286010171</Color3uint8>
-          <token name="Material">256</token>
-          <token name="TopSurface">0</token>
-          <token name="BottomSurface">0</token>
-          <Vector3 name="size">
-            <X>0.52</X>
-            <Y>15.8</Y>
-            <Z>0.72</Z>
-          </Vector3>
-          <CoordinateFrame name="CFrame">
-            <X>-39.73</X>
-            <Y>-16</Y>
-            <Z>-83</Z>
-            <R00>1</R00>
-            <R01>0</R01>
-            <R02>0</R02>
-            <R10>0</R10>
-            <R11>1.0</R11>
-            <R12>0.0</R12>
-            <R20>0</R20>
-            <R21>-0.0</R21>
-            <R22>1.0</R22>
-          </CoordinateFrame>
-        </Properties>
-      </Item>
-      <Item class="Part" referent="FieldHall21">
-        <Properties>
-          <string name="Name">Survey lantern</string>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">false</bool>
-          <bool name="CanTouch">false</bool>
-          <bool name="CanQuery">false</bool>
-          <Color3uint8 name="Color3uint8">4293113693</Color3uint8>
-          <token name="Material">256</token>
-          <token name="TopSurface">0</token>
-          <token name="BottomSurface">0</token>
-          <Vector3 name="size">
-            <X>0.55</X>
-            <Y>0.65</Y>
-            <Z>0.5</Z>
-          </Vector3>
-          <CoordinateFrame name="CFrame">
-            <X>-39.12</X>
-            <Y>-14</Y>
-            <Z>-83</Z>
-            <R00>1</R00>
-            <R01>0</R01>
-            <R02>0</R02>
-            <R10>0</R10>
-            <R11>1.0</R11>
-            <R12>0.0</R12>
-            <R20>0</R20>
-            <R21>-0.0</R21>
-            <R22>1.0</R22>
-          </CoordinateFrame>
-        </Properties>
-        <Item class="PointLight" referent="FieldHall22">
-          <Properties>
-            <string name="Name">Lamplight</string>
-            <float name="Brightness">0.62</float>
-            <float name="Range">29</float>
-            <Color3 name="Color">
-              <R>1</R>
-              <G>0.8</G>
-              <B>0.58</B>
-            </Color3>
-          </Properties>
-        </Item>
-      </Item>
-      <Item class="Part" referent="FieldHall23">
-        <Properties>
-          <string name="Name">Survey rib</string>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">false</bool>
-          <bool name="CanTouch">false</bool>
-          <bool name="CanQuery">false</bool>
-          <Color3uint8 name="Color3uint8">4286010171</Color3uint8>
-          <token name="Material">256</token>
-          <token name="TopSurface">0</token>
-          <token name="BottomSurface">0</token>
-          <Vector3 name="size">
-            <X>0.52</X>
-            <Y>15.8</Y>
-            <Z>0.72</Z>
-          </Vector3>
-          <CoordinateFrame name="CFrame">
-            <X>39.73</X>
-            <Y>-16</Y>
-            <Z>-83</Z>
-            <R00>1</R00>
-            <R01>0</R01>
-            <R02>0</R02>
-            <R10>0</R10>
-            <R11>1.0</R11>
-            <R12>0.0</R12>
-            <R20>0</R20>
-            <R21>-0.0</R21>
-            <R22>1.0</R22>
-          </CoordinateFrame>
-        </Properties>
-      </Item>
-      <Item class="Part" referent="FieldHall24">
-        <Properties>
-          <string name="Name">Survey lantern</string>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">false</bool>
-          <bool name="CanTouch">false</bool>
-          <bool name="CanQuery">false</bool>
-          <Color3uint8 name="Color3uint8">4293113693</Color3uint8>
-          <token name="Material">256</token>
-          <token name="TopSurface">0</token>
-          <token name="BottomSurface">0</token>
-          <Vector3 name="size">
-            <X>0.55</X>
-            <Y>0.65</Y>
-            <Z>0.5</Z>
-          </Vector3>
-          <CoordinateFrame name="CFrame">
-            <X>39.12</X>
-            <Y>-14</Y>
-            <Z>-83</Z>
-            <R00>1</R00>
-            <R01>0</R01>
-            <R02>0</R02>
-            <R10>0</R10>
-            <R11>1.0</R11>
-            <R12>0.0</R12>
-            <R20>0</R20>
-            <R21>-0.0</R21>
-            <R22>1.0</R22>
-          </CoordinateFrame>
-        </Properties>
-        <Item class="PointLight" referent="FieldHall25">
-          <Properties>
-            <string name="Name">Lamplight</string>
-            <float name="Brightness">0.62</float>
-            <float name="Range">29</float>
-            <Color3 name="Color">
-              <R>1</R>
-              <G>0.8</G>
-              <B>0.58</B>
-            </Color3>
-          </Properties>
-        </Item>
-      </Item>
-      <Item class="Part" referent="FieldHall26">
-        <Properties>
-          <string name="Name">Ceiling rib</string>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">false</bool>
-          <bool name="CanTouch">false</bool>
-          <bool name="CanQuery">false</bool>
-          <Color3uint8 name="Color3uint8">4286010171</Color3uint8>
-          <token name="Material">256</token>
-          <token name="TopSurface">0</token>
-          <token name="BottomSurface">0</token>
-          <Vector3 name="size">
-            <X>78.92</X>
-            <Y>0.55</Y>
-            <Z>0.60</Z>
-          </Vector3>
-          <CoordinateFrame name="CFrame">
-            <X>0</X>
-            <Y>-8.33</Y>
-            <Z>-83</Z>
-            <R00>1</R00>
-            <R01>0</R01>
-            <R02>0</R02>
-            <R10>0</R10>
-            <R11>1.0</R11>
-            <R12>0.0</R12>
-            <R20>0</R20>
-            <R21>-0.0</R21>
-            <R22>1.0</R22>
-          </CoordinateFrame>
-        </Properties>
-      </Item>
-      <Item class="Part" referent="FieldHall27">
-        <Properties>
-          <string name="Name">Survey rib</string>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">false</bool>
-          <bool name="CanTouch">false</bool>
-          <bool name="CanQuery">false</bool>
-          <Color3uint8 name="Color3uint8">4286010171</Color3uint8>
-          <token name="Material">256</token>
-          <token name="TopSurface">0</token>
-          <token name="BottomSurface">0</token>
-          <Vector3 name="size">
-            <X>0.52</X>
-            <Y>15.8</Y>
-            <Z>0.72</Z>
-          </Vector3>
-          <CoordinateFrame name="CFrame">
-            <X>-39.73</X>
-            <Y>-16</Y>
-            <Z>-107</Z>
-            <R00>1</R00>
-            <R01>0</R01>
-            <R02>0</R02>
-            <R10>0</R10>
-            <R11>1.0</R11>
-            <R12>0.0</R12>
-            <R20>0</R20>
-            <R21>-0.0</R21>
-            <R22>1.0</R22>
-          </CoordinateFrame>
-        </Properties>
-      </Item>
-      <Item class="Part" referent="FieldHall28">
-        <Properties>
-          <string name="Name">Survey lantern</string>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">false</bool>
-          <bool name="CanTouch">false</bool>
-          <bool name="CanQuery">false</bool>
-          <Color3uint8 name="Color3uint8">4293113693</Color3uint8>
-          <token name="Material">256</token>
-          <token name="TopSurface">0</token>
-          <token name="BottomSurface">0</token>
-          <Vector3 name="size">
-            <X>0.55</X>
-            <Y>0.65</Y>
-            <Z>0.5</Z>
-          </Vector3>
-          <CoordinateFrame name="CFrame">
-            <X>-39.12</X>
-            <Y>-14</Y>
-            <Z>-107</Z>
-            <R00>1</R00>
-            <R01>0</R01>
-            <R02>0</R02>
-            <R10>0</R10>
-            <R11>1.0</R11>
-            <R12>0.0</R12>
-            <R20>0</R20>
-            <R21>-0.0</R21>
-            <R22>1.0</R22>
-          </CoordinateFrame>
-        </Properties>
-        <Item class="PointLight" referent="FieldHall29">
-          <Properties>
-            <string name="Name">Lamplight</string>
-            <float name="Brightness">0.62</float>
-            <float name="Range">29</float>
-            <Color3 name="Color">
-              <R>1</R>
-              <G>0.8</G>
-              <B>0.58</B>
-            </Color3>
-          </Properties>
-        </Item>
-      </Item>
-      <Item class="Part" referent="FieldHall30">
-        <Properties>
-          <string name="Name">Survey rib</string>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">false</bool>
-          <bool name="CanTouch">false</bool>
-          <bool name="CanQuery">false</bool>
-          <Color3uint8 name="Color3uint8">4286010171</Color3uint8>
-          <token name="Material">256</token>
-          <token name="TopSurface">0</token>
-          <token name="BottomSurface">0</token>
-          <Vector3 name="size">
-            <X>0.52</X>
-            <Y>15.8</Y>
-            <Z>0.72</Z>
-          </Vector3>
-          <CoordinateFrame name="CFrame">
-            <X>39.73</X>
-            <Y>-16</Y>
-            <Z>-107</Z>
-            <R00>1</R00>
-            <R01>0</R01>
-            <R02>0</R02>
-            <R10>0</R10>
-            <R11>1.0</R11>
-            <R12>0.0</R12>
-            <R20>0</R20>
-            <R21>-0.0</R21>
-            <R22>1.0</R22>
-          </CoordinateFrame>
-        </Properties>
-      </Item>
-      <Item class="Part" referent="FieldHall31">
-        <Properties>
-          <string name="Name">Survey lantern</string>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">false</bool>
-          <bool name="CanTouch">false</bool>
-          <bool name="CanQuery">false</bool>
-          <Color3uint8 name="Color3uint8">4293113693</Color3uint8>
-          <token name="Material">256</token>
-          <token name="TopSurface">0</token>
-          <token name="BottomSurface">0</token>
-          <Vector3 name="size">
-            <X>0.55</X>
-            <Y>0.65</Y>
-            <Z>0.5</Z>
-          </Vector3>
-          <CoordinateFrame name="CFrame">
-            <X>39.12</X>
-            <Y>-14</Y>
-            <Z>-107</Z>
-            <R00>1</R00>
-            <R01>0</R01>
-            <R02>0</R02>
-            <R10>0</R10>
-            <R11>1.0</R11>
-            <R12>0.0</R12>
-            <R20>0</R20>
-            <R21>-0.0</R21>
-            <R22>1.0</R22>
-          </CoordinateFrame>
-        </Properties>
-        <Item class="PointLight" referent="FieldHall32">
-          <Properties>
-            <string name="Name">Lamplight</string>
-            <float name="Brightness">0.62</float>
-            <float name="Range">29</float>
-            <Color3 name="Color">
-              <R>1</R>
-              <G>0.8</G>
-              <B>0.58</B>
-            </Color3>
-          </Properties>
-        </Item>
-      </Item>
-      <Item class="Part" referent="FieldHall33">
-        <Properties>
-          <string name="Name">Ceiling rib</string>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">false</bool>
-          <bool name="CanTouch">false</bool>
-          <bool name="CanQuery">false</bool>
-          <Color3uint8 name="Color3uint8">4286010171</Color3uint8>
-          <token name="Material">256</token>
-          <token name="TopSurface">0</token>
-          <token name="BottomSurface">0</token>
-          <Vector3 name="size">
-            <X>78.92</X>
-            <Y>0.55</Y>
-            <Z>0.60</Z>
-          </Vector3>
-          <CoordinateFrame name="CFrame">
-            <X>0</X>
-            <Y>-8.33</Y>
-            <Z>-107</Z>
-            <R00>1</R00>
-            <R01>0</R01>
-            <R02>0</R02>
-            <R10>0</R10>
-            <R11>1.0</R11>
-            <R12>0.0</R12>
-            <R20>0</R20>
-            <R21>-0.0</R21>
-            <R22>1.0</R22>
-          </CoordinateFrame>
-        </Properties>
-      </Item>
-      <Item class="Part" referent="FieldHall34">
-        <Properties>
-          <string name="Name">Survey rib</string>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">false</bool>
-          <bool name="CanTouch">false</bool>
-          <bool name="CanQuery">false</bool>
-          <Color3uint8 name="Color3uint8">4286010171</Color3uint8>
-          <token name="Material">256</token>
-          <token name="TopSurface">0</token>
-          <token name="BottomSurface">0</token>
-          <Vector3 name="size">
-            <X>0.52</X>
-            <Y>15.8</Y>
-            <Z>0.72</Z>
-          </Vector3>
-          <CoordinateFrame name="CFrame">
-            <X>-39.73</X>
-            <Y>-16</Y>
-            <Z>-139</Z>
-            <R00>1</R00>
-            <R01>0</R01>
-            <R02>0</R02>
-            <R10>0</R10>
-            <R11>1.0</R11>
-            <R12>0.0</R12>
-            <R20>0</R20>
-            <R21>-0.0</R21>
-            <R22>1.0</R22>
-          </CoordinateFrame>
-        </Properties>
-      </Item>
-      <Item class="Part" referent="FieldHall35">
-        <Properties>
-          <string name="Name">Survey lantern</string>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">false</bool>
-          <bool name="CanTouch">false</bool>
-          <bool name="CanQuery">false</bool>
-          <Color3uint8 name="Color3uint8">4293113693</Color3uint8>
-          <token name="Material">256</token>
-          <token name="TopSurface">0</token>
-          <token name="BottomSurface">0</token>
-          <Vector3 name="size">
-            <X>0.55</X>
-            <Y>0.65</Y>
-            <Z>0.5</Z>
-          </Vector3>
-          <CoordinateFrame name="CFrame">
-            <X>-39.12</X>
-            <Y>-14</Y>
-            <Z>-139</Z>
-            <R00>1</R00>
-            <R01>0</R01>
-            <R02>0</R02>
-            <R10>0</R10>
-            <R11>1.0</R11>
-            <R12>0.0</R12>
-            <R20>0</R20>
-            <R21>-0.0</R21>
-            <R22>1.0</R22>
-          </CoordinateFrame>
-        </Properties>
-        <Item class="PointLight" referent="FieldHall36">
-          <Properties>
-            <string name="Name">Lamplight</string>
-            <float name="Brightness">0.62</float>
-            <float name="Range">29</float>
-            <Color3 name="Color">
-              <R>1</R>
-              <G>0.8</G>
-              <B>0.58</B>
-            </Color3>
-          </Properties>
-        </Item>
-      </Item>
-      <Item class="Part" referent="FieldHall37">
-        <Properties>
-          <string name="Name">Survey rib</string>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">false</bool>
-          <bool name="CanTouch">false</bool>
-          <bool name="CanQuery">false</bool>
-          <Color3uint8 name="Color3uint8">4286010171</Color3uint8>
-          <token name="Material">256</token>
-          <token name="TopSurface">0</token>
-          <token name="BottomSurface">0</token>
-          <Vector3 name="size">
-            <X>0.52</X>
-            <Y>15.8</Y>
-            <Z>0.72</Z>
-          </Vector3>
-          <CoordinateFrame name="CFrame">
-            <X>39.73</X>
-            <Y>-16</Y>
-            <Z>-139</Z>
-            <R00>1</R00>
-            <R01>0</R01>
-            <R02>0</R02>
-            <R10>0</R10>
-            <R11>1.0</R11>
-            <R12>0.0</R12>
-            <R20>0</R20>
-            <R21>-0.0</R21>
-            <R22>1.0</R22>
-          </CoordinateFrame>
-        </Properties>
-      </Item>
-      <Item class="Part" referent="FieldHall38">
-        <Properties>
-          <string name="Name">Survey lantern</string>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">false</bool>
-          <bool name="CanTouch">false</bool>
-          <bool name="CanQuery">false</bool>
-          <Color3uint8 name="Color3uint8">4293113693</Color3uint8>
-          <token name="Material">256</token>
-          <token name="TopSurface">0</token>
-          <token name="BottomSurface">0</token>
-          <Vector3 name="size">
-            <X>0.55</X>
-            <Y>0.65</Y>
-            <Z>0.5</Z>
-          </Vector3>
-          <CoordinateFrame name="CFrame">
-            <X>39.12</X>
-            <Y>-14</Y>
-            <Z>-139</Z>
-            <R00>1</R00>
-            <R01>0</R01>
-            <R02>0</R02>
-            <R10>0</R10>
-            <R11>1.0</R11>
-            <R12>0.0</R12>
-            <R20>0</R20>
-            <R21>-0.0</R21>
-            <R22>1.0</R22>
-          </CoordinateFrame>
-        </Properties>
-        <Item class="PointLight" referent="FieldHall39">
-          <Properties>
-            <string name="Name">Lamplight</string>
-            <float name="Brightness">0.62</float>
-            <float name="Range">29</float>
-            <Color3 name="Color">
-              <R>1</R>
-              <G>0.8</G>
-              <B>0.58</B>
-            </Color3>
-          </Properties>
-        </Item>
-      </Item>
-      <Item class="Part" referent="FieldHall40">
-        <Properties>
-          <string name="Name">Ceiling rib</string>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">false</bool>
-          <bool name="CanTouch">false</bool>
-          <bool name="CanQuery">false</bool>
-          <Color3uint8 name="Color3uint8">4286010171</Color3uint8>
-          <token name="Material">256</token>
-          <token name="TopSurface">0</token>
-          <token name="BottomSurface">0</token>
-          <Vector3 name="size">
-            <X>78.92</X>
-            <Y>0.55</Y>
-            <Z>0.60</Z>
-          </Vector3>
-          <CoordinateFrame name="CFrame">
-            <X>0</X>
-            <Y>-8.33</Y>
-            <Z>-139</Z>
-            <R00>1</R00>
-            <R01>0</R01>
-            <R02>0</R02>
-            <R10>0</R10>
-            <R11>1.0</R11>
-            <R12>0.0</R12>
-            <R20>0</R20>
-            <R21>-0.0</R21>
-            <R22>1.0</R22>
-          </CoordinateFrame>
-        </Properties>
-      </Item>
-      <Item class="Part" referent="FieldHall101">
-        <Properties>
-          <string name="Name">Lamp drop</string>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">false</bool>
-          <bool name="CanTouch">false</bool>
-          <bool name="CanQuery">false</bool>
-          <Color3uint8 name="Color3uint8">4282404947</Color3uint8>
-          <token name="Material">256</token>
-          <token name="TopSurface">0</token>
-          <token name="BottomSurface">0</token>
-          <Vector3 name="size">
-            <X>0.14</X>
-            <Y>1.9</Y>
-            <Z>0.14</Z>
-          </Vector3>
-          <CoordinateFrame name="CFrame">
-            <X>-14</X>
-            <Y>-9.2</Y>
-            <Z>-86</Z>
-            <R00>1</R00>
-            <R01>0</R01>
-            <R02>0</R02>
-            <R10>0</R10>
-            <R11>1.0</R11>
-            <R12>0.0</R12>
-            <R20>0</R20>
-            <R21>-0.0</R21>
-            <R22>1.0</R22>
-          </CoordinateFrame>
-        </Properties>
-      </Item>
-      <Item class="Part" referent="FieldHall102">
-        <Properties>
-          <string name="Name">Lamp cap</string>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">false</bool>
-          <bool name="CanTouch">false</bool>
-          <bool name="CanQuery">false</bool>
-          <Color3uint8 name="Color3uint8">4282404947</Color3uint8>
-          <token name="Material">256</token>
-          <token name="TopSurface">0</token>
-          <token name="BottomSurface">0</token>
-          <Vector3 name="size">
-            <X>1.12</X>
-            <Y>0.28</Y>
-            <Z>1.1</Z>
-          </Vector3>
-          <CoordinateFrame name="CFrame">
-            <X>-14</X>
-            <Y>-10.2</Y>
-            <Z>-86</Z>
-            <R00>1</R00>
-            <R01>0</R01>
-            <R02>0</R02>
-            <R10>0</R10>
-            <R11>1.0</R11>
-            <R12>0.0</R12>
-            <R20>0</R20>
-            <R21>-0.0</R21>
-            <R22>1.0</R22>
-          </CoordinateFrame>
-        </Properties>
-      </Item>
-      <Item class="Part" referent="FieldHall103">
-        <Properties>
-          <string name="Name">Lamp glass</string>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">false</bool>
-          <bool name="CanTouch">false</bool>
-          <bool name="CanQuery">false</bool>
-          <Color3uint8 name="Color3uint8">4294361707</Color3uint8>
+          <Color3uint8 name="Color3uint8">4294952289</Color3uint8>
           <token name="Material">288</token>
           <token name="TopSurface">0</token>
           <token name="BottomSurface">0</token>
           <Vector3 name="size">
-            <X>0.84</X>
-            <Y>0.84</Y>
-            <Z>0.82</Z>
+            <X>0.75</X>
+            <Y>0.8</Y>
+            <Z>0.75</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>-14</X>
-            <Y>-10.74</Y>
-            <Z>-86</Z>
+            <X>-8.9</X>
+            <Y>-12.65</Y>
+            <Z>1.5</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -14519,39 +13586,39 @@
             <R22>1.0</R22>
           </CoordinateFrame>
         </Properties>
-        <Item class="PointLight" referent="FieldHall105">
+        <Item class="PointLight" referent="FieldHall509">
           <Properties>
-            <string name="Name">Warm pool</string>
-            <float name="Range">31</float>
-            <float name="Brightness">1.05</float>
+            <string name="Name">Lamplight</string>
+            <float name="Brightness">0.62</float>
+            <float name="Range">20</float>
             <Color3 name="Color">
               <R>1</R>
               <G>0.84</G>
-              <B>0.68</B>
+              <B>0.65</B>
             </Color3>
           </Properties>
         </Item>
       </Item>
-      <Item class="Part" referent="FieldHall104">
+      <Item class="Part" referent="FieldHall510">
         <Properties>
-          <string name="Name">Lamp base</string>
+          <string name="Name">Lantern hook</string>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CanQuery">false</bool>
-          <Color3uint8 name="Color3uint8">4282404947</Color3uint8>
+          <Color3uint8 name="Color3uint8">4282533457</Color3uint8>
           <token name="Material">256</token>
           <token name="TopSurface">0</token>
           <token name="BottomSurface">0</token>
           <Vector3 name="size">
-            <X>0.99</X>
-            <Y>0.18</Y>
-            <Z>0.97</Z>
+            <X>0.24</X>
+            <Y>1.2</Y>
+            <Z>0.27</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>-14</X>
-            <Y>-11.25</Y>
-            <Z>-86</Z>
+            <X>-8.9</X>
+            <Y>-11.7</Y>
+            <Z>-17.8</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -14564,90 +13631,26 @@
           </CoordinateFrame>
         </Properties>
       </Item>
-      <Item class="Part" referent="FieldHall106">
+      <Item class="Part" referent="FieldHall511">
         <Properties>
-          <string name="Name">Lamp drop</string>
+          <string name="Name">Survey lamp</string>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CanQuery">false</bool>
-          <Color3uint8 name="Color3uint8">4282404947</Color3uint8>
-          <token name="Material">256</token>
-          <token name="TopSurface">0</token>
-          <token name="BottomSurface">0</token>
-          <Vector3 name="size">
-            <X>0.14</X>
-            <Y>1.9</Y>
-            <Z>0.14</Z>
-          </Vector3>
-          <CoordinateFrame name="CFrame">
-            <X>12</X>
-            <Y>-9.2</Y>
-            <Z>-107</Z>
-            <R00>1</R00>
-            <R01>0</R01>
-            <R02>0</R02>
-            <R10>0</R10>
-            <R11>1.0</R11>
-            <R12>0.0</R12>
-            <R20>0</R20>
-            <R21>-0.0</R21>
-            <R22>1.0</R22>
-          </CoordinateFrame>
-        </Properties>
-      </Item>
-      <Item class="Part" referent="FieldHall107">
-        <Properties>
-          <string name="Name">Lamp cap</string>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">false</bool>
-          <bool name="CanTouch">false</bool>
-          <bool name="CanQuery">false</bool>
-          <Color3uint8 name="Color3uint8">4282404947</Color3uint8>
-          <token name="Material">256</token>
-          <token name="TopSurface">0</token>
-          <token name="BottomSurface">0</token>
-          <Vector3 name="size">
-            <X>1.12</X>
-            <Y>0.28</Y>
-            <Z>1.1</Z>
-          </Vector3>
-          <CoordinateFrame name="CFrame">
-            <X>12</X>
-            <Y>-10.2</Y>
-            <Z>-107</Z>
-            <R00>1</R00>
-            <R01>0</R01>
-            <R02>0</R02>
-            <R10>0</R10>
-            <R11>1.0</R11>
-            <R12>0.0</R12>
-            <R20>0</R20>
-            <R21>-0.0</R21>
-            <R22>1.0</R22>
-          </CoordinateFrame>
-        </Properties>
-      </Item>
-      <Item class="Part" referent="FieldHall108">
-        <Properties>
-          <string name="Name">Lamp glass</string>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">false</bool>
-          <bool name="CanTouch">false</bool>
-          <bool name="CanQuery">false</bool>
-          <Color3uint8 name="Color3uint8">4294361707</Color3uint8>
+          <Color3uint8 name="Color3uint8">4294952289</Color3uint8>
           <token name="Material">288</token>
           <token name="TopSurface">0</token>
           <token name="BottomSurface">0</token>
           <Vector3 name="size">
-            <X>0.84</X>
-            <Y>0.84</Y>
-            <Z>0.82</Z>
+            <X>0.75</X>
+            <Y>0.8</Y>
+            <Z>0.75</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>12</X>
-            <Y>-10.74</Y>
-            <Z>-107</Z>
+            <X>-8.9</X>
+            <Y>-12.65</Y>
+            <Z>-17.8</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -14659,39 +13662,39 @@
             <R22>1.0</R22>
           </CoordinateFrame>
         </Properties>
-        <Item class="PointLight" referent="FieldHall110">
+        <Item class="PointLight" referent="FieldHall512">
           <Properties>
-            <string name="Name">Warm pool</string>
-            <float name="Range">31</float>
-            <float name="Brightness">1.05</float>
+            <string name="Name">Lamplight</string>
+            <float name="Brightness">0.62</float>
+            <float name="Range">20</float>
             <Color3 name="Color">
               <R>1</R>
               <G>0.84</G>
-              <B>0.68</B>
+              <B>0.65</B>
             </Color3>
           </Properties>
         </Item>
       </Item>
-      <Item class="Part" referent="FieldHall109">
+      <Item class="Part" referent="FieldHall513">
         <Properties>
-          <string name="Name">Lamp base</string>
+          <string name="Name">Lantern hook</string>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CanQuery">false</bool>
-          <Color3uint8 name="Color3uint8">4282404947</Color3uint8>
+          <Color3uint8 name="Color3uint8">4282533457</Color3uint8>
           <token name="Material">256</token>
           <token name="TopSurface">0</token>
           <token name="BottomSurface">0</token>
           <Vector3 name="size">
-            <X>0.99</X>
-            <Y>0.18</Y>
-            <Z>0.97</Z>
+            <X>0.24</X>
+            <Y>1.2</Y>
+            <Z>0.27</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>12</X>
-            <Y>-11.25</Y>
-            <Z>-107</Z>
+            <X>8.9</X>
+            <Y>-11.7</Y>
+            <Z>1.5</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -14704,90 +13707,26 @@
           </CoordinateFrame>
         </Properties>
       </Item>
-      <Item class="Part" referent="FieldHall111">
+      <Item class="Part" referent="FieldHall514">
         <Properties>
-          <string name="Name">Lamp drop</string>
+          <string name="Name">Survey lamp</string>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CanQuery">false</bool>
-          <Color3uint8 name="Color3uint8">4282404947</Color3uint8>
-          <token name="Material">256</token>
-          <token name="TopSurface">0</token>
-          <token name="BottomSurface">0</token>
-          <Vector3 name="size">
-            <X>0.14</X>
-            <Y>1.9</Y>
-            <Z>0.14</Z>
-          </Vector3>
-          <CoordinateFrame name="CFrame">
-            <X>-15</X>
-            <Y>-9.2</Y>
-            <Z>-137</Z>
-            <R00>1</R00>
-            <R01>0</R01>
-            <R02>0</R02>
-            <R10>0</R10>
-            <R11>1.0</R11>
-            <R12>0.0</R12>
-            <R20>0</R20>
-            <R21>-0.0</R21>
-            <R22>1.0</R22>
-          </CoordinateFrame>
-        </Properties>
-      </Item>
-      <Item class="Part" referent="FieldHall112">
-        <Properties>
-          <string name="Name">Lamp cap</string>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">false</bool>
-          <bool name="CanTouch">false</bool>
-          <bool name="CanQuery">false</bool>
-          <Color3uint8 name="Color3uint8">4282404947</Color3uint8>
-          <token name="Material">256</token>
-          <token name="TopSurface">0</token>
-          <token name="BottomSurface">0</token>
-          <Vector3 name="size">
-            <X>1.12</X>
-            <Y>0.28</Y>
-            <Z>1.1</Z>
-          </Vector3>
-          <CoordinateFrame name="CFrame">
-            <X>-15</X>
-            <Y>-10.2</Y>
-            <Z>-137</Z>
-            <R00>1</R00>
-            <R01>0</R01>
-            <R02>0</R02>
-            <R10>0</R10>
-            <R11>1.0</R11>
-            <R12>0.0</R12>
-            <R20>0</R20>
-            <R21>-0.0</R21>
-            <R22>1.0</R22>
-          </CoordinateFrame>
-        </Properties>
-      </Item>
-      <Item class="Part" referent="FieldHall113">
-        <Properties>
-          <string name="Name">Lamp glass</string>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">false</bool>
-          <bool name="CanTouch">false</bool>
-          <bool name="CanQuery">false</bool>
-          <Color3uint8 name="Color3uint8">4294361707</Color3uint8>
+          <Color3uint8 name="Color3uint8">4294952289</Color3uint8>
           <token name="Material">288</token>
           <token name="TopSurface">0</token>
           <token name="BottomSurface">0</token>
           <Vector3 name="size">
-            <X>0.84</X>
-            <Y>0.84</Y>
-            <Z>0.82</Z>
+            <X>0.75</X>
+            <Y>0.8</Y>
+            <Z>0.75</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>-15</X>
-            <Y>-10.74</Y>
-            <Z>-137</Z>
+            <X>8.9</X>
+            <Y>-12.65</Y>
+            <Z>1.5</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -14799,39 +13738,39 @@
             <R22>1.0</R22>
           </CoordinateFrame>
         </Properties>
-        <Item class="PointLight" referent="FieldHall115">
+        <Item class="PointLight" referent="FieldHall515">
           <Properties>
-            <string name="Name">Warm pool</string>
-            <float name="Range">31</float>
-            <float name="Brightness">1.05</float>
+            <string name="Name">Lamplight</string>
+            <float name="Brightness">0.62</float>
+            <float name="Range">20</float>
             <Color3 name="Color">
               <R>1</R>
               <G>0.84</G>
-              <B>0.68</B>
+              <B>0.65</B>
             </Color3>
           </Properties>
         </Item>
       </Item>
-      <Item class="Part" referent="FieldHall114">
+      <Item class="Part" referent="FieldHall516">
         <Properties>
-          <string name="Name">Lamp base</string>
+          <string name="Name">Lantern hook</string>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CanQuery">false</bool>
-          <Color3uint8 name="Color3uint8">4282404947</Color3uint8>
+          <Color3uint8 name="Color3uint8">4282533457</Color3uint8>
           <token name="Material">256</token>
           <token name="TopSurface">0</token>
           <token name="BottomSurface">0</token>
           <Vector3 name="size">
-            <X>0.99</X>
-            <Y>0.18</Y>
-            <Z>0.97</Z>
+            <X>0.24</X>
+            <Y>1.2</Y>
+            <Z>0.27</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>-15</X>
-            <Y>-11.25</Y>
-            <Z>-137</Z>
+            <X>8.9</X>
+            <Y>-11.7</Y>
+            <Z>-17.8</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -14844,90 +13783,26 @@
           </CoordinateFrame>
         </Properties>
       </Item>
-      <Item class="Part" referent="FieldHall116">
+      <Item class="Part" referent="FieldHall517">
         <Properties>
-          <string name="Name">Lamp drop</string>
+          <string name="Name">Survey lamp</string>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">false</bool>
           <bool name="CanTouch">false</bool>
           <bool name="CanQuery">false</bool>
-          <Color3uint8 name="Color3uint8">4282404947</Color3uint8>
-          <token name="Material">256</token>
-          <token name="TopSurface">0</token>
-          <token name="BottomSurface">0</token>
-          <Vector3 name="size">
-            <X>0.14</X>
-            <Y>1.9</Y>
-            <Z>0.14</Z>
-          </Vector3>
-          <CoordinateFrame name="CFrame">
-            <X>15</X>
-            <Y>-9.2</Y>
-            <Z>-137</Z>
-            <R00>1</R00>
-            <R01>0</R01>
-            <R02>0</R02>
-            <R10>0</R10>
-            <R11>1.0</R11>
-            <R12>0.0</R12>
-            <R20>0</R20>
-            <R21>-0.0</R21>
-            <R22>1.0</R22>
-          </CoordinateFrame>
-        </Properties>
-      </Item>
-      <Item class="Part" referent="FieldHall117">
-        <Properties>
-          <string name="Name">Lamp cap</string>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">false</bool>
-          <bool name="CanTouch">false</bool>
-          <bool name="CanQuery">false</bool>
-          <Color3uint8 name="Color3uint8">4282404947</Color3uint8>
-          <token name="Material">256</token>
-          <token name="TopSurface">0</token>
-          <token name="BottomSurface">0</token>
-          <Vector3 name="size">
-            <X>1.12</X>
-            <Y>0.28</Y>
-            <Z>1.1</Z>
-          </Vector3>
-          <CoordinateFrame name="CFrame">
-            <X>15</X>
-            <Y>-10.2</Y>
-            <Z>-137</Z>
-            <R00>1</R00>
-            <R01>0</R01>
-            <R02>0</R02>
-            <R10>0</R10>
-            <R11>1.0</R11>
-            <R12>0.0</R12>
-            <R20>0</R20>
-            <R21>-0.0</R21>
-            <R22>1.0</R22>
-          </CoordinateFrame>
-        </Properties>
-      </Item>
-      <Item class="Part" referent="FieldHall118">
-        <Properties>
-          <string name="Name">Lamp glass</string>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">false</bool>
-          <bool name="CanTouch">false</bool>
-          <bool name="CanQuery">false</bool>
-          <Color3uint8 name="Color3uint8">4294361707</Color3uint8>
+          <Color3uint8 name="Color3uint8">4294952289</Color3uint8>
           <token name="Material">288</token>
           <token name="TopSurface">0</token>
           <token name="BottomSurface">0</token>
           <Vector3 name="size">
-            <X>0.84</X>
-            <Y>0.84</Y>
-            <Z>0.82</Z>
+            <X>0.75</X>
+            <Y>0.8</Y>
+            <Z>0.75</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
-            <X>15</X>
-            <Y>-10.74</Y>
-            <Z>-137</Z>
+            <X>8.9</X>
+            <Y>-12.65</Y>
+            <Z>-17.8</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -14939,376 +13814,25 @@
             <R22>1.0</R22>
           </CoordinateFrame>
         </Properties>
-        <Item class="PointLight" referent="FieldHall120">
+        <Item class="PointLight" referent="FieldHall518">
           <Properties>
-            <string name="Name">Warm pool</string>
-            <float name="Range">31</float>
-            <float name="Brightness">1.05</float>
+            <string name="Name">Lamplight</string>
+            <float name="Brightness">0.62</float>
+            <float name="Range">20</float>
             <Color3 name="Color">
               <R>1</R>
               <G>0.84</G>
-              <B>0.68</B>
+              <B>0.65</B>
             </Color3>
           </Properties>
-        </Item>
-      </Item>
-      <Item class="Part" referent="FieldHall119">
-        <Properties>
-          <string name="Name">Lamp base</string>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">false</bool>
-          <bool name="CanTouch">false</bool>
-          <bool name="CanQuery">false</bool>
-          <Color3uint8 name="Color3uint8">4282404947</Color3uint8>
-          <token name="Material">256</token>
-          <token name="TopSurface">0</token>
-          <token name="BottomSurface">0</token>
-          <Vector3 name="size">
-            <X>0.99</X>
-            <Y>0.18</Y>
-            <Z>0.97</Z>
-          </Vector3>
-          <CoordinateFrame name="CFrame">
-            <X>15</X>
-            <Y>-11.25</Y>
-            <Z>-137</Z>
-            <R00>1</R00>
-            <R01>0</R01>
-            <R02>0</R02>
-            <R10>0</R10>
-            <R11>1.0</R11>
-            <R12>0.0</R12>
-            <R20>0</R20>
-            <R21>-0.0</R21>
-            <R22>1.0</R22>
-          </CoordinateFrame>
-        </Properties>
-      </Item>
-      <Item class="Part" referent="FieldHall121">
-        <Properties>
-          <string name="Name">Face upright</string>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">false</bool>
-          <bool name="CanTouch">false</bool>
-          <bool name="CanQuery">false</bool>
-          <Color3uint8 name="Color3uint8">4287325245</Color3uint8>
-          <token name="Material">256</token>
-          <token name="TopSurface">0</token>
-          <token name="BottomSurface">0</token>
-          <Vector3 name="size">
-            <X>0.68</X>
-            <Y>15</Y>
-            <Z>1.15</Z>
-          </Vector3>
-          <CoordinateFrame name="CFrame">
-            <X>-28</X>
-            <Y>-16</Y>
-            <Z>-147.71</Z>
-            <R00>1</R00>
-            <R01>0</R01>
-            <R02>0</R02>
-            <R10>0</R10>
-            <R11>1.0</R11>
-            <R12>0.0</R12>
-            <R20>0</R20>
-            <R21>-0.0</R21>
-            <R22>1.0</R22>
-          </CoordinateFrame>
-        </Properties>
-      </Item>
-      <Item class="Part" referent="FieldHall122">
-        <Properties>
-          <string name="Name">Face upright</string>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">false</bool>
-          <bool name="CanTouch">false</bool>
-          <bool name="CanQuery">false</bool>
-          <Color3uint8 name="Color3uint8">4287325245</Color3uint8>
-          <token name="Material">256</token>
-          <token name="TopSurface">0</token>
-          <token name="BottomSurface">0</token>
-          <Vector3 name="size">
-            <X>0.68</X>
-            <Y>15</Y>
-            <Z>1.15</Z>
-          </Vector3>
-          <CoordinateFrame name="CFrame">
-            <X>-14</X>
-            <Y>-16</Y>
-            <Z>-147.71</Z>
-            <R00>1</R00>
-            <R01>0</R01>
-            <R02>0</R02>
-            <R10>0</R10>
-            <R11>1.0</R11>
-            <R12>0.0</R12>
-            <R20>0</R20>
-            <R21>-0.0</R21>
-            <R22>1.0</R22>
-          </CoordinateFrame>
-        </Properties>
-      </Item>
-      <Item class="Part" referent="FieldHall123">
-        <Properties>
-          <string name="Name">Face upright</string>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">false</bool>
-          <bool name="CanTouch">false</bool>
-          <bool name="CanQuery">false</bool>
-          <Color3uint8 name="Color3uint8">4287325245</Color3uint8>
-          <token name="Material">256</token>
-          <token name="TopSurface">0</token>
-          <token name="BottomSurface">0</token>
-          <Vector3 name="size">
-            <X>0.68</X>
-            <Y>15</Y>
-            <Z>1.15</Z>
-          </Vector3>
-          <CoordinateFrame name="CFrame">
-            <X>0</X>
-            <Y>-16</Y>
-            <Z>-147.71</Z>
-            <R00>1</R00>
-            <R01>0</R01>
-            <R02>0</R02>
-            <R10>0</R10>
-            <R11>1.0</R11>
-            <R12>0.0</R12>
-            <R20>0</R20>
-            <R21>-0.0</R21>
-            <R22>1.0</R22>
-          </CoordinateFrame>
-        </Properties>
-      </Item>
-      <Item class="Part" referent="FieldHall124">
-        <Properties>
-          <string name="Name">Face upright</string>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">false</bool>
-          <bool name="CanTouch">false</bool>
-          <bool name="CanQuery">false</bool>
-          <Color3uint8 name="Color3uint8">4287325245</Color3uint8>
-          <token name="Material">256</token>
-          <token name="TopSurface">0</token>
-          <token name="BottomSurface">0</token>
-          <Vector3 name="size">
-            <X>0.68</X>
-            <Y>15</Y>
-            <Z>1.15</Z>
-          </Vector3>
-          <CoordinateFrame name="CFrame">
-            <X>14</X>
-            <Y>-16</Y>
-            <Z>-147.71</Z>
-            <R00>1</R00>
-            <R01>0</R01>
-            <R02>0</R02>
-            <R10>0</R10>
-            <R11>1.0</R11>
-            <R12>0.0</R12>
-            <R20>0</R20>
-            <R21>-0.0</R21>
-            <R22>1.0</R22>
-          </CoordinateFrame>
-        </Properties>
-      </Item>
-      <Item class="Part" referent="FieldHall125">
-        <Properties>
-          <string name="Name">Face upright</string>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">false</bool>
-          <bool name="CanTouch">false</bool>
-          <bool name="CanQuery">false</bool>
-          <Color3uint8 name="Color3uint8">4287325245</Color3uint8>
-          <token name="Material">256</token>
-          <token name="TopSurface">0</token>
-          <token name="BottomSurface">0</token>
-          <Vector3 name="size">
-            <X>0.68</X>
-            <Y>15</Y>
-            <Z>1.15</Z>
-          </Vector3>
-          <CoordinateFrame name="CFrame">
-            <X>28</X>
-            <Y>-16</Y>
-            <Z>-147.71</Z>
-            <R00>1</R00>
-            <R01>0</R01>
-            <R02>0</R02>
-            <R10>0</R10>
-            <R11>1.0</R11>
-            <R12>0.0</R12>
-            <R20>0</R20>
-            <R21>-0.0</R21>
-            <R22>1.0</R22>
-          </CoordinateFrame>
-        </Properties>
-      </Item>
-      <Item class="Part" referent="FieldHall126">
-        <Properties>
-          <string name="Name">Workface rail</string>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">false</bool>
-          <bool name="CanTouch">false</bool>
-          <bool name="CanQuery">false</bool>
-          <Color3uint8 name="Color3uint8">4287325245</Color3uint8>
-          <token name="Material">256</token>
-          <token name="TopSurface">0</token>
-          <token name="BottomSurface">0</token>
-          <Vector3 name="size">
-            <X>79.7</X>
-            <Y>0.44</Y>
-            <Z>0.68</Z>
-          </Vector3>
-          <CoordinateFrame name="CFrame">
-            <X>0</X>
-            <Y>-10.2</Y>
-            <Z>-147.18</Z>
-            <R00>1</R00>
-            <R01>0</R01>
-            <R02>0</R02>
-            <R10>0</R10>
-            <R11>1.0</R11>
-            <R12>0.0</R12>
-            <R20>0</R20>
-            <R21>-0.0</R21>
-            <R22>1.0</R22>
-          </CoordinateFrame>
-        </Properties>
-      </Item>
-      <Item class="Part" referent="FieldHall127">
-        <Properties>
-          <string name="Name">Workface rail</string>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">false</bool>
-          <bool name="CanTouch">false</bool>
-          <bool name="CanQuery">false</bool>
-          <Color3uint8 name="Color3uint8">4287325245</Color3uint8>
-          <token name="Material">256</token>
-          <token name="TopSurface">0</token>
-          <token name="BottomSurface">0</token>
-          <Vector3 name="size">
-            <X>79.7</X>
-            <Y>0.44</Y>
-            <Z>0.68</Z>
-          </Vector3>
-          <CoordinateFrame name="CFrame">
-            <X>0</X>
-            <Y>-21.6</Y>
-            <Z>-147.18</Z>
-            <R00>1</R00>
-            <R01>0</R01>
-            <R02>0</R02>
-            <R10>0</R10>
-            <R11>1.0</R11>
-            <R12>0.0</R12>
-            <R20>0</R20>
-            <R21>-0.0</R21>
-            <R22>1.0</R22>
-          </CoordinateFrame>
-        </Properties>
-      </Item>
-      <Item class="Part" referent="FieldHall128">
-        <Properties>
-          <string name="Name">Workface marker</string>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">false</bool>
-          <bool name="CanTouch">false</bool>
-          <bool name="CanQuery">false</bool>
-          <Color3uint8 name="Color3uint8">4282404947</Color3uint8>
-          <token name="Material">256</token>
-          <token name="TopSurface">0</token>
-          <token name="BottomSurface">0</token>
-          <Vector3 name="size">
-            <X>15</X>
-            <Y>3</Y>
-            <Z>0.3</Z>
-          </Vector3>
-          <CoordinateFrame name="CFrame">
-            <X>0</X>
-            <Y>-14.8</Y>
-            <Z>-146.97</Z>
-            <R00>1</R00>
-            <R01>0</R01>
-            <R02>0</R02>
-            <R10>0</R10>
-            <R11>1.0</R11>
-            <R12>0.0</R12>
-            <R20>0</R20>
-            <R21>-0.0</R21>
-            <R22>1.0</R22>
-          </CoordinateFrame>
-        </Properties>
-        <Item class="SurfaceGui" referent="FieldHall129">
-          <Properties>
-            <string name="Name">Direction</string>
-            <token name="Face">2</token>
-            <token name="SizingMode">0</token>
-            <Vector2 name="CanvasSize">
-              <X>360</X>
-              <Y>72</Y>
-            </Vector2>
-            <float name="LightInfluence">0.18</float>
-          </Properties>
-          <Item class="TextLabel" referent="FieldHall130">
-            <Properties>
-              <string name="Name">Lettering</string>
-              <string name="Text">↓   DIG FACE   ↓</string>
-              <bool name="TextScaled">true</bool>
-              <float name="BackgroundTransparency">1</float>
-              <token name="Font">39</token>
-              <Color3 name="TextColor3">
-                <R>1</R>
-                <G>0.83</G>
-                <B>0.53</B>
-              </Color3>
-              <UDim2 name="Size">
-                <XS>1</XS>
-                <XO>0</XO>
-                <YS>1</YS>
-                <YO>0</YO>
-              </UDim2>
-            </Properties>
-          </Item>
         </Item>
       </Item>
     </Item>
-    <Item class="Model" referent="FieldHall41">
+    <Item class="Model" referent="FieldHall519">
       <Properties>
         <string name="Name">EditFace</string>
       </Properties>
-      <Item class="Part" referent="FieldHall42">
-        <Properties>
-          <string name="Name">Dirt</string>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">true</bool>
-          <bool name="CanTouch">false</bool>
-          <Color3uint8 name="Color3uint8">4291333213</Color3uint8>
-          <token name="Material">256</token>
-          <token name="TopSurface">3</token>
-          <token name="BottomSurface">0</token>
-          <Vector3 name="size">
-            <X>80</X>
-            <Y>4</Y>
-            <Z>40</Z>
-          </Vector3>
-          <CoordinateFrame name="CFrame">
-            <X>0</X>
-            <Y>-26</Y>
-            <Z>-96</Z>
-            <R00>1</R00>
-            <R01>0</R01>
-            <R02>0</R02>
-            <R10>0</R10>
-            <R11>1.0</R11>
-            <R12>0.0</R12>
-            <R20>0</R20>
-            <R21>-0.0</R21>
-            <R22>1.0</R22>
-          </CoordinateFrame>
-        </Properties>
-      </Item>
-      <Item class="Part" referent="FieldHall43">
+      <Item class="Part" referent="FieldHall520">
         <Properties>
           <string name="Name">Stone</string>
           <bool name="Anchored">true</bool>
@@ -15319,14 +13843,696 @@
           <token name="TopSurface">3</token>
           <token name="BottomSurface">0</token>
           <Vector3 name="size">
-            <X>80</X>
-            <Y>4</Y>
-            <Z>32</Z>
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-7.5</X>
+            <Y>-28.5</Y>
+            <Z>-18.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="FieldHall521">
+        <Properties>
+          <string name="Name">Stone</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4288125342</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-7.5</X>
+            <Y>-28.5</Y>
+            <Z>-13.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="FieldHall522">
+        <Properties>
+          <string name="Name">Stone</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4288125342</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-7.5</X>
+            <Y>-28.5</Y>
+            <Z>-8.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="FieldHall523">
+        <Properties>
+          <string name="Name">Stone</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4288125342</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-7.5</X>
+            <Y>-28.5</Y>
+            <Z>-3.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="FieldHall524">
+        <Properties>
+          <string name="Name">Stone</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4288125342</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-7.5</X>
+            <Y>-28.5</Y>
+            <Z>1.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="FieldHall525">
+        <Properties>
+          <string name="Name">Stone</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4288125342</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-2.5</X>
+            <Y>-28.5</Y>
+            <Z>-18.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="FieldHall526">
+        <Properties>
+          <string name="Name">Stone</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4288125342</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-2.5</X>
+            <Y>-28.5</Y>
+            <Z>-13.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="FieldHall527">
+        <Properties>
+          <string name="Name">Stone</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4288125342</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-2.5</X>
+            <Y>-28.5</Y>
+            <Z>-8.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="FieldHall528">
+        <Properties>
+          <string name="Name">Stone</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4288125342</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-2.5</X>
+            <Y>-28.5</Y>
+            <Z>-3.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="FieldHall529">
+        <Properties>
+          <string name="Name">Stone</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4288125342</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-2.5</X>
+            <Y>-28.5</Y>
+            <Z>1.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="FieldHall530">
+        <Properties>
+          <string name="Name">Stone</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4288125342</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>2.5</X>
+            <Y>-28.5</Y>
+            <Z>-18.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="FieldHall531">
+        <Properties>
+          <string name="Name">Stone</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4288125342</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>2.5</X>
+            <Y>-28.5</Y>
+            <Z>-13.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="FieldHall532">
+        <Properties>
+          <string name="Name">Stone</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4288125342</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>2.5</X>
+            <Y>-28.5</Y>
+            <Z>-8.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="FieldHall533">
+        <Properties>
+          <string name="Name">Stone</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4288125342</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>2.5</X>
+            <Y>-28.5</Y>
+            <Z>-3.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="FieldHall534">
+        <Properties>
+          <string name="Name">Stone</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4288125342</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>2.5</X>
+            <Y>-28.5</Y>
+            <Z>1.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="FieldHall535">
+        <Properties>
+          <string name="Name">Stone</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4288125342</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>7.5</X>
+            <Y>-28.5</Y>
+            <Z>-18.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="FieldHall536">
+        <Properties>
+          <string name="Name">Stone</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4288125342</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>7.5</X>
+            <Y>-28.5</Y>
+            <Z>-13.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="FieldHall537">
+        <Properties>
+          <string name="Name">Stone</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4288125342</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>7.5</X>
+            <Y>-28.5</Y>
+            <Z>-8.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="FieldHall538">
+        <Properties>
+          <string name="Name">Stone</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4288125342</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>7.5</X>
+            <Y>-28.5</Y>
+            <Z>-3.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="FieldHall539">
+        <Properties>
+          <string name="Name">Stone</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4288125342</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>7.5</X>
+            <Y>-28.5</Y>
+            <Z>1.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="FieldHall540">
+        <Properties>
+          <string name="Name">Exposed seam</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291333213</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>25</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-12.5</X>
+            <Y>-13.5</Y>
+            <Z>-8.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="FieldHall541">
+        <Properties>
+          <string name="Name">Exposed seam</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291333213</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>25</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>12.5</X>
+            <Y>-13.5</Y>
+            <Z>-8.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="FieldHall542">
+        <Properties>
+          <string name="Name">Exposed seam</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291333213</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>20</X>
+            <Y>5</Y>
+            <Z>5</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>0</X>
-            <Y>-42</Y>
-            <Z>-132</Z>
+            <Y>-13.5</Y>
+            <Z>-23.5</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -15339,9 +14545,9 @@
           </CoordinateFrame>
         </Properties>
       </Item>
-      <Item class="Part" referent="FieldHall44">
+      <Item class="Part" referent="FieldHall543">
         <Properties>
-          <string name="Name">Dirt</string>
+          <string name="Name">Exposed seam</string>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">true</bool>
           <bool name="CanTouch">false</bool>
@@ -15350,76 +14556,14 @@
           <token name="TopSurface">3</token>
           <token name="BottomSurface">0</token>
           <Vector3 name="size">
-            <X>4</X>
-            <Y>12</Y>
-            <Z>32</Z>
-          </Vector3>
-          <CoordinateFrame name="CFrame">
-            <X>-42</X>
-            <Y>-30</Y>
-            <Z>-132</Z>
-            <R00>1</R00>
-            <R01>0</R01>
-            <R02>0</R02>
-            <R10>0</R10>
-            <R11>1.0</R11>
-            <R12>0.0</R12>
-            <R20>0</R20>
-            <R21>-0.0</R21>
-            <R22>1.0</R22>
-          </CoordinateFrame>
-        </Properties>
-      </Item>
-      <Item class="Part" referent="FieldHall45">
-        <Properties>
-          <string name="Name">Dirt</string>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">true</bool>
-          <bool name="CanTouch">false</bool>
-          <Color3uint8 name="Color3uint8">4291333213</Color3uint8>
-          <token name="Material">256</token>
-          <token name="TopSurface">3</token>
-          <token name="BottomSurface">0</token>
-          <Vector3 name="size">
-            <X>4</X>
-            <Y>12</Y>
-            <Z>32</Z>
-          </Vector3>
-          <CoordinateFrame name="CFrame">
-            <X>42</X>
-            <Y>-30</Y>
-            <Z>-132</Z>
-            <R00>1</R00>
-            <R01>0</R01>
-            <R02>0</R02>
-            <R10>0</R10>
-            <R11>1.0</R11>
-            <R12>0.0</R12>
-            <R20>0</R20>
-            <R21>-0.0</R21>
-            <R22>1.0</R22>
-          </CoordinateFrame>
-        </Properties>
-      </Item>
-      <Item class="Part" referent="FieldHall46">
-        <Properties>
-          <string name="Name">Dirt</string>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">true</bool>
-          <bool name="CanTouch">false</bool>
-          <Color3uint8 name="Color3uint8">4291333213</Color3uint8>
-          <token name="Material">256</token>
-          <token name="TopSurface">3</token>
-          <token name="BottomSurface">0</token>
-          <Vector3 name="size">
-            <X>80</X>
-            <Y>12</Y>
-            <Z>4</Z>
+            <X>20</X>
+            <Y>5</Y>
+            <Z>5</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>0</X>
-            <Y>-30</Y>
-            <Z>-150</Z>
+            <Y>-13.5</Y>
+            <Z>6.5</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -15432,9 +14576,9 @@
           </CoordinateFrame>
         </Properties>
       </Item>
-      <Item class="Part" referent="FieldHall47">
+      <Item class="Part" referent="FieldHall544">
         <Properties>
-          <string name="Name">Dirt</string>
+          <string name="Name">Exposed seam</string>
           <bool name="Anchored">true</bool>
           <bool name="CanCollide">true</bool>
           <bool name="CanTouch">false</bool>
@@ -15443,14 +14587,231 @@
           <token name="TopSurface">3</token>
           <token name="BottomSurface">0</token>
           <Vector3 name="size">
-            <X>80</X>
-            <Y>8</Y>
-            <Z>4</Z>
+            <X>5</X>
+            <Y>5</Y>
+            <Z>25</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-12.5</X>
+            <Y>-18.5</Y>
+            <Z>-8.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="FieldHall545">
+        <Properties>
+          <string name="Name">Exposed seam</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291333213</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>25</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>12.5</X>
+            <Y>-18.5</Y>
+            <Z>-8.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="FieldHall546">
+        <Properties>
+          <string name="Name">Exposed seam</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291333213</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>20</X>
+            <Y>5</Y>
+            <Z>5</Z>
           </Vector3>
           <CoordinateFrame name="CFrame">
             <X>0</X>
-            <Y>-32</Y>
-            <Z>-114</Z>
+            <Y>-18.5</Y>
+            <Z>-23.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="FieldHall547">
+        <Properties>
+          <string name="Name">Exposed seam</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4291333213</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>20</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>0</X>
+            <Y>-18.5</Y>
+            <Z>6.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="FieldHall548">
+        <Properties>
+          <string name="Name">Exposed seam</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4288125342</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>25</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-12.5</X>
+            <Y>-23.5</Y>
+            <Z>-8.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="FieldHall549">
+        <Properties>
+          <string name="Name">Exposed seam</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4288125342</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>5</X>
+            <Y>5</Y>
+            <Z>25</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>12.5</X>
+            <Y>-23.5</Y>
+            <Z>-8.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="FieldHall550">
+        <Properties>
+          <string name="Name">Exposed seam</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4288125342</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>20</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>0</X>
+            <Y>-23.5</Y>
+            <Z>-23.5</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1.0</R11>
+            <R12>0.0</R12>
+            <R20>0</R20>
+            <R21>-0.0</R21>
+            <R22>1.0</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="Part" referent="FieldHall551">
+        <Properties>
+          <string name="Name">Exposed seam</string>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">true</bool>
+          <bool name="CanTouch">false</bool>
+          <Color3uint8 name="Color3uint8">4288125342</Color3uint8>
+          <token name="Material">256</token>
+          <token name="TopSurface">3</token>
+          <token name="BottomSurface">0</token>
+          <Vector3 name="size">
+            <X>20</X>
+            <Y>5</Y>
+            <Z>5</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>0</X>
+            <Y>-23.5</Y>
+            <Z>6.5</Z>
             <R00>1</R00>
             <R01>0</R01>
             <R02>0</R02>
@@ -15728,12 +15089,12 @@
             <bool name="CastShadow">true</bool>
             <Vector3 name="size">
               <X>0.56</X>
-              <Y>7.25</Y>
+              <Y>7.30602</Y>
               <Z>0.56</Z>
             </Vector3>
             <CoordinateFrame name="CFrame">
               <X>-27.3</X>
-              <Y>28.0</Y>
+              <Y>28.02801</Y>
               <Z>11.25</Z>
               <R00>1.0</R00>
               <R01>0.0</R01>
@@ -15759,12 +15120,12 @@
             <bool name="CastShadow">true</bool>
             <Vector3 name="size">
               <X>0.56</X>
-              <Y>7.25</Y>
+              <Y>7.30602</Y>
               <Z>0.56</Z>
             </Vector3>
             <CoordinateFrame name="CFrame">
               <X>-16.7</X>
-              <Y>28.0</Y>
+              <Y>28.02801</Y>
               <Z>11.25</Z>
               <R00>1.0</R00>
               <R01>0.0</R01>
@@ -15825,9 +15186,9 @@
               <Z>0.29</Z>
             </Vector3>
             <CoordinateFrame name="CFrame">
-              <X>-27.533</X>
-              <Y>30.83</Y>
-              <Z>16.28</Z>
+              <X>-27.58</X>
+              <Y>30.55951</Y>
+              <Z>16.21582</Z>
               <R00>1.0</R00>
               <R01>0.0</R01>
               <R02>0.0</R02>
@@ -15887,9 +15248,9 @@
               <Z>0.29</Z>
             </Vector3>
             <CoordinateFrame name="CFrame">
-              <X>-25.673</X>
-              <Y>30.83</Y>
-              <Z>16.28</Z>
+              <X>-25.72</X>
+              <Y>30.55951</Y>
+              <Z>16.21582</Z>
               <R00>1.0</R00>
               <R01>0.0</R01>
               <R02>0.0</R02>
@@ -15949,9 +15310,9 @@
               <Z>0.29</Z>
             </Vector3>
             <CoordinateFrame name="CFrame">
-              <X>-23.813</X>
-              <Y>30.83</Y>
-              <Z>16.28</Z>
+              <X>-23.86</X>
+              <Y>30.55951</Y>
+              <Z>16.21582</Z>
               <R00>1.0</R00>
               <R01>0.0</R01>
               <R02>0.0</R02>
@@ -16011,9 +15372,9 @@
               <Z>0.29</Z>
             </Vector3>
             <CoordinateFrame name="CFrame">
-              <X>-21.953</X>
-              <Y>30.83</Y>
-              <Z>16.28</Z>
+              <X>-22.0</X>
+              <Y>30.55951</Y>
+              <Z>16.21582</Z>
               <R00>1.0</R00>
               <R01>0.0</R01>
               <R02>0.0</R02>
@@ -16073,9 +15434,9 @@
               <Z>0.29</Z>
             </Vector3>
             <CoordinateFrame name="CFrame">
-              <X>-20.093</X>
-              <Y>30.83</Y>
-              <Z>16.28</Z>
+              <X>-20.14</X>
+              <Y>30.55951</Y>
+              <Z>16.21582</Z>
               <R00>1.0</R00>
               <R01>0.0</R01>
               <R02>0.0</R02>
@@ -16135,9 +15496,9 @@
               <Z>0.29</Z>
             </Vector3>
             <CoordinateFrame name="CFrame">
-              <X>-18.233</X>
-              <Y>30.83</Y>
-              <Z>16.28</Z>
+              <X>-18.28</X>
+              <Y>30.55951</Y>
+              <Z>16.21582</Z>
               <R00>1.0</R00>
               <R01>0.0</R01>
               <R02>0.0</R02>
@@ -16197,9 +15558,9 @@
               <Z>0.29</Z>
             </Vector3>
             <CoordinateFrame name="CFrame">
-              <X>-16.373</X>
-              <Y>30.83</Y>
-              <Z>16.28</Z>
+              <X>-16.42</X>
+              <Y>30.55951</Y>
+              <Z>16.21582</Z>
               <R00>1.0</R00>
               <R01>0.0</R01>
               <R02>0.0</R02>
@@ -16694,12 +16055,12 @@
             <bool name="CastShadow">true</bool>
             <Vector3 name="size">
               <X>0.56</X>
-              <Y>7.25</Y>
+              <Y>7.30602</Y>
               <Z>0.56</Z>
             </Vector3>
             <CoordinateFrame name="CFrame">
               <X>17.7</X>
-              <Y>28.0</Y>
+              <Y>28.02801</Y>
               <Z>11.25</Z>
               <R00>1.0</R00>
               <R01>0.0</R01>
@@ -16725,12 +16086,12 @@
             <bool name="CastShadow">true</bool>
             <Vector3 name="size">
               <X>0.56</X>
-              <Y>7.25</Y>
+              <Y>7.30602</Y>
               <Z>0.56</Z>
             </Vector3>
             <CoordinateFrame name="CFrame">
               <X>28.3</X>
-              <Y>28.0</Y>
+              <Y>28.02801</Y>
               <Z>11.25</Z>
               <R00>1.0</R00>
               <R01>0.0</R01>
@@ -16791,9 +16152,9 @@
               <Z>0.29</Z>
             </Vector3>
             <CoordinateFrame name="CFrame">
-              <X>17.467</X>
-              <Y>30.83</Y>
-              <Z>16.28</Z>
+              <X>17.42</X>
+              <Y>30.55951</Y>
+              <Z>16.21582</Z>
               <R00>1.0</R00>
               <R01>0.0</R01>
               <R02>0.0</R02>
@@ -16853,9 +16214,9 @@
               <Z>0.29</Z>
             </Vector3>
             <CoordinateFrame name="CFrame">
-              <X>19.327</X>
-              <Y>30.83</Y>
-              <Z>16.28</Z>
+              <X>19.28</X>
+              <Y>30.55951</Y>
+              <Z>16.21582</Z>
               <R00>1.0</R00>
               <R01>0.0</R01>
               <R02>0.0</R02>
@@ -16915,9 +16276,9 @@
               <Z>0.29</Z>
             </Vector3>
             <CoordinateFrame name="CFrame">
-              <X>21.187</X>
-              <Y>30.83</Y>
-              <Z>16.28</Z>
+              <X>21.14</X>
+              <Y>30.55951</Y>
+              <Z>16.21582</Z>
               <R00>1.0</R00>
               <R01>0.0</R01>
               <R02>0.0</R02>
@@ -16977,9 +16338,9 @@
               <Z>0.29</Z>
             </Vector3>
             <CoordinateFrame name="CFrame">
-              <X>23.047</X>
-              <Y>30.83</Y>
-              <Z>16.28</Z>
+              <X>23.0</X>
+              <Y>30.55951</Y>
+              <Z>16.21582</Z>
               <R00>1.0</R00>
               <R01>0.0</R01>
               <R02>0.0</R02>
@@ -17039,9 +16400,9 @@
               <Z>0.29</Z>
             </Vector3>
             <CoordinateFrame name="CFrame">
-              <X>24.907</X>
-              <Y>30.83</Y>
-              <Z>16.28</Z>
+              <X>24.86</X>
+              <Y>30.55951</Y>
+              <Z>16.21582</Z>
               <R00>1.0</R00>
               <R01>0.0</R01>
               <R02>0.0</R02>
@@ -17101,9 +16462,9 @@
               <Z>0.29</Z>
             </Vector3>
             <CoordinateFrame name="CFrame">
-              <X>26.767</X>
-              <Y>30.83</Y>
-              <Z>16.28</Z>
+              <X>26.72</X>
+              <Y>30.55951</Y>
+              <Z>16.21582</Z>
               <R00>1.0</R00>
               <R01>0.0</R01>
               <R02>0.0</R02>
@@ -17163,9 +16524,9 @@
               <Z>0.29</Z>
             </Vector3>
             <CoordinateFrame name="CFrame">
-              <X>28.627</X>
-              <Y>30.83</Y>
-              <Z>16.28</Z>
+              <X>28.58</X>
+              <Y>30.55951</Y>
+              <Z>16.21582</Z>
               <R00>1.0</R00>
               <R01>0.0</R01>
               <R02>0.0</R02>
@@ -25130,7 +24491,7 @@
             </Properties>
             <Item class="TextLabel" referent="RBX12116">
               <Properties>
-                <string name="Name">ENDLESS MINING</string>
+                <string name="Name">CITRINE COVE</string>
                 <UDim2 name="Size">
                   <XS>0.92</XS>
                   <XO>0</XO>
@@ -25144,12 +24505,12 @@
                   <YO>0</YO>
                 </UDim2>
                 <float name="BackgroundTransparency">1</float>
-                <string name="Text">ENDLESS MINING</string>
+                <string name="Text">CITRINE COVE</string>
                 <Font name="FontFace">
                   <Family>
-                    <url>rbxasset://fonts/families/FredokaOne.json</url>
+                    <url>rbxasset://fonts/families/BuilderSans.json</url>
                   </Family>
-                  <Weight>400</Weight>
+                  <Weight>800</Weight>
                   <Style>Normal</Style>
                 </Font>
                 <bool name="TextScaled">true</bool>
@@ -25913,12 +25274,12 @@
             <bool name="CastShadow">true</bool>
             <Vector3 name="size">
               <X>0.7</X>
-              <Y>7.8</Y>
+              <Y>6.95</Y>
               <Z>1.1</Z>
             </Vector3>
             <CoordinateFrame name="CFrame">
               <X>-22.997</X>
-              <Y>28.3</Y>
+              <Y>27.975</Y>
               <Z>57.4</Z>
               <R00>1.0</R00>
               <R01>0.0</R01>
@@ -25944,12 +25305,12 @@
             <bool name="CastShadow">true</bool>
             <Vector3 name="size">
               <X>0.7</X>
-              <Y>7.8</Y>
+              <Y>6.95</Y>
               <Z>1.1</Z>
             </Vector3>
             <CoordinateFrame name="CFrame">
               <X>-15.003</X>
-              <Y>28.3</Y>
+              <Y>27.975</Y>
               <Z>57.4</Z>
               <R00>1.0</R00>
               <R01>0.0</R01>
@@ -26322,7 +25683,7 @@
             </Vector3>
             <CoordinateFrame name="CFrame">
               <X>-19.0</X>
-              <Y>24.69</Y>
+              <Y>24.58</Y>
               <Z>61.6</Z>
               <R00>1.0</R00>
               <R01>0.0</R01>
@@ -26559,7 +25920,7 @@
             </Vector3>
             <CoordinateFrame name="CFrame">
               <X>-22.25</X>
-              <Y>24.822</Y>
+              <Y>24.712</Y>
               <Z>61.6</Z>
               <R00>1.0</R00>
               <R01>0.0</R01>
@@ -26592,7 +25953,7 @@
             </Vector3>
             <CoordinateFrame name="CFrame">
               <X>-15.75</X>
-              <Y>24.822</Y>
+              <Y>24.712</Y>
               <Z>61.6</Z>
               <R00>1.0</R00>
               <R01>0.0</R01>
@@ -26625,7 +25986,7 @@
             </Vector3>
             <CoordinateFrame name="CFrame">
               <X>-19.0</X>
-              <Y>24.822</Y>
+              <Y>24.712</Y>
               <Z>63.05</Z>
               <R00>1.0</R00>
               <R01>0.0</R01>
@@ -26718,12 +26079,12 @@
             <bool name="CastShadow">true</bool>
             <Vector3 name="size">
               <X>0.64</X>
-              <Y>8.0</Y>
+              <Y>7.39192</Y>
               <Z>0.64</Z>
             </Vector3>
             <CoordinateFrame name="CFrame">
               <X>22.0</X>
-              <Y>28.8</Y>
+              <Y>28.49596</Y>
               <Z>52.35</Z>
               <R00>1.0</R00>
               <R01>0.0</R01>
@@ -26749,12 +26110,12 @@
             <bool name="CastShadow">true</bool>
             <Vector3 name="size">
               <X>0.64</X>
-              <Y>8.0</Y>
+              <Y>7.39192</Y>
               <Z>0.64</Z>
             </Vector3>
             <CoordinateFrame name="CFrame">
               <X>34.0</X>
-              <Y>28.8</Y>
+              <Y>28.49596</Y>
               <Z>52.35</Z>
               <R00>1.0</R00>
               <R01>0.0</R01>
@@ -26815,9 +26176,9 @@
               <Z>0.27</Z>
             </Vector3>
             <CoordinateFrame name="CFrame">
-              <X>22.287</X>
-              <Y>31.74</Y>
-              <Z>54.3</Z>
+              <X>22.24</X>
+              <Y>31.49212</Y>
+              <Z>54.17973</Z>
               <R00>1.0</R00>
               <R01>0.0</R01>
               <R02>0.0</R02>
@@ -26877,9 +26238,9 @@
               <Z>0.27</Z>
             </Vector3>
             <CoordinateFrame name="CFrame">
-              <X>24.207</X>
-              <Y>31.74</Y>
-              <Z>54.3</Z>
+              <X>24.16</X>
+              <Y>31.49212</Y>
+              <Z>54.17973</Z>
               <R00>1.0</R00>
               <R01>0.0</R01>
               <R02>0.0</R02>
@@ -26939,9 +26300,9 @@
               <Z>0.27</Z>
             </Vector3>
             <CoordinateFrame name="CFrame">
-              <X>26.127</X>
-              <Y>31.74</Y>
-              <Z>54.3</Z>
+              <X>26.08</X>
+              <Y>31.49212</Y>
+              <Z>54.17973</Z>
               <R00>1.0</R00>
               <R01>0.0</R01>
               <R02>0.0</R02>
@@ -27001,9 +26362,9 @@
               <Z>0.27</Z>
             </Vector3>
             <CoordinateFrame name="CFrame">
-              <X>28.047</X>
-              <Y>31.74</Y>
-              <Z>54.3</Z>
+              <X>28.0</X>
+              <Y>31.49212</Y>
+              <Z>54.17973</Z>
               <R00>1.0</R00>
               <R01>0.0</R01>
               <R02>0.0</R02>
@@ -27063,9 +26424,9 @@
               <Z>0.27</Z>
             </Vector3>
             <CoordinateFrame name="CFrame">
-              <X>29.967</X>
-              <Y>31.74</Y>
-              <Z>54.3</Z>
+              <X>29.92</X>
+              <Y>31.49212</Y>
+              <Z>54.17973</Z>
               <R00>1.0</R00>
               <R01>0.0</R01>
               <R02>0.0</R02>
@@ -27125,9 +26486,9 @@
               <Z>0.27</Z>
             </Vector3>
             <CoordinateFrame name="CFrame">
-              <X>31.887</X>
-              <Y>31.74</Y>
-              <Z>54.3</Z>
+              <X>31.84</X>
+              <Y>31.49212</Y>
+              <Z>54.17973</Z>
               <R00>1.0</R00>
               <R01>0.0</R01>
               <R02>0.0</R02>
@@ -27187,9 +26548,9 @@
               <Z>0.27</Z>
             </Vector3>
             <CoordinateFrame name="CFrame">
-              <X>33.807</X>
-              <Y>31.74</Y>
-              <Z>54.3</Z>
+              <X>33.76</X>
+              <Y>31.49212</Y>
+              <Z>54.17973</Z>
               <R00>1.0</R00>
               <R01>0.0</R01>
               <R02>0.0</R02>
@@ -27985,7 +27346,7 @@
             </Vector3>
             <CoordinateFrame name="CFrame">
               <X>28.0</X>
-              <Y>24.67</Y>
+              <Y>24.61</Y>
               <Z>58.0</Z>
               <R00>1.0</R00>
               <R01>0.0</R01>
@@ -28156,7 +27517,7 @@
             </Vector3>
             <CoordinateFrame name="CFrame">
               <X>24.75</X>
-              <Y>24.802</Y>
+              <Y>24.742</Y>
               <Z>58.0</Z>
               <R00>1.0</R00>
               <R01>0.0</R01>
@@ -28189,7 +27550,7 @@
             </Vector3>
             <CoordinateFrame name="CFrame">
               <X>31.25</X>
-              <Y>24.802</Y>
+              <Y>24.742</Y>
               <Z>58.0</Z>
               <R00>1.0</R00>
               <R01>0.0</R01>
@@ -28222,7 +27583,7 @@
             </Vector3>
             <CoordinateFrame name="CFrame">
               <X>28.0</X>
-              <Y>24.802</Y>
+              <Y>24.742</Y>
               <Z>59.45</Z>
               <R00>1.0</R00>
               <R01>0.0</R01>
@@ -28298,12 +27659,12 @@
             <bool name="CastShadow">true</bool>
             <Vector3 name="size">
               <X>0.48</X>
-              <Y>8.0</Y>
+              <Y>8.49028</Y>
               <Z>0.52</Z>
             </Vector3>
             <CoordinateFrame name="CFrame">
               <X>42.0</X>
-              <Y>28.4</Y>
+              <Y>28.64514</Y>
               <Z>14.8</Z>
               <R00>1.0</R00>
               <R01>0.0</R01>
@@ -28329,12 +27690,12 @@
             <bool name="CastShadow">true</bool>
             <Vector3 name="size">
               <X>0.48</X>
-              <Y>8.0</Y>
+              <Y>8.49028</Y>
               <Z>0.52</Z>
             </Vector3>
             <CoordinateFrame name="CFrame">
               <X>54.0</X>
-              <Y>28.4</Y>
+              <Y>28.64514</Y>
               <Z>14.8</Z>
               <R00>1.0</R00>
               <R01>0.0</R01>
@@ -28365,7 +27726,7 @@
             </Vector3>
             <CoordinateFrame name="CFrame">
               <X>48.0</X>
-              <Y>24.65</Y>
+              <Y>24.36</Y>
               <Z>22.25</Z>
               <R00>1.0</R00>
               <R01>0.0</R01>
@@ -28536,7 +27897,7 @@
             </Vector3>
             <CoordinateFrame name="CFrame">
               <X>44.75</X>
-              <Y>24.782</Y>
+              <Y>24.492</Y>
               <Z>22.25</Z>
               <R00>1.0</R00>
               <R01>0.0</R01>
@@ -28569,7 +27930,7 @@
             </Vector3>
             <CoordinateFrame name="CFrame">
               <X>51.25</X>
-              <Y>24.782</Y>
+              <Y>24.492</Y>
               <Z>22.25</Z>
               <R00>1.0</R00>
               <R01>0.0</R01>
@@ -28602,7 +27963,7 @@
             </Vector3>
             <CoordinateFrame name="CFrame">
               <X>48.0</X>
-              <Y>24.782</Y>
+              <Y>24.492</Y>
               <Z>23.7</Z>
               <R00>1.0</R00>
               <R01>0.0</R01>
@@ -28694,9 +28055,9 @@
               <Z>0.2</Z>
             </Vector3>
             <CoordinateFrame name="CFrame">
-              <X>41.727</X>
-              <Y>32.05</Y>
-              <Z>20.73</Z>
+              <X>41.68</X>
+              <Y>31.8677</Y>
+              <Z>20.60348</Z>
               <R00>1.0</R00>
               <R01>0.0</R01>
               <R02>0.0</R02>
@@ -28756,9 +28117,9 @@
               <Z>0.2</Z>
             </Vector3>
             <CoordinateFrame name="CFrame">
-              <X>43.307</X>
-              <Y>32.05</Y>
-              <Z>20.73</Z>
+              <X>43.26</X>
+              <Y>31.8677</Y>
+              <Z>20.60348</Z>
               <R00>1.0</R00>
               <R01>0.0</R01>
               <R02>0.0</R02>
@@ -28818,9 +28179,9 @@
               <Z>0.2</Z>
             </Vector3>
             <CoordinateFrame name="CFrame">
-              <X>44.887</X>
-              <Y>32.05</Y>
-              <Z>20.73</Z>
+              <X>44.84</X>
+              <Y>31.8677</Y>
+              <Z>20.60348</Z>
               <R00>1.0</R00>
               <R01>0.0</R01>
               <R02>0.0</R02>
@@ -28880,9 +28241,9 @@
               <Z>0.2</Z>
             </Vector3>
             <CoordinateFrame name="CFrame">
-              <X>46.467</X>
-              <Y>32.05</Y>
-              <Z>20.73</Z>
+              <X>46.42</X>
+              <Y>31.8677</Y>
+              <Z>20.60348</Z>
               <R00>1.0</R00>
               <R01>0.0</R01>
               <R02>0.0</R02>
@@ -28942,9 +28303,9 @@
               <Z>0.2</Z>
             </Vector3>
             <CoordinateFrame name="CFrame">
-              <X>48.047</X>
-              <Y>32.05</Y>
-              <Z>20.73</Z>
+              <X>48.0</X>
+              <Y>31.8677</Y>
+              <Z>20.60348</Z>
               <R00>1.0</R00>
               <R01>0.0</R01>
               <R02>0.0</R02>
@@ -29004,9 +28365,9 @@
               <Z>0.2</Z>
             </Vector3>
             <CoordinateFrame name="CFrame">
-              <X>49.627</X>
-              <Y>32.05</Y>
-              <Z>20.73</Z>
+              <X>49.58</X>
+              <Y>31.8677</Y>
+              <Z>20.60348</Z>
               <R00>1.0</R00>
               <R01>0.0</R01>
               <R02>0.0</R02>
@@ -29066,9 +28427,9 @@
               <Z>0.2</Z>
             </Vector3>
             <CoordinateFrame name="CFrame">
-              <X>51.207</X>
-              <Y>32.05</Y>
-              <Z>20.73</Z>
+              <X>51.16</X>
+              <Y>31.8677</Y>
+              <Z>20.60348</Z>
               <R00>1.0</R00>
               <R01>0.0</R01>
               <R02>0.0</R02>
@@ -29128,9 +28489,9 @@
               <Z>0.2</Z>
             </Vector3>
             <CoordinateFrame name="CFrame">
-              <X>52.787</X>
-              <Y>32.05</Y>
-              <Z>20.73</Z>
+              <X>52.74</X>
+              <Y>31.8677</Y>
+              <Z>20.60348</Z>
               <R00>1.0</R00>
               <R01>0.0</R01>
               <R02>0.0</R02>
@@ -29190,9 +28551,9 @@
               <Z>0.2</Z>
             </Vector3>
             <CoordinateFrame name="CFrame">
-              <X>54.367</X>
-              <Y>32.05</Y>
-              <Z>20.73</Z>
+              <X>54.32</X>
+              <Y>31.8677</Y>
+              <Z>20.60348</Z>
               <R00>1.0</R00>
               <R01>0.0</R01>
               <R02>0.0</R02>
@@ -29217,12 +28578,12 @@
             <bool name="CastShadow">true</bool>
             <Vector3 name="size">
               <X>0.53</X>
-              <Y>7.9</Y>
+              <Y>7.72092</Y>
               <Z>0.53</Z>
             </Vector3>
             <CoordinateFrame name="CFrame">
               <X>42.0</X>
-              <Y>28.53</Y>
+              <Y>28.44046</Y>
               <Z>19.6</Z>
               <R00>1.0</R00>
               <R01>0.0</R01>
@@ -29248,12 +28609,12 @@
             <bool name="CastShadow">true</bool>
             <Vector3 name="size">
               <X>0.53</X>
-              <Y>7.9</Y>
+              <Y>7.72092</Y>
               <Z>0.53</Z>
             </Vector3>
             <CoordinateFrame name="CFrame">
               <X>54.0</X>
-              <Y>28.53</Y>
+              <Y>28.44046</Y>
               <Z>19.6</Z>
               <R00>1.0</R00>
               <R01>0.0</R01>
@@ -32574,7 +31935,7 @@
                     <YO>0</YO>
                   </UDim2>
                   <float name="BackgroundTransparency">1</float>
-                  <string name="Text">DEEPEST DESCENT</string>
+                  <string name="Text">HIGHEST LEVEL</string>
                   <bool name="TextScaled">true</bool>
                   <Font name="FontFace">
                     <Family>

@@ -26,15 +26,67 @@ Run:BindToRenderStep("MiningLoadLock", Enum.RenderPriority.Input.Value + 1, func
 		humanoid.Jump = false
 	end
 end)
-local function line(text, y, size, tint)
-	local label = Instance.new("TextLabel")
-	label.Text, label.Font, label.TextSize, label.TextColor3 = text, Enum.Font.FredokaOne, size, tint
-	label.BackgroundTransparency, label.AnchorPoint, label.Size = 1, Vector2.new(0.5, 0.5), UDim2.new(1, -16, 0, 48)
-	label.Position, label.Parent = UDim2.new(0.5, 0, 0.5, y), cover
-	return label
+local ink = Color3.fromRGB(42, 34, 57)
+cover.BackgroundColor3 = Color3.new(1, 1, 1)
+local sky = Instance.new("UIGradient")
+sky.Rotation = 38
+sky.Color = ColorSequence.new({
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 228, 139)),
+	ColorSequenceKeypoint.new(0.52, Color3.fromRGB(255, 185, 113)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(242, 132, 146)),
+})
+sky.Parent = cover
+local function round(obj, n)
+	local u = Instance.new("UICorner")
+	u.CornerRadius = UDim.new(0, n)
+	u.Parent = obj
 end
-line("Citrine Cove", -25, 36, Color3.fromRGB(255, 213, 119))
-local status = line("Opening the mine…", 20, 18, Color3.fromRGB(206, 237, 231))
+local function plate(parentObj, name, x, y, w, h, color)
+	local f = Instance.new("Frame")
+	f.Name, f.BackgroundColor3, f.BorderSizePixel = name, color, 0
+	f.Position, f.Size, f.Parent = UDim2.fromOffset(x, y), UDim2.fromOffset(w, h), parentObj
+	return f
+end
+local center = plate(cover, "Load panel", 0, 0, 422, 248, ink)
+center.BackgroundTransparency = 1
+center.AnchorPoint = Vector2.new(0.5, 0.5)
+center.Position = UDim2.fromScale(0.5, 0.5)
+local scale = Instance.new("UIScale")
+scale.Parent = center
+local function resize()
+	scale.Scale = math.clamp(math.min((cover.AbsoluteSize.X - 36) / 422, (cover.AbsoluteSize.Y - 36) / 248), 0.4, 1.45)
+end
+cover:GetPropertyChangedSignal("AbsoluteSize"):Connect(resize)
+local function label(name, text, x, y, w, h, size, color)
+	local l = Instance.new("TextLabel")
+	l.Name, l.Text, l.Font, l.TextSize, l.TextColor3 = name, text, Enum.Font.FredokaOne, size, color
+	l.BackgroundTransparency, l.Position, l.Size, l.Parent = 1, UDim2.fromOffset(x, y), UDim2.fromOffset(w, h), center
+	return l
+end
+local stone = plate(center, "Ore", 174, 0, 73, 66, ink)
+round(stone, 14)
+stone.Rotation = -9
+local inset = plate(stone, "Specimen", 4, 3, 65, 58, Color3.fromRGB(85, 190, 176))
+round(inset, 12)
+for row = 0, 1 do
+	for col = 0, 2 do
+		local stud = plate(inset, "Stud", 7 + col * 19, 8 + row * 22, 13, 13, Color3.fromRGB(156, 240, 197))
+		round(stud, 3)
+	end
+end
+label("Title", "Mine EVERYTHING!", 0, 76, 422, 60, 45, ink)
+local status = label("Status", "Opening Citrine Cove…", 0, 139, 422, 29, 21, ink)
+local track = plate(center, "Loading bar", 24, 186, 374, 25, ink)
+round(track, 12)
+local fill = plate(track, "Progress", 4, 4, 0, 17, Color3.fromRGB(100, 234, 192))
+round(fill, 8)
+local percent = label("Percent", "0%", 0, 219, 422, 24, 17, ink)
+local shown = 0
+local function progress(value)
+	shown = math.max(shown, math.clamp(value, 0, 1))
+	fill.Size = UDim2.new(0, math.floor(366 * shown), 0, 17)
+	percent.Text = math.floor(shown * 100) .. "%"
+end
 gui.Parent = parent
 First:RemoveDefaultLoadingScreen()
 -- Only warm the built-in surfaces used by the studded plastic blocks.
@@ -64,7 +116,7 @@ local function entranceBrickCount(net)
 		requestedEntrance = true
 		task.spawn(function()
 			pcall(function()
-				player:RequestStreamAroundAsync(origin + Vector3.new(0, -48, -86), 2)
+				player:RequestStreamAroundAsync(origin + Vector3.new(0, -48, -12), 2)
 			end)
 		end)
 	end
@@ -77,8 +129,8 @@ local function entranceBrickCount(net)
 	end
 	overlap.FilterDescendantsInstances = { grid }
 	return #workspace:GetPartBoundsInBox(
-		CFrame.new(origin + Vector3.new(0, -50, -86)),
-		Vector3.new(32, 12, 22),
+		CFrame.new(origin + Vector3.new(0, -49, -12)),
+		Vector3.new(25, 12, 22),
 		overlap
 	)
 end
@@ -86,7 +138,7 @@ end
 -- The entrance lights can already be replicated while the renderer still shows
 -- the unlit ore. Give it several seconds of frames with the actual scene present.
 local lightWarmup = 9.5
-local deadline = os.clock() + 15
+local coreSince
 local lastCount, countChanged, firstReady = 0, 0, nil
 local renderedTime = 0
 local function renderInterval()
@@ -103,19 +155,22 @@ repeat
 	local hud = parent:FindFirstChild("MiningHUD")
 	local character = player.Character
 	local count = if net then entranceBrickCount(net) else 0
-	local ready = count > 0
-		and game:IsLoaded()
+	local coreReady = game:IsLoaded()
 		and workspace.CurrentCamera
 		and character
 		and character:GetAttribute("MiningViewReady")
-		and character:FindFirstChild("Mining lamp", true)
-		and Lighting:FindFirstChild("SeaAir")
-		and Lighting:FindFirstChild("MarketGlow")
+		and net
 		and net:GetAttribute("Ready")
 		and hud
 		and hud:GetAttribute("ControllerReady")
 		and player:GetAttribute("ProfileReady")
 	local now = os.clock()
+	coreSince = if coreReady then coreSince or now else nil
+	local ready = coreReady
+		and count > 0
+		and character:FindFirstChild("Mining lamp", true)
+		and Lighting:FindFirstChild("SeaAir")
+		and Lighting:FindFirstChild("MarketGlow")
 	if ready then
 		firstReady = firstReady or now
 		status.Text = "Lighting the mine…"
@@ -125,17 +180,30 @@ repeat
 			status.Text = "Getting your gear ready…"
 		end
 	end
+	local staged = (if game:IsLoaded() then 0.12 else 0)
+		+ (if count > 0 then 0.19 else 0)
+		+ (if materialsFinished then 0.12 else 0)
+		+ (if player:GetAttribute("ProfileReady") then 0.1 else 0)
+		+ (if hud and hud:GetAttribute("ControllerReady") then 0.12 else 0)
+	progress(staged + 0.34 * math.min(1, renderedTime / lightWarmup))
 	local visualsReady = firstReady and (materialsFinished or now - firstReady >= 2.5)
 	if count ~= lastCount then
 		countChanged = now
 		lastCount = count
 	end
-	if visualsReady and now - countChanged >= 0.3 and renderedTime >= lightWarmup then
+	if
+		(visualsReady and now - countChanged >= 0.3 and renderedTime >= lightWarmup)
+		or (coreSince and now - coreSince >= 15)
+	then
 		break
 	end
 	local interval = renderInterval()
 	renderedTime = if visualsReady then renderedTime + interval else 0
-until os.clock() >= deadline
+until false
+progress(1)
+status.Text = "Ready to dig"
+Run.PreRender:Wait()
+task.wait(0.12)
 gui:Destroy()
 local net = Rep:FindFirstChild("EndlessMiningNet")
 local action = net and net:FindFirstChild("Action")
