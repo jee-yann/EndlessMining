@@ -5,7 +5,8 @@ local completed = false
 local function finish(result)
 	if not completed then
 		completed = true
-		print((if mode == "Swing" then "MINING_SWING_RESULT " else "MINING_PLAYTEST_RESULT ") .. result)
+		local marker = if mode == "Swing" then "MINING_SWING_RESULT " else "MINING_PLAYTEST_RESULT "
+		print(marker .. result .. " [" .. rep:GetAttribute("MiningTestRun") .. "]")
 		test:EndTest(result)
 	end
 end

@@ -2,10 +2,12 @@
 
 import argparse
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
 import tempfile
+import time
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -26,7 +28,7 @@ def make_project(folder, mode):
 
     resolve_paths(tree)
     tree["ReplicatedStorage"].setdefault("$attributes", {}).update(
-        MuteTestMusic=True, MiningTestMode=mode
+        MuteTestMusic=True, MiningTestMode=mode, MiningTestRun=folder.name
     )
     tree["ServerScriptService"]["Server"].setdefault("$attributes", {})["StudioMineSeed"] = 73129
     tree["ServerScriptService"]["MiningPlaytest"] = {
@@ -40,6 +42,25 @@ def make_project(folder, mode):
     return path
 
 
+def studio_results(folder, marker, started):
+    # In an asynchronous multiplayer run, Studio can leave the result in the
+    # child server's Output. Match this build's token before accepting a line.
+    if sys.platform == "win32":
+        logs = Path(os.environ["LOCALAPPDATA"]) / "Roblox" / "logs"
+    else:
+        logs = Path.home() / "Library" / "Logs" / "Roblox"
+    results = []
+    for path in logs.glob("*Studio*.log"):
+        if path.stat().st_mtime < started - 5:
+            continue
+        with path.open(encoding="utf-8", errors="replace") as log:
+            for line in log:
+                _, found, result = line.partition("[FLog::CreatorOutput] " + marker + " ")
+                if found and result.rstrip().endswith(f"[{folder.name}]"):
+                    results.append(marker + " " + result.rstrip())
+    return results
+
+
 def run(studio, folder, mode, marker):
     project = make_project(folder, mode)
     place = folder / f"{mode}.rbxlx"
@@ -50,6 +71,7 @@ def run(studio, folder, mode, marker):
         startup = subprocess.STARTUPINFO()
         startup.dwFlags |= subprocess.STARTF_USESHOWWINDOW
         startup.wShowWindow = subprocess.SW_HIDE
+    started = time.time()
     subprocess.run(
         [
             studio, "--task", "RunScript", "--localPlaceFile", place,
@@ -62,6 +84,8 @@ def run(studio, folder, mode, marker):
     )
     output = log.read_text(encoding="utf-8", errors="replace")
     results = [line for line in output.splitlines() if line.startswith(marker + " ")]
+    if not results:
+        results = studio_results(folder, marker, started)
     if not results or any(not line.startswith(marker + " PASS ") for line in results):
         raise RuntimeError(f"{mode} failed in Studio.\n{output[-4000:]}")
     print(results[-1], flush=True)
