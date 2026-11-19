@@ -1,6 +1,5 @@
 local Shared = game:GetService("ReplicatedStorage").Shared
 local Config = require(Shared.GameConfig)
-local Descent = require(script.Parent.Descent)
 local Blocks = require(script.Parent.MineBlocks)
 local Geology = require(script.Parent.Geology)
 local World = {}
@@ -74,7 +73,6 @@ function World:generate()
 			task.wait()
 		end
 	end
-	Descent.carve(grid)
 	for z = 0, math.ceil(size.Z / Config.Chunk) - 1 do
 		for y = 0, math.ceil(size.Y / Config.Chunk) - 1 do
 			for x = 0, math.ceil(size.X / Config.Chunk) - 1 do
@@ -94,7 +92,7 @@ end
 
 -- The server has checked the selected faces together in this same, non-yielding pulse.
 function World:excavate(selected)
-	local loot, lower, upper = {}, Blocks.size, Vector3.zero
+	local loot, finds, lower, upper = {}, {}, Blocks.size, Vector3.zero
 	for _, point in selected do
 		local p = ((point - self.grid.corner) / cell):Floor()
 		local i = Blocks.index(p.X, p.Y, p.Z)
@@ -103,12 +101,15 @@ function World:excavate(selected)
 			buffer.writeu8(self.grid.cells, i, 0)
 			local name = kind.ore.name
 			loot[name] = (loot[name] or 0) + 1
+			if not kind.ore.host and not finds[name] then
+				finds[name] = point
+			end
 			lower, upper = lower:Min(p), upper:Max(p)
 		end
 	end
 	if next(loot) then
 		self.grid:refresh(lower, upper)
 	end
-	return loot
+	return loot, finds
 end
 return World

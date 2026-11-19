@@ -1,5 +1,6 @@
 local shared = game:GetService("ReplicatedStorage").Shared
 local Config = require(shared.GameConfig)
+local Ores = require(shared.Ores)
 local Audio = require(script.Parent.HarborAudio)
 local Tween = game:GetService("TweenService")
 local Debris = game:GetService("Debris")
@@ -140,6 +141,35 @@ function Effects:damage(cells, normal, progress)
 	end
 	self.usedLines = used
 	self.fracture.Parent = self.preview
+end
+-- One label per ore in a cut, anchored at a cell that actually yielded that ore.
+function Effects:labels(finds, loot, normal)
+	for name, center in finds do
+		local ore = Ores.byName[name]
+		local anchor = Instance.new("Attachment")
+		anchor.Name, anchor.Parent = "Ore find", workspace.Terrain
+		anchor.WorldPosition = center + normal * (Config.Cell * 0.5)
+		local gui = Instance.new("BillboardGui")
+		gui.Name, gui.Size, gui.MaxDistance, gui.LightInfluence = "Ore popup", UDim2.fromScale(6.8, 1.35), 64, 0
+		gui.StudsOffsetWorldSpace = Vector3.new(0, 0.3, 0)
+		gui.Parent = anchor
+		local label = Instance.new("TextLabel")
+		label.Size, label.BackgroundTransparency, label.TextScaled = UDim2.fromScale(1, 1), 1, true
+		label.Font, label.Text, label.TextColor3 =
+			Enum.Font.FredokaOne, "+" .. loot[name] .. " " .. name, ore.color:Lerp(Color3.new(1, 1, 1), 0.38)
+		local outline = Instance.new("UIStroke")
+		outline.Color, outline.Thickness, outline.Parent = Color3.fromRGB(38, 49, 76), 2, label
+		label.Parent = gui
+		Tween:Create(
+			gui,
+			TweenInfo.new(1.05, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+			{ StudsOffsetWorldSpace = Vector3.new(0, 1.9, 0) }
+		):Play()
+		local fade = TweenInfo.new(0.42, Enum.EasingStyle.Quad, Enum.EasingDirection.In, 0, false, 0.58)
+		Tween:Create(label, fade, { TextTransparency = 1 }):Play()
+		Tween:Create(outline, fade, { Transparency = 1 }):Play()
+		Debris:AddItem(anchor, 1.08)
+	end
 end
 function Effects:burst(point, spread, ore, quiet)
 	local now = os.clock()

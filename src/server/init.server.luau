@@ -2,7 +2,8 @@ local Players = game:GetService("Players")
 local Rep = game:GetService("ReplicatedStorage")
 local Config, Upgrades = require(Rep.Shared.GameConfig), require(Rep.Shared.Upgrades)
 local World, Quarry = require(script.MineWorld), require(script.Quarry)
-local Expeditions, Ores = require(Rep.Shared.Expeditions), require(Rep.Shared.Ores)
+local Ores = require(Rep.Shared.Ores)
+local Preferences = require(Rep.Shared.Preferences)
 local Passes = require(script.Passes)
 local Pickaxe = require(script.Pickaxe)
 local Data, Profile, Mining = require(script.DataService), require(script.Profile), require(script.MiningService)
@@ -30,14 +31,10 @@ local function sync(player, p)
 	player:SetAttribute("BagValue", Profile.value(p.bag))
 	player:SetAttribute("Mined", p.mined)
 	player:SetAttribute("Jobs", p.jobs)
-	local found = 0
-	for i, ore in Ores.list do
+	for _, ore in Ores.list do
 		player:SetAttribute("Held" .. ore.name, p.bag[ore.name] or 0)
-		if p.discoveries[ore.name] then
-			found = bit32.bor(found, bit32.lshift(1, i - 1))
-		end
+		player:SetAttribute("Found" .. ore.name, p.discoveries[ore.name] == true)
 	end
-	player:SetAttribute("OreIndex", found)
 	for _, key in Upgrades.order do
 		player:SetAttribute(key, p.levels[key])
 	end
@@ -91,6 +88,9 @@ local function join(player)
 	end
 	board.Parent = player
 	sessions[player], loading[player] = session, nil
+	for key, value in session.profile.preferences do
+		player:SetAttribute(key, value)
+	end
 	sync(player, session.profile)
 	player:SetAttribute("ProfileReady", true)
 end
@@ -115,9 +115,16 @@ local function atCounter(player, prompt)
 end
 
 local counterFor = { Sell = "Sell", Buy = "Shop", PreviewPass = "Store", Pass = "Store" }
-local function action(player, key, option)
+local function action(player, key, option, value)
 	local s = sessions[player]
 	if not s or type(key) ~= "string" then
+		return
+	end
+	if key == "Preference" then
+		if Preferences.valid(option, value) and s.profile.preferences[option] ~= value then
+			s.profile.preferences[option] = value
+			player:SetAttribute(option, value)
+		end
 		return
 	end
 	local now = os.clock()
@@ -125,7 +132,6 @@ local function action(player, key, option)
 		key ~= "Surface"
 		and key ~= "Sell"
 		and key ~= "Buy"
-		and key ~= "Travel"
 		and key ~= "Job"
 		and key ~= "PreviewPass"
 		and key ~= "Pass"
@@ -167,27 +173,6 @@ local function action(player, key, option)
 		Passes.preview(player, option)
 	elseif key == "Pass" then
 		Passes.prompt(player, option)
-	elseif key == "Travel" and type(option) == "string" then
-		local stop = Expeditions.byKey[option]
-		local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-		if not stop or not root then
-			return
-		end
-		if not world.ready then
-			net.Feedback:FireClient(player, "hint", "The lift is warming up")
-			return
-		end
-		if p.mined < stop.goal then
-			net.Feedback:FireClient(player, "hint", "Mine " .. stop.goal .. " blocks to unlock this stop")
-			return
-		end
-		if not stop.floor then
-			toSurface(player, player.Character)
-		else
-			root.AssemblyLinearVelocity, root.AssemblyAngularVelocity = Vector3.zero, Vector3.zero
-			player.Character:PivotTo(CFrame.new(world.origin + stop.floor + Vector3.new(0, 4.7, 2)))
-		end
-		net.Feedback:FireClient(player, "travel", stop.name)
 	end
 end
 net.Action.OnServerEvent:Connect(action)
@@ -205,7 +190,7 @@ for name, prompt in site.stations do
 		elseif name == "Shop" then
 			net.Feedback:FireClient(player, "shop")
 		else
-			net.Feedback:FireClient(player, "page", if string.sub(name, 1, 4) == "Lift" then "Lift" else name)
+			net.Feedback:FireClient(player, "page", name)
 		end
 	end)
 end

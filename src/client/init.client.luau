@@ -107,30 +107,19 @@ UIS:GetPropertyChangedSignal("PreferredInput"):Connect(function()
 	release()
 end)
 
-net.Feedback.OnClientEvent:Connect(function(kind, a, point, spread)
+net.Feedback.OnClientEvent:Connect(function(kind, a, point, spread, finds, normal)
 	if kind == "loot" then
 		firstHaul = true
-		local best = Ores.byName.Stone
-		local pieces, value, lines = 0, 0, {}
-		for _, ore in Ores.list do
-			local n = a[ore.name]
-			if n then
-				pieces += n
-				value += n * ore.value
+		local best = Ores.byName.Dirt
+		for name in a do
+			local ore = Ores.byName[name]
+			if ore.value > best.value then
 				best = ore
-				table.insert(lines, string.format("%d %s", n, ore.name))
 			end
 		end
 		Audio.ore(a)
 		fx:burst(point, spread, best)
-		local rare = best.hardness >= 4
-		hud:notice(
-			if rare then best.flash else "+" .. pieces .. " ore  ·  " .. value .. " G",
-			table.concat(lines, "  +  ") .. (if rare then "  ·  " .. value .. " G" else ""),
-			if rare then best.color else W.white
-		)
-	elseif kind == "haul" then
-		hud:haul(a, point)
+		fx:labels(finds, a, normal)
 	elseif kind == "milestone" then
 		hud:milestone(a, point, spread)
 	elseif kind == "sale" then
@@ -156,9 +145,8 @@ net.Feedback.OnClientEvent:Connect(function(kind, a, point, spread)
 		hud:setShop(true)
 	elseif kind == "page" then
 		hud:openPage(a)
-	elseif kind == "travel" then
+	elseif kind == "close" then
 		hud:setShop(false)
-		hud:notice(a, "Lift arrived", W.aqua)
 	elseif kind == "job" then
 		fx:chime(1.65)
 		hud:notice("+" .. W.number(point) .. " gold", a .. " completed", W.gold)
@@ -169,7 +157,8 @@ net.Feedback.OnClientEvent:Connect(function(kind, a, point, spread)
 		hud:notice(a, "", W.gold)
 	end
 end)
-net.Dust.OnClientEvent:Connect(function(point, spread, ore)
+net.Dust.OnClientEvent:Connect(function(point, spread, ore, finds, normal, loot)
+	fx:labels(finds, loot, normal)
 	fx:burst(point, spread, Ores.byName[ore], true)
 end)
 
@@ -280,7 +269,7 @@ local function sampleAim()
 		local help = if mobile then "Hold MINE on the highlighted blocks" else "Hold the left mouse button to mine"
 		local title = if valid
 			then string.format("%d block%s selected", #cells, if #cells == 1 then "" else "s")
-			elseif depth > 2 then "Aim at the studded rock beside the trail"
+			elseif depth > 2 then "Aim at the wall or floor to keep digging"
 			else "Follow the path to the crystal cave"
 		hud:guide(title, help, true)
 	else

@@ -3,7 +3,6 @@ local StarterGui = game:GetService("StarterGui")
 local Upgrades, Expeditions = require(Shared.Upgrades), require(Shared.Expeditions)
 local W, Icons, Menu = require(script.Parent.Widgets), require(script.Parent.Icons), require(script.Parent.HarborMenu)
 local Audio = require(script.Parent.HarborAudio)
-local Ores = require(Shared.Ores)
 local Hud = {}
 Hud.__index = Hud
 local function card(parent, name, x, y, w, h, top, bottom)
@@ -68,23 +67,17 @@ function Hud.new(player, net, mobile)
 	local loc = card(root, "Location", 0, 0, 211, 76, Color3.fromRGB(19, 142, 153), Color3.fromRGB(24, 68, 119))
 	self.layer = W.text(loc, "CITRINE COVE", 10, 3, 186, 19, 13, W.aqua, true)
 	self.depth = W.title(loc, "Surface", 10, 24, 91, 26, 20, W.white, true)
-	self.surface = W.button(loc, "Surface", 105, 22, 92, 27, W.aqua, "↑ Harbor", "Lift")
+	self.surface = W.button(loc, "Surface", 105, 22, 92, 27, W.aqua, "↑ Harbor", "Select")
 	self.surface.TextSize = 14
 	self.surface.Activated:Connect(function()
 		net.Action:FireServer("Surface")
 	end)
 	self.stats = W.text(loc, "", 10, 53, 194, 18, 12, W.muted, true)
-	local music = W.button(loc, "Music", 0, 83, 92, 31, W.aqua, "Music on", "Select")
-	music.TextSize = 15
-	music.Activated:Connect(function()
-		local on = Audio.toggleMusic()
-		music.Text, music.BackgroundColor3 = if on then "Music on" else "Music off", if on then W.aqua else W.muted
-	end)
 	local dock = W.frame(root, "Action dock", 0, 0, 291, 64, W.ink)
 	dock.BackgroundTransparency = 1
 	self.nav = {}
-	local cues = { Lift = "Lift", Jobs = "Job", Book = "Open", Pack = "Select" }
-	for i, key in { "Pack", "Lift", "Jobs", "Book" } do
+	local cues = { Settings = "Open", Jobs = "Job", Book = "Open", Pack = "Select" }
+	for i, key in { "Pack", "Jobs", "Book", "Settings" } do
 		local tint = Menu.pages[key].color
 		local b = W.button(dock, key, (i - 1) * 74, 0, 69, 61, tint, "", cues[key])
 		local badge = W.frame(b, "Medallion", 15, -6, 39, 39, tint:Lerp(W.white, 0.62), 13)
@@ -127,20 +120,6 @@ function Hud.new(player, net, mobile)
 	self.cursorPick = Icons.draw(badge, "Power", 2, 2, 24, W.gold)
 	self.denied = W.frame(badge, "No entry", 4, 12, 20, 4, Color3.fromRGB(255, 100, 108), 2)
 	badge.Visible = false
-	local haul = Instance.new("CanvasGroup")
-	haul.Name, haul.AnchorPoint, haul.BackgroundTransparency = "Server haul", Vector2.new(0.5, 0), 1
-	haul.Visible, haul.Parent = false, root
-	self.haulGroup = haul
-	self.haulTitle = W.title(haul, "", 0, 0, 1, 1, 24, W.white)
-	self.haulTitle.Size, self.haulTitle.TextScaled = UDim2.new(1, -4, 0.60, 0), true
-	self.haulDetail = W.text(haul, "", 0, 0, 1, 1, 16, W.white)
-	self.haulDetail.Position, self.haulDetail.Size, self.haulDetail.TextScaled =
-		UDim2.fromScale(0, 0.60), UDim2.fromScale(1, 0.40), true
-	for _, label in { self.haulTitle, self.haulDetail } do
-		W.outlineText(label)
-		local constraint = Instance.new("UITextSizeConstraint")
-		constraint.MaxTextSize, constraint.MinTextSize, constraint.Parent = label.TextSize, 8, label
-	end
 	self.menu = Menu.new(root, player, net, function()
 		self:setShop(false)
 	end)
@@ -148,6 +127,7 @@ function Hud.new(player, net, mobile)
 	self.overlay:GetPropertyChangedSignal("Visible"):Connect(function()
 		local open = self.overlay.Visible
 		backdrop.Enabled = open
+		self.mine.Visible = self.mobile and not open
 		for _, panel in { wallet, taskCard, loc, dock } do
 			panel.Visible = not open
 		end
@@ -163,14 +143,6 @@ function Hud.new(player, net, mobile)
 		local s = math.clamp(math.min((width - 28) / 434, height / 447), 0.50, 1.36)
 		local ds = math.min(s, (width - 16) / 291)
 		local portrait = self.mobile and width < height
-		local gap = width - 2 * (14 + 215 * s)
-		if gap >= 185 then
-			haul.Position, haul.Size = UDim2.new(0.5, 0, 0, 12), UDim2.fromOffset(math.min(gap, 390), 54)
-		else
-			-- The left column contains Location; the right column clears Discovery.
-			local free = math.max(100, width - 30 - 211 * s)
-			haul.Position, haul.Size = UDim2.new(1, -10 - free / 2, 0, 12 + 142 * s), UDim2.fromOffset(free, 40 * s)
-		end
 		if self.mobile and not portrait then
 			ds = math.min(math.max(ds, 0.78), math.max(0.56, (width - 195) / 291))
 		end
@@ -205,8 +177,7 @@ function Hud:setShop(open)
 	if open then
 		self:openPage("Gear")
 	else
-		self.overlay.Visible = false
-		self.mine.Visible = self.mobile
+		self.menu:close()
 	end
 end
 function Hud:refresh()
@@ -256,41 +227,6 @@ function Hud:aimAt(screen, valid, locked)
 	if not self.meter.Visible then
 		self.cursorPick.Rotation = 0
 	end
-end
-function Hud:haul(counts, miners)
-	local finds, best = {}, nil
-	for i = #Ores.list, 1, -1 do
-		local ore = Ores.list[i]
-		if counts[ore.name] then
-			best = best or ore
-			table.insert(finds, counts[ore.name] .. " × " .. ore.name)
-		end
-	end
-	if not best then
-		return
-	end
-	self.haulTitle.Text = miners .. " mined " .. finds[1]
-	table.remove(finds, 1)
-	self.haulTitle.TextColor3 = best.color:Lerp(W.white, 0.48)
-	self.haulDetail.Text = table.concat(finds, "  ·  ")
-	local group = self.haulGroup
-	self.haulSerial = (self.haulSerial or 0) + 1
-	local serial = self.haulSerial
-	if self.haulTween then
-		self.haulTween:Cancel()
-	end
-	group.Visible, group.GroupTransparency = true, 0
-	task.delay(1.6, function()
-		if self.haulSerial ~= serial then
-			return
-		end
-		self.haulTween = W.tween(group, 0.65, { GroupTransparency = 1 })
-		self.haulTween.Completed:Once(function()
-			if self.haulSerial == serial then
-				group.Visible = false
-			end
-		end)
-	end)
 end
 function Hud:milestone(kind, name, color)
 	local serial = (self.ribbonSerial or 0) + 1

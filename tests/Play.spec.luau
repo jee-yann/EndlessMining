@@ -27,10 +27,6 @@ report.OnServerEvent:Connect(function(player,stage,detail)
 		local x=if player.UserId%2==0 then -3.25 else 1.5
 		char:PivotTo(CFrame.new(n:GetAttribute("Origin")+Vector3.new(x,4,-8)))
 		char.HumanoidRootPart.Anchored=true
-	elseif stage=="foundry" then
-		local dest=require(rep.Shared.Expeditions).byKey.Foundry.floor+n:GetAttribute("Origin")
-		player.Character:PivotTo(CFrame.new(dest+Vector3.new(2,4,-8)))
-		player.Character.HumanoidRootPart.Anchored=true
 	elseif stage=="openPage" then
 		n.Feedback:FireClient(player,"page",detail)
 	elseif stage=="station" then
@@ -41,7 +37,7 @@ report.OnServerEvent:Connect(function(player,stage,detail)
 			player.Character.HumanoidRootPart.Anchored=true
 		end
 	elseif stage=="closePage" then
-		n.Feedback:FireClient(player,"travel","Citrine Harbor")
+		n.Feedback:FireClient(player,"close")
 	elseif stage=="passed" then
 		done[player]=detail
 		local results={}
@@ -76,10 +72,6 @@ local function test()
 	local song=harbor:WaitForChild("Prima Bossa Nova",5)
 	waitFor(function() return song.IsLoaded and song.IsPlaying and song.TimePosition>.1 end,20,"soundtrack playback")
 	local audio=require(p.PlayerScripts.Client.HarborAudio)
-	assert(audio.toggleMusic()==false)
-	waitFor(function() return not song.IsPlaying end,3,"music pause")
-	assert(audio.toggleMusic()==true)
-	waitFor(function() return song.IsPlaying and song.Volume>.1 end,3,"music resume")
 	for _,voice in harbor:GetChildren() do waitFor(function() return voice.IsLoaded end,8,voice.Name.." failed to load") end
 	if r:GetAttribute("CheckSwing") then
 		local seenIds={}
@@ -117,10 +109,11 @@ local function test()
 			pad.Service:InputHoldEnd()
 		end
 	end
-	for _,page in {"Pack","Lift","Gear","Jobs","Book","Store"} do
+	for _,page in {"Pack","Settings","Gear","Jobs","Book","Store"} do
 		if counters[page] then visit(page,true) else r:FireServer("openPage",page) end
-		local listing=({Lift="Citrine Harbor",Gear="Mining area",Jobs="First strike",Book="Stone",Pack="Stone",Store="Double Gold"})[page]
+		local listing=({Settings="Music volume",Gear="Mining area",Jobs="First strike",Book="Stone",Pack="Stone",Store="Double Gold"})[page]
 		waitFor(function() return overlay.Visible and menu.Listings:FindFirstChild(listing) end,5,"open "..page)
+		task.wait(.26)
 		local left,top=menu.AbsolutePosition.X,menu.AbsolutePosition.Y
 		local safe=gui.SafeArea
 		assert(left>=safe.AbsolutePosition.X-1 and top>=safe.AbsolutePosition.Y-1,"menu origin")
@@ -132,12 +125,10 @@ local function test()
 	local origin=n:GetAttribute("Origin")
 	waitFor(function() return (p.Character.Head.Position-origin).Z<0 end,8,"placement")
 	local first=os.clock()
-	local discovered,unlocked,announced
+	local discovered
 	n.Feedback.OnClientEvent:Connect(function(kind,title,name)
-		if kind=="haul" then announced=title end
 		if kind=="milestone" then
 			if title=="ORE DISCOVERED" then discovered=name end
-			if title=="LIFT UNLOCKED" then unlocked=name end
 		end
 	end)
 	local params=RaycastParams.new()
@@ -151,6 +142,28 @@ local function test()
 		local camera=workspace.CurrentCamera
 		local input=game:GetService("UserInputService"):CreateVirtualInput()
 		assert(input,"Studio virtual input unavailable")
+		r:FireServer("openPage","Settings")
+		waitFor(function() return overlay.Visible and menu.Listings:FindFirstChild("Music volume") end,4,"settings")
+		task.wait(.3)
+		local function clickAt(xy)
+			input:SendMousePosition(xy); task.wait(.07)
+			input:SendMouseButton(xy,Enum.UserInputType.MouseButton1,true);task.wait(.07)
+			input:SendMouseButton(xy,Enum.UserInputType.MouseButton1,false);task.wait(.07)
+		end
+		local function adjust(row,value,key,group)
+			local track=menu.Listings[row].Slider.Track
+			local xy=track.AbsolutePosition+track.AbsoluteSize*Vector2.new(value/100,.5)+game:GetService("GuiService"):GetGuiInset()
+			clickAt(xy)
+			waitFor(function() return p:GetAttribute(key)==value and math.abs(group.Volume-value/100)<.011 end,2,row.." slider")
+		end
+		adjust("Music volume",0,"MusicVolume",song.SoundGroup)
+		assert(harbor["Coal break"].SoundGroup.Volume>.5,"music muted effects")
+		adjust("Sound effects",23,"SfxVolume",harbor["Coal break"].SoundGroup)
+		assert(song.SoundGroup.Volume==0,"effects changed music")
+		adjust("Music volume",55,"MusicVolume",song.SoundGroup)
+		adjust("Sound effects",80,"SfxVolume",harbor["Coal break"].SoundGroup)
+		r:FireServer("closePage")
+		waitFor(function() return not overlay.Visible end,2,"animated close")
 		local hand=p.Character:FindFirstChild("RightHand") or p.Character:FindFirstChild("Right Arm")
 		local defaultY=hand.Position.Y
 		local hit=workspace:Raycast(head.Position,Vector3.new(0,0,-32),params)
@@ -207,13 +220,12 @@ local function test()
 		assert(maxGap<.035,"grip drift: "..maxGap)
 		assert(replicated,"swing start was not replicated")
 		waitFor(function() return not p.Character:GetAttribute("MiningSwing") end,3,"replicated swing release")
-		waitFor(function() return announced and gui.SafeArea["Server haul"].Visible end,4,"server haul announcement")
-		waitFor(function() return not gui.SafeArea["Server haul"].Visible end,4,"announcement fades")
-		r:FireServer("foundry")
-		local landing=require(rep.Shared.Expeditions).byKey.Foundry.floor+origin
-		waitFor(function() return (head.Position-landing).Magnitude<14 end,5,"locked ore fixture")
-		camera.CFrame=CFrame.lookAt(head.Position+Vector3.new(0,1,3),landing+Vector3.new(2,6,-22))
-		waitFor(function() return cursor.Visible and cursor["No entry"].Visible end,5,"locked iron cursor")
+		local popup
+		waitFor(function() popup=workspace.Terrain:FindFirstChild("Ore find");return popup and popup:FindFirstChild("Ore popup") end,2,"world ore popup")
+		assert((popup.WorldPosition-aim).Magnitude<2.1 and popup["Ore popup"].TextLabel.Text=="+1 Coal","popup location and label")
+		waitFor(function() return not popup.Parent end,2,"popup fades out")
+		camera.CFrame=CFrame.lookAt(head.Position+Vector3.new(2,1,3),origin+Vector3.new(10,6,-26))
+		waitFor(function() return cursor.Visible and cursor["No entry"].Visible end,5,"locked copper cursor")
 		local collected=p:GetAttribute("Used")
 		input:SendMouseButton(xy,Enum.UserInputType.MouseButton1,true)
 		task.wait(.85)
@@ -242,9 +254,9 @@ local function test()
 		task.wait(.12)
 	end
 	assert(p:GetAttribute("Used")==36,"starter pack incomplete: "..tostring(p:GetAttribute("Used")))
-	waitFor(function() return discovered and unlocked=="Ember Foundry" end,4,"ore and lift notifications")
+	waitFor(function() return discovered end,4,"first ore discovery")
 	local value=p:GetAttribute("BagValue")
-	assert(value>=72,"ore valuation")
+	assert(value>=36,"material valuation")
 	local quantity,total=0,0
 	for _,ore in ores.list do
 		local held=p:GetAttribute("Held"..ore.name)
@@ -274,7 +286,7 @@ local function test()
 		task.wait(.12)
 	end
 	assert(p:GetAttribute("Used")==2,"the 2x1 upgrade should mine both highlighted cells")
-	assert(p:GetAttribute("OreIndex")>0 and p:GetAttribute("Mined")==38,"ore discovery and lifetime blocks")
+	assert(p:GetAttribute("Found"..discovered) and p:GetAttribute("Mined")==38,"ore discovery and lifetime blocks")
 	n.Action:FireServer("Job",1)
 	waitFor(function() return p:GetAttribute("Jobs")==1 end,5,"first reward")
 	local afterJob=p:GetAttribute("Gold")
@@ -292,18 +304,10 @@ local function test()
 	visit("Store",true)
 	n.Action:FireServer("PreviewPass","PrismTrail")
 	waitFor(function() return p.Character.HumanoidRootPart:FindFirstChild("Prism Ribbon") end,5,"equipped trail")
-	n.Action:FireServer("Travel","Foundry")
-	local foundry=require(rep.Shared.Expeditions).byKey.Foundry.floor+origin
-	waitFor(function() return (p.Character.HumanoidRootPart.Position-foundry).Magnitude<10 end,5,"foundry lift")
-	task.wait(.3)
-	n.Action:FireServer("Travel","Deep")
-	task.wait(.4)
-	assert((p.Character.HumanoidRootPart.Position-foundry).Magnitude<10,"locked vault")
-	task.wait(.25)
 	n.Action:FireServer("Surface")
 	local landing=n:GetAttribute("Landing")
 	waitFor(function() return (p.Character.HumanoidRootPart.Position-landing).Magnitude<8 end,5,"surface recall")
-	return string.format("38 ore, %d gold sale, area 1×1→2×1, six menus, jobs, both passes, lift gates, recall (%.1fs)",value,os.clock()-first)
+	return string.format("38 ore, %d gold sale, area 1×1→2×1, six menus, jobs, both passes, settings, recall (%.1fs)",value,os.clock()-first)
 end
 local ok,result=pcall(test)
 r:FireServer(if ok then "passed" else "failed",tostring(result))

@@ -1,7 +1,6 @@
 local Shared = game:GetService("ReplicatedStorage").Shared
 local Config = require(Shared.GameConfig)
 local Ores = require(Shared.Ores)
-local Expeditions = require(Shared.Expeditions)
 local Geology = {}
 Geology.__index = Geology
 local air = Enum.Material.Air
@@ -20,19 +19,19 @@ function Geology:vein(a, b, c)
 	local rng = Random.new((self.seed + a * 73856093 + b * 19349663 + c * 83492791) % 2147483647)
 	local x, y, z = a * 32 + rng:NextNumber(10, 22), b * 32 + rng:NextNumber(10, 22), c * 32 + rng:NextNumber(10, 22)
 	local depth = math.max(0, -y)
-	local lode = depth >= Ores.byName.Gold.min and rng:NextNumber() < 0.075
-	local total, ore = 0, Ores.byName.Coal
-	for i = 2, #Ores.list do
-		local candidate = Ores.list[i]
-		if depth >= candidate.min and (not lode or candidate.hardness >= 4) then
-			local weight = candidate.weight
-				/ (1 + ((depth - candidate.preferred) / math.max(58, candidate.preferred * 0.26)) ^ 2)
+	local layer = Config.layer(depth)
+	local total, ore = 0, nil
+	-- Iterate the catalog in order so generation is reproducible for a seed.
+	for _, candidate in Ores.list do
+		local weight = layer.veinWeights[candidate.name]
+		if weight and weight > 0 then
 			total += weight
 			if rng:NextNumber() * total < weight then
 				ore = candidate
 			end
 		end
 	end
+	local lode = ore ~= nil and ore.hardness >= 4 and rng:NextNumber() < 0.15
 	local v = {
 		x = x,
 		y = y,
@@ -49,26 +48,6 @@ function Geology:vein(a, b, c)
 end
 
 function Geology:sample(x, y, z)
-	local stop = Expeditions.byBand[math.floor(y / 32)]
-	if stop then
-		local p = stop.floor
-		local dx, dy, dz = x - p.X, y - p.Y, z - p.Z
-		if dy >= 0 and dy < 16 and math.abs(dx) < 16 and dz > -20 and dz < 8 then
-			return air, 0
-		end
-		if dz <= -20 and dz > -28 and dy >= 0 and dy < 12 and math.abs(dx) < 12 then
-			if (dx - 3) ^ 2 + (dy - 6) ^ 2 < 42 then
-				return Ores.byName[stop.ore].material, 1
-			end
-			if (dx + 8) ^ 2 + (dy - 5) ^ 2 < 24 then
-				local second = if stop.key == "Foundry"
-					then "Copper"
-					elseif stop.key == "Prism" then "Gold"
-					else "Diamond"
-				return Ores.byName[second].material, 1
-			end
-		end
-	end
 	local top = Config.ridgeHeight(self.seed, x, z)
 	if y > top then
 		return air, 0
@@ -100,12 +79,16 @@ function Geology:sample(x, y, z)
 	local v = self:vein(math.floor(x / 32), math.floor(y / 32), math.floor(z / 32))
 	local dx, dz = x - v.x, z - v.z
 	local d = (dx / v.rx) ^ 2 + ((y - v.y - dx * v.tilt) / v.ry) ^ 2 + (dz / v.rz) ^ 2
-	if d < 1 and math.max(0, -y) >= v.ore.min then
+	local layer = Config.layer(-y)
+	if d < 1 and v.ore and layer.veinWeights[v.ore.name] then
 		if v.lode and d < 0.20 then
 			return air, 0
 		end
 		return v.ore.material, 1
 	end
-	return Config.layer(-y).material, 1
+	if y >= -Config.DirtMaxDepth and y + Config.DirtThickness + Config.Cell > top then
+		return Ores.byName.Dirt.material, 1
+	end
+	return layer.material, 1
 end
 return Geology

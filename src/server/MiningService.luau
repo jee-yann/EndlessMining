@@ -3,7 +3,6 @@ local RunService = game:GetService("RunService")
 local Shared = game:GetService("ReplicatedStorage").Shared
 local Config, Ores = require(Shared.GameConfig), require(Shared.Ores)
 local Pattern = require(Shared.BlockPattern)
-local Expeditions = require(Shared.Expeditions)
 local Profile = require(script.Parent.Profile)
 local Mining = {}
 
@@ -53,29 +52,6 @@ end
 function Mining.start(world, net, sessions, sync)
 	local pending, nextPulse, nextInput, lastHint, queue = {}, {}, {}, {}, {}
 	local credit = Config.BurstCells
-	local totals, miners = {}, {}
-	local function announce(player, loot)
-		local first = next(totals) == nil
-		miners[player] = player.DisplayName
-		for name, count in loot do
-			totals[name] = (totals[name] or 0) + count
-		end
-		if first then
-			task.delay(1.25, function()
-				local participants, name = 0, ""
-				for _, display in miners do
-					participants += 1
-					name = display
-				end
-				net.Feedback:FireAllClients(
-					"haul",
-					totals,
-					if participants == 1 then name else participants .. " miners"
-				)
-				totals, miners = {}, {}
-			end)
-		end
-	end
 	local function hint(player, message, now)
 		if now >= (lastHint[player] or 0) then
 			lastHint[player] = now + 1.4
@@ -162,18 +138,17 @@ function Mining.start(world, net, sessions, sync)
 		if #selected == 0 then
 			return
 		end
-		local loot = world:excavate(selected)
+		local loot, finds = world:excavate(selected)
 		if not next(loot) then
 			return
 		end
-		announce(player, loot)
 		local center = selected[1]
 		local spread = math.sqrt(#selected) * Config.Cell
-		local best = Ores.byName.Stone
-		local before, discovery = profile.mined, nil
+		local best = Ores.byName.Dirt
+		local discovery
 		for name, count in loot do
 			local ore = Ores.byName[name]
-			if not profile.discoveries[name] and (not discovery or ore.value > discovery.value) then
+			if not ore.host and not profile.discoveries[name] and (not discovery or ore.value > discovery.value) then
 				discovery = ore
 			end
 			profile.discoveries[name] = true
@@ -184,22 +159,14 @@ function Mining.start(world, net, sessions, sync)
 			end
 		end
 		sync(player, profile)
-		net.Feedback:FireClient(player, "loot", loot, center, spread)
-		local unlocked
-		for _, stop in Expeditions.stops do
-			if before < stop.goal and profile.mined >= stop.goal then
-				unlocked = stop
-			end
-		end
-		if unlocked then
-			net.Feedback:FireClient(player, "milestone", "LIFT UNLOCKED", unlocked.name, unlocked.color)
-		elseif discovery then
+		net.Feedback:FireClient(player, "loot", loot, center, spread, finds, request.normal)
+		if discovery then
 			net.Feedback:FireClient(player, "milestone", "ORE DISCOVERED", discovery.name, discovery.color)
 		end
 		for _, other in Players:GetPlayers() do
 			local root = other.Character and other.Character:FindFirstChild("HumanoidRootPart")
 			if other ~= player and root and (root.Position - center).Magnitude < 72 then
-				net.Dust:FireClient(other, center, spread, best.name)
+				net.Dust:FireClient(other, center, spread, best.name, finds, request.normal, loot)
 			end
 		end
 	end

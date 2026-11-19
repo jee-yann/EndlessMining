@@ -2,12 +2,14 @@ local Shared = game:GetService("ReplicatedStorage").Shared
 local Market = game:GetService("MarketplaceService")
 local RunService = game:GetService("RunService")
 local Upgrades, Expeditions, Ores = require(Shared.Upgrades), require(Shared.Expeditions), require(Shared.Ores)
+local Settings = require(script.Parent.Settings)
+local Config = require(Shared.GameConfig)
 local Catalog = require(Shared.PassCatalog)
 local W, Icons = require(script.Parent.Widgets), require(script.Parent.Icons)
 local Menu = {}
 Menu.__index = Menu
 Menu.pages = {
-	Lift = { name = "Mine lift", color = Color3.fromRGB(120, 170, 255) },
+	Settings = { name = "Settings", color = Color3.fromRGB(120, 185, 255) },
 	Gear = { name = "Workshop", color = W.aqua },
 	Jobs = { name = "Shift jobs", color = W.violet },
 	Book = { name = "Ore index", color = W.green },
@@ -16,6 +18,7 @@ Menu.pages = {
 }
 function Menu.new(root, player, net, close)
 	local self = setmetatable({ player = player, net = net, prices = {}, updates = {} }, Menu)
+	self.preferences = Settings.new(player, net)
 	local shade = Instance.new("Frame")
 	shade.Name, shade.Size, shade.BackgroundColor3, shade.BackgroundTransparency =
 		"ShopOverlay", UDim2.fromScale(1, 1), W.ink, 0.25
@@ -70,7 +73,7 @@ function Menu:row(i, name, icon, color)
 	Icons.draw(plate, icon, 5, 5, 36, color)
 	local title = W.title(row, name, 67, 5, 238, 25, 20, W.white, true)
 	local detail = W.text(row, "", 67, 32, 253, 21, 14, W.muted, true)
-	local cues = { Gear = "Buy", Jobs = "Job", Lift = "Lift", Store = "Select" }
+	local cues = { Gear = "Buy", Jobs = "Job", Settings = "Select", Store = "Select" }
 	local button = W.button(row, "Action", 322, 12, 113, 38, color, "", cues[self.page])
 	return title, detail, button
 end
@@ -100,25 +103,6 @@ function Menu:gear()
 		end)
 	end
 	return #Upgrades.order
-end
-function Menu:lift()
-	for i, stop in Expeditions.stops do
-		local _, detail, b = self:row(i, stop.name, "Lift", stop.color)
-		detail.Text = stop.detail
-		b.Activated:Connect(function()
-			self.net.Action:FireServer("Travel", stop.key)
-		end)
-		table.insert(self.updates, function()
-			local unlocked = (self.player:GetAttribute("Mined") or 0) >= stop.goal
-			setButton(
-				b,
-				if unlocked then "Travel" else stop.goal .. " mined",
-				if unlocked then stop.color else W.muted,
-				unlocked
-			)
-		end)
-	end
-	return #Expeditions.stops
 end
 function Menu:jobs()
 	for i, job in Expeditions.jobs do
@@ -165,12 +149,34 @@ function Menu:book()
 				worth.Text = W.number(held * ore.value * multiplier) .. " G at Sell"
 				return
 			end
-			local found = bit32.btest(self.player:GetAttribute("OreIndex") or 0, 2 ^ (i - 1))
+			local found = self.player:GetAttribute("Found" .. ore.name)
 			state.Text, state.TextColor3 =
 				if found then ore.rarity .. "  ✓" else "Undiscovered", if found then W.green else W.muted
 		end)
 	end
-	return math.ceil(#Ores.list / 2)
+	local rows = math.ceil(#Ores.list / 2)
+	if not pack then
+		for i, layer in Config.Layers do
+			local row = W.frame(self.list, layer.name, 1, 1 + (rows + i - 1) * 69, 447, 62, W.card, 10)
+			W.frame(row, "Stratum", 0, 8, 5, 46, layer.color, 3)
+			W.title(row, layer.name, 12, 3, 273, 23, 18, W.white, true)
+			W.text(row, layer.depth .. " studs", 294, 4, 143, 21, 15, W.aqua)
+			local chances, total = {}, 0
+			for _, weight in layer.veinWeights do
+				total += weight
+			end
+			for _, ore in Ores.list do
+				local weight = layer.veinWeights[ore.name]
+				if weight then
+					table.insert(chances, string.format("%s %g%%", ore.name, math.round(weight / total * 100)))
+				end
+			end
+			local odds = W.text(row, table.concat(chances, "  ·  "), 12, 25, 420, 34, 13, W.muted, true)
+			odds.TextWrapped = true
+		end
+		rows += #Config.Layers
+	end
+	return rows
 end
 function Menu:store()
 	for i, item in Catalog do
@@ -219,8 +225,16 @@ function Menu:store()
 	end
 	return #Catalog
 end
-local builders =
-	{ Gear = Menu.gear, Lift = Menu.lift, Jobs = Menu.jobs, Book = Menu.book, Pack = Menu.book, Store = Menu.store }
+local builders = {
+	Gear = Menu.gear,
+	Settings = function(self)
+		return self.preferences:build(self)
+	end,
+	Jobs = Menu.jobs,
+	Book = Menu.book,
+	Pack = Menu.book,
+	Store = Menu.store,
+}
 function Menu:open(key)
 	local page = Menu.pages[key]
 	if not page then
@@ -240,21 +254,51 @@ function Menu:open(key)
 		then "Studio trials last for this session."
 		elseif key == "Pack" then "Take your haul to the amber Sell counter."
 		elseif key == "Jobs" then "Claim each job in order to collect its gold."
-		elseif key == "Lift" then "Walk down the mine trail or unlock a lift shortcut."
-		elseif key == "Book" then "Mine each ore once to add it to your collection."
+		elseif key == "Settings" then "Changes take effect immediately."
+		elseif key == "Book" then "Scroll down for each region’s vein chances."
 		elseif key == "Store" then "Permanent passes for this experience."
 		else "Upgrades stay equipped between visits."
 	local rows = builders[key](self)
 	self.list.CanvasSize, self.list.CanvasPosition = UDim2.fromOffset(0, rows * 69), Vector2.zero
+	if self.motion then
+		self.motion:Cancel()
+	end
+	self.closing = false
 	self.overlay.Visible = true
+	local center = UDim2.fromScale(0.5, 0.5)
+	if self.preferences.values.MenuMotion then
+		self.modal.Position = UDim2.new(0.5, 0, 0.5, 64 * self.scale.Scale)
+		self.motion = W.tween(self.modal, 0.22, { Position = center })
+	else
+		self.modal.Position = center
+	end
 	self:refresh()
+end
+function Menu:close()
+	if not self.overlay.Visible or self.closing then
+		return
+	end
+	if self.motion then
+		self.motion:Cancel()
+	end
+	if not self.preferences.values.MenuMotion then
+		self.overlay.Visible = false
+		return
+	end
+	self.closing = true
+	self.motion = W.tween(self.modal, 0.15, { Position = UDim2.new(0.5, 0, 0.5, 52 * self.scale.Scale) })
+	self.motion.Completed:Once(function(state)
+		if state == Enum.PlaybackState.Completed and self.closing then
+			self.overlay.Visible = false
+			self.closing = false
+		end
+	end)
 end
 function Menu:refresh()
 	if not self.overlay.Visible then
 		return
 	end
 	local p = self.player
-	local n = p:GetAttribute("Mined") or 0
 	if self.page == "Pack" then
 		local cap = Upgrades.items.Capacity.values[p:GetAttribute("Capacity") or 1]
 		local value = (p:GetAttribute("BagValue") or 0) * (if p:GetAttribute("DoubleGold") then 2 else 1)
@@ -263,16 +307,16 @@ function Menu:refresh()
 		self.sub.Text = W.number(p:GetAttribute("Gold") or 0) .. " gold available"
 	elseif self.page == "Jobs" then
 		self.sub.Text = (p:GetAttribute("Jobs") or 0) .. " / " .. #Expeditions.jobs .. " jobs collected"
-	elseif self.page == "Lift" then
-		self.sub.Text = W.number(n) .. " blocks mined"
+	elseif self.page == "Settings" then
+		self.sub.Text = "Sound and motion"
 	elseif self.page == "Book" then
-		local found, mask = 0, p:GetAttribute("OreIndex") or 0
-		for i in Ores.list do
-			if bit32.btest(mask, 2 ^ (i - 1)) then
+		local found = 0
+		for _, ore in Ores.list do
+			if p:GetAttribute("Found" .. ore.name) then
 				found += 1
 			end
 		end
-		self.sub.Text = found .. " / " .. #Ores.list .. " ores discovered"
+		self.sub.Text = found .. " / " .. #Ores.list .. " materials discovered"
 	else
 		self.sub.Text = "Game passes"
 	end

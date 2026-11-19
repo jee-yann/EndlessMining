@@ -34,14 +34,18 @@ assert(not Profile.valid(p))
 print("PASS sale, costs, level caps, upgrade effects, profile capacity validation")
 local legacy = Profile.new()
 legacy.jobs, legacy.discoveries, legacy.bag, legacy.mined = nil, nil, { Coal = 3 }, 36
+legacy.preferences = nil
 local upgraded = Data.claim({ profile = legacy }, "harbor", 0).profile
 assert(upgraded.discoveries.Coal and upgraded.jobs == 0)
 assert(not Profile.claimJob(upgraded, 2))
 assert(Profile.claimJob(upgraded, 1).reward == 25 and not Profile.claimJob(upgraded, 1))
 assert(Profile.claimJob(upgraded, 2).reward == 80 and not Profile.claimJob(upgraded, 3))
 assert(Profile.sell(upgraded, 2) == 30 and upgraded.gold == 135 and upgraded.discoveries.Coal)
+assert(upgraded.preferences.MusicVolume == 55 and upgraded.preferences.SfxVolume == 80)
+upgraded.preferences.MusicVolume, upgraded.preferences.MenuMotion = 0, false
 local snapshot = Data.commit({ owner = "harbor" }, "harbor", upgraded, 100, true)
 local loaded = Data.claim(snapshot, "again", 101).profile
+assert(loaded.preferences.MusicVolume == 0 and not loaded.preferences.MenuMotion)
 assert(Profile.valid(loaded) and loaded.jobs == 2 and loaded.discoveries.Coal)
 print("PASS legacy ore collection, job order, duplicate claims, doubled sales and reload")
 
@@ -55,7 +59,10 @@ for _, seed in { 11, 73129, 91003, 73129 } do
 				local mat = geo:sample(x, y, z)
 				local ore = Ores.byMaterial[mat]
 				if ore then
-					assert(-y >= ore.min)
+					assert(ore.host or Config.layer(-y).veinWeights[ore.name], "Ore outside its region")
+					if ore.name == "Dirt" then
+						assert(-y <= Config.DirtMaxDepth)
+					end
 					seen[ore.name] = true
 				end
 				hash = (hash * 31 + mat.Value) % 1000000007
@@ -79,6 +86,29 @@ for _, seed in { 11, 73129, 91003, 73129 } do
 end
 assert(hashes[11] ~= hashes[73129] and hashes[91003] ~= hashes[73129])
 
+for _, layer in Config.Layers do
+	local counts, total, weightSum = {}, 0, 0
+	for _, w in layer.veinWeights do
+		weightSum += w
+	end
+	for seed = 1, 45 do
+		local geo = Geology.new(seed)
+		for x = -3, 2 do
+			for z = -7, -1 do
+				local vein = geo:vein(x, math.floor(-(layer.depth + 50) / 32), z)
+				counts[vein.ore.name] = (counts[vein.ore.name] or 0) + 1
+				total += 1
+			end
+		end
+	end
+	for name, weight in layer.veinWeights do
+		assert(
+			math.abs((counts[name] or 0) / total - weight / weightSum) < 0.05,
+			layer.name .. " " .. name .. " vein frequency"
+		)
+	end
+end
+print("PASS region-specific vein odds")
 local surface = workspace.CitrineCove
 local world = World.new(Config.Seed, surface)
 local mapCopy = surface:Clone()
@@ -139,7 +169,7 @@ for _, name in { "Sell", "Shop" } do
 	local pad = prompt.Parent.Position - world.origin
 	assert(floorAt(pad.X, pad.Z) and math.abs(pad.Z - 15) < prompt.MaxActivationDistance)
 end
-for _, name in { "Jobs", "Book", "Store", "Lift" } do
+for _, name in { "Jobs", "Book", "Store" } do
 	local pad = site.stations[name].Parent.Position - world.origin
 	assert(floorAt(pad.X, pad.Z), name)
 end
@@ -159,7 +189,7 @@ for _, pair in { { "Sell", "Exchange lights" }, { "Shop", "Workshop lights" } } 
 	assert(group["Name tag"]:FindFirstChildOfClass("BillboardGui"))
 	assert(highlands[pair[2]]:FindFirstChildWhichIsA("PointLight", true).Brightness < 0.5)
 end
-for _, key in { "Lift", "Jobs", "Store", "Book" } do
+for _, key in { "Jobs", "Store", "Book" } do
 	local stall = site.stations[key].Parent.Parent
 	assert(stall:FindFirstChildWhichIsA("BillboardGui", true) and stall:FindFirstChildWhichIsA("PointLight", true))
 end
@@ -196,48 +226,21 @@ for _, side in { -1, 1 } do
 		end
 	end
 end
-for _, stop in require(Shared.Expeditions).stops do
-	if stop.floor then
-		local base = world.origin + stop.floor
-		local hit = workspace:Raycast(base + Vector3.new(0, 5, 2), -Vector3.yAxis * 7, onMap)
-		assert(hit and math.abs(hit.Position.Y - base.Y) < 1, stop.name .. " floor")
-		assert((site.stations["Lift" .. stop.key].Parent.Position - base).Magnitude < 9)
-		local geology = Geology.new(Config.Seed)
-		assert(geology:sample(stop.floor.X + 2, stop.floor.Y + 6, stop.floor.Z + 2) == Enum.Material.Air)
-		assert(geology:sample(stop.floor.X + 2, stop.floor.Y + 6, stop.floor.Z - 22) == Ores.byName[stop.ore].material)
-	end
-end
 print("PASS harbor paths, 360 rock rim rays, lit service pads, bridge crossing and edit-face removal")
 local terrainCells = workspace.Terrain:CountCells()
 world:generate()
-local trail = require(Server.Descent)
-onMap.FilterDescendantsInstances = { mapCopy, world.grid.folder }
-local function checkRoad(point, side)
-	for _, offset in { Vector3.zero, side * 1.75, -side * 1.75 } do
-		local feet = world.origin + point + offset
-		local ground = workspace:Raycast(feet + Vector3.yAxis * 1.4, -Vector3.yAxis * 3, onMap)
-		assert(ground and math.abs(ground.Position.Y - feet.Y) < 1.2, "Unwalkable floor at " .. tostring(point))
-		local ceiling = workspace:Raycast(feet + Vector3.yAxis * 1.5, Vector3.yAxis * 5.4, onMap)
-		assert(
-			not ceiling,
-			"Passage blocked at "
-				.. tostring(point)
-				.. " by "
-				.. (if ceiling then ceiling.Instance:GetFullName() else "")
-		)
-	end
-end
-for _, run in trail.runs do
-	local steps = math.ceil((run.b - run.a).Magnitude / 2)
-	for j = 0, steps do
-		checkRoad(run.a:Lerp(run.b, j / steps), (run.b - run.a):Cross(Vector3.yAxis).Unit)
-	end
-end
-for _, turn in trail.turns do
-	checkRoad(turn, Vector3.xAxis)
-end
 assert(workspace.FallenPartsDestroyHeight < world.origin.Y + Config.Min.Y)
-print("PASS continuous walkable route and headroom at", #trail.turns, "switchbacks")
+assert(
+	not mapCopy["Harbor Plaza"]:FindFirstChild("Lift")
+		and not mapCopy:FindFirstChild("Lift Landings")
+		and not mapCopy:FindFirstChild("Deep mine trail")
+)
+for _, depth in { 128, 448, 1024 } do
+	assert(
+		world:oreAt(world.origin + Vector3.new(-14, -depth + 6, -34)),
+		"Former station should contain mineable blocks"
+	)
+end
 local roof
 for _, part in world.grid.folder:GetChildren() do
 	if part.Name == "Turf" then
@@ -245,7 +248,24 @@ for _, part in world.grid.folder:GetChildren() do
 		break
 	end
 end
-assert(roof and not world:oreAt(roof) and not next(world:excavate({ roof })), "Landscape turf was mined")
+assert(roof and not world:oreAt(roof) and not next((world:excavate({ roof }))), "Landscape turf was mined")
+local hostCells = {}
+for _, part in world.grid.folder:GetChildren() do
+	if
+		(part.Name == "Stone" or part.Name == "Dirt")
+		and math.abs(part.Position.X - world.origin.X) > 25
+		and not hostCells[part.Name]
+	then
+		hostCells[part.Name] =
+			Config.blockCenter(world.origin, part.Position + Vector3.yAxis * part.Size.Y * 0.5, Vector3.yAxis)
+	end
+	if hostCells.Dirt and hostCells.Stone then
+		break
+	end
+end
+assert(hostCells.Dirt and hostCells.Stone)
+local hostLoot, hostFinds = world:excavate({ hostCells.Dirt, hostCells.Stone })
+assert(hostLoot.Dirt == 1 and hostLoot.Stone == 1 and not next(hostFinds), "Base materials filled an ore popup")
 mapCopy:Destroy()
 local bricks = world.grid.folder:GetChildren()
 assert(#bricks > 0 and #bricks < 5800, "Starting brick count: " .. #bricks)
@@ -284,10 +304,11 @@ assert(#limited == 2 and limitedMask ~= fullMask)
 local one, oneMask = Mining.selection(world, rig, anchor, normal, 4, 6, 36, 2)
 assert(#one == 1 and oneMask == 2 and one[1] ~= anchor)
 local sideLoot = world:excavate(one)
-assert(next(sideLoot) and not next(world:excavate(one)))
+assert(next(sideLoot) and not next((world:excavate(one))))
 local stale, staleMask = Mining.selection(world, rig, anchor, normal, 4, 6, 36, limitedMask)
 assert(staleMask == 1 and #stale == 1, "Stale preview must not substitute other blocks")
-local loot = world:excavate(stale)
+local loot, finds = world:excavate(stale)
+assert(finds.Coal == anchor and not finds.Stone and not finds.Dirt)
 assert(loot.Coal == 1 and world:oreAt(anchor) == nil)
 local deeper = workspace:Raycast(head.Position, (anchor + normal * 2 - head.Position).Unit * 45)
 assert(deeper and deeper.Instance.Parent == world.grid.folder and deeper.Position.Z < face.Position.Z - 3)

@@ -1,5 +1,6 @@
 local Ores = require(game.ReplicatedStorage.Shared.Ores)
 local Pickaxe = {}
+local socketOres = { "Coal", "Copper", "Iron", "Gold", "Diamond", "Emerald" }
 -- RightGripAttachment points along the hand's tool axis. Match it at the wrapped
 -- part of the shaft, with the steel head reaching forward from the palm at rest.
 local tapeY = -0.54
@@ -96,7 +97,7 @@ function Pickaxe.equip(player, char)
 	model.PrimaryPart, model.Parent = handle, char
 	local function update()
 		local level = player:GetAttribute("Power") or 1
-		socket.Color = if level == 1 then Color3.fromRGB(255, 201, 72) else Ores.list[level + 1].color
+		socket.Color = if level == 1 then Color3.fromRGB(255, 201, 72) else Ores.byName[socketOres[level]].color
 	end
 	update()
 	local changed = player:GetAttributeChangedSignal("Power"):Connect(update)

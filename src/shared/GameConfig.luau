@@ -3,6 +3,8 @@ local Config = {
 	-- Grid coordinates are relative to the entrance. One voxel is four studs.
 	Cell = 4,
 	Chunk = 8,
+	DirtThickness = 8,
+	DirtMaxDepth = 12,
 	MineBlockTag = "EndlessMiningBlockFolder",
 	Min = Vector3.new(-96, -1152, -224),
 	Max = Vector3.new(96, 40, 0),
@@ -23,26 +25,30 @@ Config.Layers = {
 	{
 		depth = 0,
 		name = "Sunstone Hollow",
+		veinWeights = { Coal = 72, Copper = 28 },
 		material = Enum.Material.Concrete,
-		color = Color3.fromRGB(213, 156, 111),
+		color = Color3.fromRGB(151, 153, 158),
 	},
 	{
 		depth = 108,
 		name = "Iron Shelf",
+		veinWeights = { Coal = 23, Copper = 27, Iron = 44, Gold = 6 },
 		material = Enum.Material.Rock,
-		color = Color3.fromRGB(126, 139, 157),
+		color = Color3.fromRGB(132, 136, 143),
 	},
 	{
 		depth = 360,
 		name = "Prism Grotto",
+		veinWeights = { Coal = 10, Copper = 15, Iron = 36, Gold = 27, Diamond = 12 },
 		material = Enum.Material.Slate,
-		color = Color3.fromRGB(97, 117, 158),
+		color = Color3.fromRGB(115, 119, 127),
 	},
 	{
 		depth = 740,
 		name = "Emerald Deep",
+		veinWeights = { Coal = 6, Copper = 9, Iron = 26, Gold = 28, Diamond = 23, Emerald = 8 },
 		material = Enum.Material.Basalt,
-		color = Color3.fromRGB(87, 90, 127),
+		color = Color3.fromRGB(96, 100, 108),
 	},
 }
 function Config.ridgeHeight(seed, x, z)

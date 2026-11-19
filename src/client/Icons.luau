@@ -26,12 +26,11 @@ function Icons.draw(parent, key, x, y, size, tint)
 		shape("Pick head", 8, 5, 16, 6, light, 2, 20, true)
 		shape("Pick tip", 21, 8, 7, 5, W.aqua, 1, 39, true)
 		shape("Rear pick", 4, 6, 7, 4, W.aqua, 1, -23, true)
-	elseif key == "Lift" then
-		shape("Cab", 4, 5, 24, 22, light, 3, 0, true)
-		shape("Door", 7, 10, 18, 14, W.panel, 1)
-		shape("Left door", 8, 11, 7, 12, W.aqua, 1)
-		shape("Right door", 17, 11, 7, 12, W.aqua, 1)
-		shape("Signal", 12, 6, 8, 2, W.orange, 1)
+	elseif key == "Settings" then
+		for i, xx in { 8, 16, 24 } do
+			shape("Rail", xx - 1, 4, 3, 24, W.panel, 2)
+			shape("Dial", xx - 4, if i == 2 then 17 else 8, 9, 7, light, 3, 0, true)
+		end
 	elseif key == "Jobs" then
 		shape("Clipboard", 6, 5, 20, 24, W.gold, 3, -6, true)
 		shape("Paper", 9, 9, 14, 16, light, 1, -6)

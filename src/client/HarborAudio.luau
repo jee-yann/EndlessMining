@@ -1,48 +1,30 @@
 local SoundService = game:GetService("SoundService")
-local TweenService = game:GetService("TweenService")
 local Input = game:GetService("UserInputService")
 
 local Audio = {}
 local bus = Instance.new("Folder")
 bus.Name, bus.Parent = "Harbor audio", SoundService
+local function channel(name)
+	local group = Instance.new("SoundGroup")
+	group.Name, group.Volume, group.Parent = name, 0, SoundService
+	return group
+end
+local musicChannel, sfxChannel = channel("Harbor music"), channel("Harbor effects")
+function Audio.volume(key, percent)
+	local group = if key == "MusicVolume" then musicChannel else sfxChannel
+	group.Volume = percent / 100
+end
 local function sound(name, asset, volume, pitch)
 	local s = Instance.new("Sound")
 	s.Name, s.SoundId, s.Volume, s.PlaybackSpeed, s.Parent = name, asset, volume, pitch, bus
+	s.SoundGroup = sfxChannel
 	return s
 end
 
 -- Anthony Mawer, Prima Bossa Nova, from APM's Roblox Creator Store catalog.
-local music = sound("Prima Bossa Nova", "rbxassetid://1837070127", 0, 1)
-music.Looped = true
-local enabled = true
-local fade
-local function fadeMusic(volume)
-	if fade then
-		fade:Cancel()
-	end
-	fade = TweenService:Create(music, TweenInfo.new(0.3), { Volume = volume })
-	fade:Play()
-end
+local music = sound("Prima Bossa Nova", "rbxassetid://1837070127", 0.31, 1)
+music.SoundGroup, music.Looped = musicChannel, true
 music:Play()
-fadeMusic(0.17)
-
-function Audio.toggleMusic()
-	enabled = not enabled
-	if enabled then
-		if not music.IsPlaying then
-			music:Resume()
-		end
-		fadeMusic(0.17)
-	else
-		fadeMusic(0)
-		fade.Completed:Once(function()
-			if not enabled then
-				music:Pause()
-			end
-		end)
-	end
-	return enabled
-end
 
 local pop = "rbxassetid://15675055424" -- Roblox UI Cute Pop
 local voices = {
@@ -51,7 +33,6 @@ local voices = {
 	Close = sound("Close bubble", "rbxassetid://15675081158", 0.15, 1.1),
 	Buy = sound("Workshop pop", pop, 0.17, 1.18),
 	Job = sound("Job pop", pop, 0.16, 1.31),
-	Lift = sound("Lift pop", pop, 0.16, 0.97),
 	Mine = sound("Grip pop", pop, 0.09, 0.78),
 	Select = sound("Switch pop", pop, 0.15, 1.21),
 	Reward = sound("Reward bubbles", pop, 0.18, 1.26),
@@ -66,6 +47,9 @@ local function play(key)
 	local voice = voices[key]
 	voice.TimePosition = 0
 	voice:Play()
+end
+function Audio.preview()
+	play("Select")
 end
 function Audio.reward(pitch)
 	play("Open")
@@ -84,6 +68,8 @@ local signatures = {
 	{ "Diamond", 9116394545, 0.20, 1.34, 0.70 },
 	{ "Emerald", 9116395089, 0.22, 1.08, 0.85 },
 }
+local dirt = sound("Dirt break", "rbxasset://sounds/action_footsteps_plastic.mp3", 0.15, 0.82)
+dirt.PlaybackRegionsEnabled, dirt.PlaybackRegion = true, NumberRange.new(0, 0.21)
 local oreVoices = {}
 for _, cue in signatures do
 	local s = sound(cue[1] .. " break", "rbxassetid://" .. cue[2], cue[3], cue[4])
@@ -99,6 +85,10 @@ for i = 1, 3 do
 end
 local flourishEnd, flourishRank, flourishSerial = 0, 0, 0
 function Audio.ore(loot)
+	if loot.Dirt then
+		dirt.TimePosition = 0
+		dirt:Play()
+	end
 	local delay, best = 0, 0
 	for rank, cue in signatures do
 		if loot[cue[1]] then
@@ -115,7 +105,7 @@ function Audio.ore(loot)
 	if best < 5 or (now < flourishEnd and best <= flourishRank) then
 		return
 	end
-	local noteCount = best - 4
+	local noteCount = math.min(#notes, best - 4)
 	flourishRank, flourishEnd, flourishSerial = best, now + delay + noteCount * 0.09, flourishSerial + 1
 	local serial = flourishSerial
 	for note = 1, noteCount do

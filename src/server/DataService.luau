@@ -19,6 +19,7 @@ local function copy(p)
 		mined = p.mined,
 		bestDepth = p.bestDepth,
 		levels = table.clone(p.levels),
+		preferences = table.clone(p.preferences),
 		bag = table.clone(p.bag),
 		jobs = p.jobs,
 		discoveries = table.clone(p.discoveries),

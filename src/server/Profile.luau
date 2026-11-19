@@ -2,6 +2,7 @@ local Shared = game:GetService("ReplicatedStorage").Shared
 local Ores = require(Shared.Ores)
 local Upgrades = require(Shared.Upgrades)
 local Expeditions = require(Shared.Expeditions)
+local Preferences = require(Shared.Preferences)
 local Profile = {}
 
 function Profile.new()
@@ -14,6 +15,7 @@ function Profile.new()
 		bestDepth = 0,
 		jobs = 0,
 		discoveries = {},
+		preferences = table.clone(Preferences.defaults),
 	}
 end
 
@@ -66,10 +68,26 @@ function Profile.valid(p)
 			end
 		end
 	end
+	if p.preferences ~= nil then
+		if type(p.preferences) ~= "table" then
+			return false
+		end
+		for key, value in p.preferences do
+			if not Preferences.valid(key, value) then
+				return false
+			end
+		end
+	end
 	return Profile.used(p) <= Profile.stat(p, "Capacity")
 end
 
 function Profile.upgradeSave(p)
+	p.preferences = p.preferences or {}
+	for key, value in Preferences.defaults do
+		if p.preferences[key] == nil then
+			p.preferences[key] = value
+		end
+	end
 	p.jobs = p.jobs or 0
 	p.discoveries = p.discoveries or {}
 	for name, amount in p.bag do
