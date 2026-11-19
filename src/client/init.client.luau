@@ -24,6 +24,7 @@ local params = RaycastParams.new()
 params.FilterType = Enum.RaycastFilterType.Exclude
 local origin = net:GetAttribute("Origin")
 local landing = net:GetAttribute("Landing")
+task.spawn(require(script.Tramway), origin)
 local function release()
 	held, tapPending = nil, false
 end
@@ -34,14 +35,14 @@ local function gotCharacter(character)
 	local root = character:WaitForChild("HumanoidRootPart", 10)
 	if root then
 		for _ = 1, 100 do
-			if (root.Position - origin).Magnitude < 80 then
+			if (root.Position - landing).Magnitude < 18 then
 				break
 			end
 			task.wait(0.05)
 		end
 		if player.Character == character and workspace.CurrentCamera then
 			workspace.CurrentCamera.CFrame =
-				CFrame.lookAt(root.Position + Vector3.new(0, 6, 15), root.Position + Vector3.new(0, 7, -22))
+				CFrame.lookAt(root.Position + Vector3.new(0, 7, 16), root.Position + Vector3.new(0, 4, -22))
 		end
 	end
 end

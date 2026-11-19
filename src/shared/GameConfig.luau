@@ -6,6 +6,8 @@ local Config = {
 	MineBlockTag = "EndlessMiningBlockFolder",
 	Min = Vector3.new(-96, -352, -224),
 	Max = Vector3.new(96, 40, 0),
+	SurfaceMin = Vector3.new(-144, -12, -92),
+	SurfaceMax = Vector3.new(144, 92, 156),
 	-- Fallback origin when the mine is built without an authored surface.
 	Origin = Vector3.new(0, 24, 4),
 	SurfaceName = "Citrine Cove",

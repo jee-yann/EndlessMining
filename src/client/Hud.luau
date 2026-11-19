@@ -2,12 +2,15 @@ local Shared = game:GetService("ReplicatedStorage").Shared
 local StarterGui = game:GetService("StarterGui")
 local Upgrades, Expeditions = require(Shared.Upgrades), require(Shared.Expeditions)
 local W, Icons, Menu = require(script.Parent.Widgets), require(script.Parent.Icons), require(script.Parent.HarborMenu)
+local Audio = require(script.Parent.HarborAudio)
 local Hud = {}
 Hud.__index = Hud
-local function card(parent, name, x, y, w, h)
+local function card(parent, name, x, y, w, h, top, bottom)
 	local f = W.frame(parent, name, x, y, w, h, W.panel, 13)
 	W.stroke(f, W.ink, 2)
-	W.gradient(f, Color3.new(1, 1, 1), Color3.fromRGB(201, 216, 232), 20)
+	W.enamel(f, top or W.ocean, bottom or W.panel)
+	local shine = W.frame(f, "Enamel highlight", 11, 2, w - 22, 2, W.white, 1)
+	shine.BackgroundTransparency = 0.68
 	return f
 end
 function Hud.new(player, net, mobile)
@@ -27,50 +30,68 @@ function Hud.new(player, net, mobile)
 	root.Size, root.BackgroundTransparency = UDim2.fromScale(1, 1), 1
 	self.root = root
 	StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.PlayerList, false)
-	local wallet = card(root, "Wallet", 0, 0, 211, 79)
+	local wallet = card(root, "Wallet", 0, 0, 211, 79, Color3.fromRGB(235, 128, 32), W.ruby)
+	local purse = W.frame(wallet, "Coin badge", 7, 6, 40, 34, W.gold, 10)
+	W.stroke(purse, W.ink, 1.5)
+	W.frame(wallet, "Backpack panel", 5, 41, 201, 33, Color3.fromRGB(93, 49, 55), 8)
 	Icons.draw(wallet, "Coins", 9, 5, 38)
 	self.gold = W.title(wallet, "0", 52, 0, 151, 40, 31, W.gold, true)
+	W.outlineText(self.gold)
 	Icons.draw(wallet, "Capacity", 12, 45, 24)
 	self.pack = W.text(wallet, "", 45, 39, 154, 19, 15, W.white, true)
 	local track = W.frame(wallet, "Capacity", 46, 63, 151, 7, W.ink, 4)
 	self.fill = W.frame(track, "Ore", 0, 0, 0, 7, W.green, 4)
 	self.status = W.text(wallet, "", 0, 80, 211, 15, 12, W.white, true)
 	self.status.TextStrokeTransparency = 0.2
-	local taskCard = card(root, "Current job", 0, 0, 215, 79)
+	local taskCard = card(root, "Current job", 0, 0, 215, 86, Color3.fromRGB(157, 65, 190), Color3.fromRGB(77, 49, 149))
 	W.anchor(taskCard, 1, 0, UDim2.new(1, -12, 0, 9))
 	Icons.draw(taskCard, "Jobs", 8, 7, 27)
 	W.text(taskCard, "SHIFT JOB", 42, 5, 96, 22, 13, W.gold, true)
-	self.reward = W.text(taskCard, "", 139, 5, 67, 22, 13, W.green)
+	local bounty = W.frame(taskCard, "Payout", 136, 7, 70, 21, W.gold, 9)
+	self.reward = W.title(bounty, "", 0, 0, 70, 21, 13, W.ink)
 	self.job = W.title(taskCard, "", 12, 29, 193, 25, 20, W.white, true)
 	self.jobCount = W.text(taskCard, "", 12, 55, 190, 19, 14, W.muted, true)
-	self.ribbon = card(taskCard, "Discovery", 0, 88, 215, 52)
+	local jobTrack = W.frame(taskCard, "Job progress", 12, 76, 190, 5, W.ink, 3)
+	self.jobFill = W.frame(jobTrack, "Mined", 0, 0, 0, 5, W.gold, 3)
+	self.ribbon = card(taskCard, "Discovery", 0, 88, 215, 52, W.ocean, W.grape)
 	self.ribbon.Visible = false
 	self.ribbonType = W.text(self.ribbon, "", 12, 4, 192, 17, 12, W.aqua, true)
 	self.ribbonName = W.title(self.ribbon, "", 12, 22, 192, 25, 20, W.white, true)
 	local jobTap = Instance.new("TextButton")
 	jobTap.Name, jobTap.Text, jobTap.AutoButtonColor, jobTap.BackgroundTransparency = "OpenJob", "", false, 1
 	jobTap.Size, jobTap.ZIndex, jobTap.Parent = UDim2.fromScale(1, 1), 2, taskCard
+	Audio.bind(jobTap, "Job")
 	jobTap.Activated:Connect(function()
 		self:openPage("Jobs")
 	end)
-	local loc = card(root, "Location", 0, 0, 211, 76)
+	local loc = card(root, "Location", 0, 0, 211, 76, Color3.fromRGB(19, 142, 153), Color3.fromRGB(24, 68, 119))
 	self.layer = W.text(loc, "CITRINE COVE", 10, 3, 186, 19, 13, W.aqua, true)
 	self.depth = W.title(loc, "Surface", 10, 24, 91, 26, 20, W.white, true)
-	self.surface = W.button(loc, "Surface", 105, 22, 92, 27, W.aqua, "↑ Harbor")
+	self.surface = W.button(loc, "Surface", 105, 22, 92, 27, W.aqua, "↑ Harbor", "Lift")
 	self.surface.TextSize = 14
 	self.surface.Activated:Connect(function()
 		net.Action:FireServer("Surface")
 	end)
 	self.stats = W.text(loc, "", 10, 53, 194, 18, 12, W.muted, true)
+	local music = W.button(loc, "Music", 0, 83, 92, 31, W.aqua, "Music on", "Select")
+	music.TextSize = 15
+	music.Activated:Connect(function()
+		local on = Audio.toggleMusic()
+		music.Text, music.BackgroundColor3 = if on then "Music on" else "Music off", if on then W.aqua else W.muted
+	end)
 	local dock = W.frame(root, "Action dock", 0, 0, 441, 64, W.ink)
 	dock.BackgroundTransparency = 1
 	self.nav = {}
+	local cues = { Lift = "Lift", Gear = "Buy", Jobs = "Job", Book = "Open", Store = "Select", Sell = "Sell" }
 	for i, key in { "Lift", "Gear", "Jobs", "Book", "Store", "Sell" } do
-		local tint = if key == "Sell" then W.green else Menu.pages[key].color
-		local b = W.button(dock, key, (i - 1) * 74, 0, 69, 61, tint, "")
-		local icon = Icons.draw(b, key, 19, 2, 31, tint)
+		local tint = if key == "Sell" then W.gold else Menu.pages[key].color
+		local b = W.button(dock, key, (i - 1) * 74, 0, 69, 61, tint, "", cues[key])
+		local badge = W.frame(b, "Medallion", 15, -6, 39, 39, tint:Lerp(W.white, 0.62), 13)
+		W.stroke(badge, W.ink, 2)
+		local icon = Icons.draw(badge, key, 3, 3, 33, tint)
 		icon.Rotation = if i % 2 == 0 then 4 else -4
-		self.nav[key] = W.title(b, if key == "Book" then "Index" else key, 1, 32, 67, 25, 17, W.ink)
+		self.nav[key] = W.title(b, if key == "Book" then "Index" else key, 1, 33, 67, 25, 18, W.white)
+		W.outlineText(self.nav[key])
 		if key == "Jobs" then
 			self.jobBadge = W.frame(b, "Reward ready", 53, -5, 20, 20, W.pink, 10)
 			W.stroke(self.jobBadge, W.ink, 2)
@@ -84,7 +105,7 @@ function Hud.new(player, net, mobile)
 			end
 		end)
 	end
-	self.mine = W.button(root, "Mine", 0, 0, 98, 46, W.aqua, "Hold mine")
+	self.mine = W.button(root, "Mine", 0, 0, 98, 46, W.aqua, "Hold mine", "Mine")
 	W.anchor(self.mine, 1, 0.5, UDim2.new(1, -12, 0.54, 0))
 	self.mine.Visible = mobile
 	local speech = card(root, "Feedback", 0, 0, 320, 47)
@@ -179,6 +200,7 @@ function Hud:refresh()
 	local mined, done = p:GetAttribute("Mined") or 0, p:GetAttribute("Jobs") or 0
 	local _, rank = Expeditions.rank(mined)
 	local job = Expeditions.jobs[done + 1]
+	self.jobFill.Size = UDim2.fromScale(if job then math.clamp(mined / job.goal, 0, 1) else 1, 1)
 	self.job.Text = if job then job.title else rank.name
 	self.reward.Text = if job then "+" .. W.number(job.reward) .. " G" else "All done"
 	self.jobCount.Text = if job and mined >= job.goal

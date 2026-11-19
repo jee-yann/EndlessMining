@@ -221,8 +221,8 @@ task.spawn(function()
 			local localPos = root.Position - world.origin
 			if
 				localPos.Y < Config.Min.Y - 10
-				or math.abs(localPos.X) > 150
-				or localPos.Z > 120
+				or math.abs(localPos.X) > Config.SurfaceMax.X + 12
+				or localPos.Z > Config.SurfaceMax.Z + 12
 				or localPos.Z < Config.Min.Z - 25
 			then
 				toSurface(player, player.Character)

@@ -96,11 +96,37 @@ local function floorAt(x, z)
 end
 for _, x in { -3, 0, 3 } do
 	local lastY = world.origin.Y
-	for z = 70, 0, -0.5 do
+	for z = (site.spawn.Position - world.origin).Z, 0, -0.5 do
 		local floor = floorAt(x, z)
 		assert(floor and math.abs(floor.Position.Y - lastY) < 1, "Landing-to-mine path at " .. z)
 		lastY = floor.Position.Y
 	end
+end
+local highlands = mapCopy["Citrine Highlands"]
+local rimParams = RaycastParams.new()
+rimParams.FilterType = Enum.RaycastFilterType.Include
+rimParams.FilterDescendantsInstances = { highlands["Rock rim"] }
+rimParams.RespectCanCollide = true
+for angle = 0, 359 do
+	local theta = math.rad(angle)
+	local hit = workspace:Raycast(
+		world.origin + Vector3.new(0, 7, 52),
+		Vector3.new(math.sin(theta), 0, math.cos(theta)) * 230,
+		rimParams
+	)
+	assert(hit, "Open shoreline at " .. angle .. " degrees")
+end
+for _, cell in
+	{ Vector2.new(0, 125), Vector2.new(-83, 76), Vector2.new(88, 96), Vector2.new(-80, 31), Vector2.new(81, 31) }
+do
+	assert(floorAt(cell.X, cell.Y), "Outer promenade floor at " .. tostring(cell))
+end
+for _, name in { "Exchange lights", "Workshop lights" } do
+	local lamps = highlands[name]
+	assert(
+		lamps:FindFirstChildWhichIsA("PointLight", true) and lamps:FindFirstChildWhichIsA("SurfaceLight", true),
+		name
+	)
 end
 assert(not floorAt(10, 32), "The inlet should pass completely under the bridge")
 assert(not floorAt(0, -10), "The gallery floor must be excavatable")
@@ -130,7 +156,7 @@ for _, stop in require(Shared.Expeditions).stops do
 	end
 end
 mapCopy:Destroy()
-print("PASS authored surface, continuous bridge crossing, both service pads and edit-face removal")
+print("PASS harbor paths, 360 rock rim rays, lit service pads, bridge crossing and edit-face removal")
 local terrainCells = workspace.Terrain:CountCells()
 world:generate()
 local bricks = world.grid.folder:GetChildren()

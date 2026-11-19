@@ -7,34 +7,39 @@ local W, Icons = require(script.Parent.Widgets), require(script.Parent.Icons)
 local Menu = {}
 Menu.__index = Menu
 Menu.pages = {
-	Lift = { name = "Mine lift", color = W.aqua },
-	Gear = { name = "Workshop", color = W.orange },
-	Jobs = { name = "Shift jobs", color = W.gold },
+	Lift = { name = "Mine lift", color = Color3.fromRGB(120, 170, 255) },
+	Gear = { name = "Workshop", color = W.aqua },
+	Jobs = { name = "Shift jobs", color = W.violet },
 	Book = { name = "Ore index", color = W.green },
 	Store = { name = "Outfitters", color = W.pink },
 }
 function Menu.new(root, player, net, close)
 	local self = setmetatable({ player = player, net = net, prices = {}, updates = {} }, Menu)
-	local shade = Instance.new("TextButton")
+	local shade = Instance.new("Frame")
 	shade.Name, shade.Size, shade.BackgroundColor3, shade.BackgroundTransparency =
 		"ShopOverlay", UDim2.fromScale(1, 1), W.ink, 0.25
-	shade.Text, shade.AutoButtonColor, shade.Visible, shade.ZIndex, shade.Parent = "", false, false, 5, root
+	shade.Active, shade.Visible, shade.ZIndex, shade.Parent = true, false, 5, root
 	shade.BackgroundTransparency = 1
 	self.overlay = shade
 	local modal = W.frame(shade, "Harbor menu", 0, 0, 480, 408, W.panel, 18)
 	modal.Active = true
 	W.stroke(modal, W.ink, 3)
+	self.trim = W.enamel(modal, W.grape, W.panel)
 	W.anchor(modal, 0.5, 0.5, UDim2.fromScale(0.5, 0.5))
 	self.scale = W.scale(modal)
 	self.modal = modal
 	local header = W.frame(modal, "Marquee", 7, 7, 466, 73, W.aqua, 12)
 	self.header = header
-	W.gradient(header, Color3.new(1, 1, 1), Color3.fromRGB(174, 194, 228), 16)
+	W.gradient(header, Color3.new(1, 1, 1), Color3.fromRGB(200, 177, 232), 24)
+	for i = 1, 3 do
+		local stripe = W.frame(header, "Sunburst", 323 + i * 17, 10, 10, 52, W.white, 4)
+		stripe.Rotation, stripe.BackgroundTransparency = 22, 0.76
+	end
 	self.iconWell = W.frame(header, "Badge", 12, 11, 50, 50, W.white, 12)
 	W.stroke(self.iconWell, W.ink, 2)
 	self.heading = W.title(header, "", 74, 4, 322, 37, 30, W.ink, true)
 	self.sub = W.text(header, "", 76, 39, 329, 23, 15, W.ink, true)
-	local closeButton = W.button(header, "Close", 416, 16, 37, 37, W.white, "×")
+	local closeButton = W.button(header, "Close", 416, 16, 37, 37, W.white, "×", "Close")
 	closeButton.TextSize = 25
 	closeButton.Activated:Connect(close)
 	local list = Instance.new("ScrollingFrame")
@@ -57,11 +62,15 @@ function Menu:layout(width, height, touch)
 end
 function Menu:row(i, name, icon, color)
 	local row = W.frame(self.list, name, 1, 1 + (i - 1) * 69, 447, 62, W.card, 10)
+	W.enamel(row, color:Lerp(W.panel, 0.55), W.panel)
+	W.frame(row, "Color tab", 0, 12, 4, 38, color, 2)
 	local plate = W.frame(row, "Badge", 9, 8, 46, 46, color, 9)
+	W.stroke(plate, W.ink, 2)
 	Icons.draw(plate, icon, 5, 5, 36, color)
 	local title = W.title(row, name, 67, 5, 238, 25, 20, W.white, true)
 	local detail = W.text(row, "", 67, 32, 253, 21, 14, W.muted, true)
-	local button = W.button(row, "Action", 322, 12, 113, 38, color, "")
+	local cues = { Gear = "Buy", Jobs = "Job", Lift = "Lift", Store = "Select" }
+	local button = W.button(row, "Action", 322, 12, 113, 38, color, "", cues[self.page])
 	return title, detail, button
 end
 local function setButton(button, caption, tint, enabled)
@@ -139,6 +148,7 @@ function Menu:book()
 	for i, ore in Ores.list do
 		local col, row = (i - 1) % 2, math.floor((i - 1) / 2)
 		local card = W.frame(self.list, ore.name, 1 + col * 226, 1 + row * 69, 219, 62, W.card, 11)
+		W.enamel(card, ore.color:Lerp(W.panel, 0.50), W.panel)
 		local tile = W.frame(card, "Specimen", 7, 9, 43, 43, ore.color, 9)
 		Icons.draw(tile, "Crystal", 5, 5, 33, ore.color:Lerp(W.white, 0.14))
 		W.title(card, ore.name, 59, 3, 153, 25, 19, W.white, true)
@@ -214,6 +224,7 @@ function Menu:open(key)
 		self.icon:Destroy()
 	end
 	self.page, self.header.BackgroundColor3, self.heading.Text = key, page.color, page.name
+	self.trim.Color = ColorSequence.new(page.color:Lerp(W.panel, 0.46), W.panel)
 	self.icon = Icons.draw(self.iconWell, key, 5, 5, 40, page.color)
 	self.status.Text = if key == "Store"
 			and RunService:IsStudio()

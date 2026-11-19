@@ -8,9 +8,7 @@ local terrain = workspace.Terrain
 local cell = Config.Cell
 local chunk = Config.Chunk * cell
 
-local function emptySite(origin, surface)
-	local bottom = origin + Config.Min
-	local top = origin + Vector3.new(96, 72, 100)
+local function emptyRegion(bottom, top, surface)
 	local overlap = OverlapParams.new()
 	overlap.MaxParts = 1
 	if surface then
@@ -20,10 +18,8 @@ local function emptySite(origin, surface)
 		return false
 	end
 	for y = bottom.Y, top.Y - 1, chunk do
-		local region = Region3.new(
-			Vector3.new(bottom.X, y, bottom.Z),
-			Vector3.new(top.X, math.min(y + chunk, top.Y), top.Z)
-		)
+		local region =
+			Region3.new(Vector3.new(bottom.X, y, bottom.Z), Vector3.new(top.X, math.min(y + chunk, top.Y), top.Z))
 		local _, occupancy = terrain:ReadVoxels(region, cell)
 		-- ReadVoxels includes a named Size field alongside its indexed X planes.
 		for _, plane in ipairs(occupancy) do
@@ -44,7 +40,10 @@ function World.new(seed, surface)
 		then (surface:GetPivot().Position / cell + Vector3.one * 0.5):Floor() * cell
 		else Config.Origin
 	for _ = 1, 32 do
-		if emptySite(origin, surface) then
+		if
+			emptyRegion(origin + Config.Min, origin + Config.Max, surface)
+			and emptyRegion(origin + Config.SurfaceMin, origin + Config.SurfaceMax, surface)
+		then
 			return setmetatable({
 				origin = origin,
 				seed = seed,

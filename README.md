@@ -23,6 +23,12 @@ For live editing, run `rojo serve default.project.json` here if this project's s
 
 ## World and balance
 
+The harbor spans roughly 268 × 229 studs inside a continuous rock rim. The spawn compass opens onto a 95-stud-wide court. Follow the central bridge to the mine, the amber bullion sign to Sell, or the cyan pickaxe to Upgrades. Side paths pass ore wagons, gardens and the stepped waterfall. Three overhead ore carriers shuttle between the ridge towers.
+
+The location card's **Music on** button pauses and resumes the instrumental loop. The action dock, menu controls and touch mining button have local sound effects. The music is Jim Condelli's *Another 8 Bit Game* from APM's Roblox catalog. [Creator Store track](https://create.roblox.com/store/asset/9048374150/Another-8-Bit-Game)
+
+![Workshop menu in Roblox Studio](map/Workshop-preview.jpg)
+
 The harbor has a lift tower, dispatch board, ore museum, pass stall and a board showing the three most productive miners in the current server. Each underground stop has a lit landing, return console and exposed ore seams. The lift unlocks with total blocks mined. The workshop's **Power** upgrade lets the pickaxe cut harder ores.
 
 | Destination | Lifetime blocks | Depth | Featured seams |
@@ -54,6 +60,7 @@ Mining area upgrades unlock **1×1, 2×1, 2×2, 3×2, 3×3, 4×3, 4×4, and 5×5
 | Studded brick geometry and face patterns | `src/server/MineBlocks.luau`, `src/shared/BlockPattern.luau` |
 | Station binding | `src/server/Quarry.luau` |
 | Starting editor camera and lighting | `default.project.json` |
+| Music and button sounds | `src/client/HarborAudio.luau` |
 
 ## Project and data ownership
 
@@ -86,12 +93,12 @@ $playTest = (Resolve-Path '.\tests\Play.spec.luau').Path
 & $studioExe --task RunScript --localPlaceFile $quarryPlace --runScriptFile $terrainTest --outputFile "$env:TEMP\EndlessMining-terrain.log" --quitAfterExecution
 ```
 
-Look for a standalone `QUARRY_TESTS_PASSED` output line. This checks save ownership, profile validation, economy, three seeds, shared depletion, server reach and obstructions, and face previews on all six sides, stale selections and repeated 5×5 cuts. Then run the two-client check in a signed-in Studio session.
+Look for a standalone `QUARRY_TESTS_PASSED` output line. The map checks cover the walk from spawn, both market counters, their lights, the outer paths and 360 directions around the rock rim. The mining checks cover save ownership, profile validation, economy, three seeds, shared depletion, server reach and obstructions, face previews on all six sides, stale selections and repeated 5×5 cuts. Then run the two-client check in a signed-in Studio session.
 
 ```powershell
 & $studioExe --task RunScript --localPlaceFile $quarryPlace --runScriptFile $playTest --outputFile "$env:TEMP\EndlessMining-play.log" --quitAfterExecution
 ```
 
-The two-client check uses real client-to-server requests. Each miner must open all five menus, fill a pack, sell it, upgrade to a two-block cut, claim a job once, try both Studio passes, travel to the Foundry, and return to the surface. The test also checks that the Vault stays locked. Look for `QUARRY_PLAYTEST_RESULT PASS` followed by both clients' results.
+The two-client check uses real client-to-server requests. Each miner must open all five menus, fill a pack, sell it, upgrade to a two-block cut, claim a job once, try both Studio passes, travel to the Foundry, and return to the surface. The test also checks that the Vault stays locked, each sound loads, the music pauses and resumes, and an ore carrier moves. Look for `QUARRY_PLAYTEST_RESULT PASS` followed by both clients' results.
 
 For hands-on checks, choose **Server & Clients** in Studio's Test selector and start two players. Mine the same face, compare balances and verify both players see the same missing bricks. Use the device emulator to check the shop, hold/release control, thumbstick and jump in phone landscape and portrait. A persistence round trip requires a separate published test place with Studio API access enabled. Sell ore, buy an upgrade, stop the session and rejoin to verify the balance and level.

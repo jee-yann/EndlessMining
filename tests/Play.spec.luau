@@ -59,6 +59,18 @@ local function test()
 	waitFor(function() return workspace:FindFirstChild("MiningSelection") end,8,"aim controller did not start")
 	assert(p:GetAttribute("SaveStatus")=="Practice session","local data scope")
 	waitFor(function() return p.Character:FindFirstChild("Harbor pick") end,8,"equipped pickaxe")
+	local harbor=game.SoundService:WaitForChild("Harbor audio",8)
+	local song=harbor:WaitForChild("Another 8 Bit Game",5)
+	waitFor(function() return song.IsLoaded and song.IsPlaying and song.TimePosition>.1 end,20,"soundtrack playback")
+	local audio=require(p.PlayerScripts.Client.HarborAudio)
+	assert(audio.toggleMusic()==false)
+	waitFor(function() return not song.IsPlaying end,3,"music pause")
+	assert(audio.toggleMusic()==true)
+	waitFor(function() return song.IsPlaying and song.Volume>.1 end,3,"music resume")
+	for _,voice in harbor:GetChildren() do assert(voice.IsLoaded,voice.Name.." failed to load") end
+	local car=workspace.CitrineCove["Citrine Highlands"]["Moving cabins"]["Ore carrier 1"]
+	local start=car:GetPivot().Position
+	waitFor(function() return (car:GetPivot().Position-start).Magnitude>.12 end,4,"tram movement")
 	local overlay=gui.SafeArea.ShopOverlay
 	local menu=overlay["Harbor menu"]
 	for _,page in {"Lift","Gear","Jobs","Book","Store"} do

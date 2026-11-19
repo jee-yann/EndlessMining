@@ -1,10 +1,12 @@
 local TweenService = game:GetService("TweenService")
+local Audio = require(script.Parent.HarborAudio)
 local W = {}
 local rgb = Color3.fromRGB
 W.ink, W.panel, W.card, W.line = rgb(18, 24, 44), rgb(30, 41, 65), rgb(48, 61, 89), rgb(77, 95, 127)
 W.white, W.muted, W.gold, W.aqua, W.green =
 	rgb(255, 253, 245), rgb(206, 220, 234), rgb(255, 209, 76), rgb(88, 224, 252), rgb(110, 236, 150)
 W.pink, W.violet, W.orange = rgb(255, 128, 191), rgb(186, 149, 255), rgb(255, 165, 90)
+W.ruby, W.ocean, W.grape = rgb(183, 63, 48), rgb(9, 115, 150), rgb(121, 66, 177)
 local off = UDim2.fromOffset
 function W.round(obj, r)
 	local c = Instance.new("UICorner")
@@ -42,14 +44,24 @@ function W.title(parent, value, x, y, w, h, size, color, left)
 	l.Font = Enum.Font.FredokaOne
 	return l
 end
-function W.button(parent, name, x, y, w, h, tint, label)
+function W.enamel(obj, top, bottom)
+	obj.BackgroundColor3 = Color3.new(1, 1, 1)
+	return W.gradient(obj, top, bottom, 34)
+end
+function W.outlineText(label)
+	label.TextStrokeColor3, label.TextStrokeTransparency = W.ink, 0.15
+end
+function W.button(parent, name, x, y, w, h, tint, label, cue)
 	local b = Instance.new("TextButton")
 	b.Name, b.Position, b.Size, b.BackgroundColor3, b.BorderSizePixel = name, off(x, y), off(w, h), tint, 0
 	b.Text, b.TextColor3, b.TextSize, b.Font = label, W.ink, 16, Enum.Font.FredokaOne
 	W.round(b, 10)
 	W.stroke(b, W.ink, 2)
-	W.gradient(b, Color3.new(1, 1, 1), rgb(215, 221, 234))
+	W.gradient(b, Color3.new(1, 1, 1), rgb(203, 192, 217), 78)
+	local gleam = W.frame(b, "Enamel highlight", 8, 2, w - 16, 2, W.white, 1)
+	gleam.BackgroundTransparency = 0.48
 	b.Parent = parent
+	Audio.bind(b, cue)
 	return b
 end
 function W.scale(obj)
