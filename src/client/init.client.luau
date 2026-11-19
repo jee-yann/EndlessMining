@@ -22,12 +22,15 @@ local fx = Effects.new()
 local Swing = require(script.PickSwing)
 local held, firstHaul, rig = nil, false, nil
 local target, targetSide, strokeStart
-local aimPoint, aimSide, aimCount, aimMask, aimCells
+local aimPoint, aimSide, aimCells
 local swinging = false
 local params = RaycastParams.new()
 params.FilterType = Enum.RaycastFilterType.Exclude
 local origin = net:GetAttribute("Origin")
 local landing = net:GetAttribute("Landing")
+local entrance = net:GetAttribute("Entrance")
+local passage = require(script.Passage).new(player, net)
+local receipt = require(script.SaleReceipt).new(hud)
 task.spawn(require(script.Tramway), origin)
 local function cancelStroke()
 	if swinging then
@@ -73,7 +76,7 @@ if player.Character then
 end
 
 UIS.InputBegan:Connect(function(input, processed)
-	if processed or hud.overlay.Visible then
+	if processed or hud.overlay.Visible or passage.active then
 		return
 	end
 	if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -122,15 +125,18 @@ net.Feedback.OnClientEvent:Connect(function(kind, a, point, spread, finds, norma
 		fx:labels(finds, a, normal)
 	elseif kind == "milestone" then
 		hud:milestone(a, point, spread)
+	elseif kind == "depart" then
+		release()
+		passage:depart(a, point)
+	elseif kind == "arrive" then
+		passage:arrive(a)
 	elseif kind == "sale" then
 		if a > 0 then
-			fx:chime(1.2)
+			fx:chime(1.45)
+			receipt:show(a, point, spread)
+		else
+			hud:notice("Your pack is empty", "Mine a block to start a haul", W.gold)
 		end
-		hud:notice(
-			if a > 0 then "+" .. W.number(a) .. " gold" else "Your pack is empty",
-			if a > 0 then "Ore sold at the exchange" else "Mine a seam to collect ore",
-			W.gold
-		)
 	elseif kind == "away" then
 		hud:setShop(false)
 		hud:notice(
@@ -218,8 +224,10 @@ local function sampleAim()
 		hud.depth.Text = if inHarbor then "Surface" elseif depth == 1 then "1 block" else depth .. " blocks"
 		hud.layer.Text = string.upper(if inHarbor then Config.SurfaceName else Config.layer(-localPos.Y).name)
 	end
-	hud.surface.Visible = localPos.Y < -2 or (root.Position - landing).Magnitude > 24
-	if hud.overlay.Visible then
+	hud.surface.Visible = not passage.active
+		and (localPos.Y < -2 or localPos.Z < 0)
+		and (root.Position - entrance).Magnitude > 7
+	if hud.overlay.Visible or passage.active then
 		hud:aimAt(nil)
 		local station = if hud.menu.page == "Gear" then "Shop" elseif hud.menu.page == "Store" then "Store" else nil
 		if station then
@@ -237,28 +245,18 @@ local function sampleAim()
 	local hit = workspace:Raycast(ray.Origin, ray.Direction * (Config.Reach + 48), params)
 	local cap = Upgrades.items.Capacity.values[player:GetAttribute("Capacity") or 1]
 	local space = cap - (player:GetAttribute("Used") or 0)
-	local count = Upgrades.items.Radius.values[player:GetAttribute("Radius") or 1]
 	local power = Upgrades.items.Power.values[player:GetAttribute("Power") or 1]
-	local center, normal, cells, mask, locked = nil, nil, nil, 0, nil
+	local center, normal, cells, locked = nil, nil, nil, nil
 	if ready and space > 0 and hit and hit.Instance.Parent:HasTag(Config.MineBlockTag) then
 		normal = hit.Normal
 		center = Config.blockCenter(origin, hit.Position, normal)
 		local anchorPart = Pattern.visiblePart(head.Position, center, normal, params)
 		if anchorPart and anchorPart.Parent:HasTag(Config.MineBlockTag) then
-			local function probe(pos)
-				local part = if pos == center
-					then anchorPart
-					else Pattern.visiblePart(head.Position, pos, normal, params)
-				if part and part.Parent:HasTag(Config.MineBlockTag) then
-					return Ores.byName[part.Name]
-				end
-				return nil
-			end
-			cells, mask, locked = Pattern.select(origin, center, normal, count, power, space, nil, probe)
+			cells, locked = Pattern.select(origin, center, Ores.byName[anchorPart.Name], power, space)
 		end
 	end
 	fx:aim(cells)
-	local valid = mask ~= 0
+	local valid = cells ~= nil and #cells == 1
 	hud:aimAt(screen, valid, locked)
 	hud.reticle.Visible = mobile
 	if mobile then
@@ -273,7 +271,7 @@ local function sampleAim()
 	elseif valid or not firstHaul then
 		local help = if mobile then "Hold MINE on the highlighted blocks" else "Hold the left mouse button to mine"
 		local title = if valid
-			then string.format("%d block%s selected", #cells, if #cells == 1 then "" else "s")
+			then "Mine " .. string.lower(hit.Instance.Name)
 			elseif localPos.Y < -2 then "Aim at the wall or floor to keep digging"
 			else "Follow the path to the crystal cave"
 		hud:guide(title, help, true)
@@ -281,7 +279,7 @@ local function sampleAim()
 		hud:guide("", "", false)
 	end
 	if valid then
-		aimPoint, aimSide, aimCount, aimMask, aimCells = center, normal, count, mask, cells
+		aimPoint, aimSide, aimCells = center, normal, cells
 	end
 end
 
@@ -322,8 +320,10 @@ RunService.RenderStepped:Connect(function(dt)
 	hud.cursorEdge.Color = W.gold
 	fx:damage(aimCells, aimSide, progress)
 	if progress == 1 then
-		net.Mine:FireServer(target, targetSide, aimCount, aimMask)
+		net.Mine:FireServer(target, targetSide, 1, 1)
 		fx:damage(nil)
 		strokeStart = now
 	end
 end)
+
+hud.root.Parent:SetAttribute("ControllerReady", true)

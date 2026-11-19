@@ -22,9 +22,16 @@ local function sound(name, asset, volume, pitch)
 end
 
 -- Anthony Mawer, Prima Bossa Nova, from APM's Roblox Creator Store catalog.
-local music = sound("Prima Bossa Nova", "rbxassetid://1837070127", 0.31, 1)
+local music = sound("Prima Bossa Nova", "rbxassetid://1837070127", 0.095, 1)
 music.SoundGroup, music.Looped = musicChannel, true
-music:Play()
+-- Keep automated Studio sessions silent, including while their slider tests run.
+if
+	not (
+		game:GetService("RunService"):IsStudio() and game:GetService("ReplicatedStorage"):GetAttribute("MuteTestMusic")
+	)
+then
+	music:Play()
+end
 
 local pop = "rbxassetid://15675055424" -- Roblox UI Cute Pop
 local voices = {

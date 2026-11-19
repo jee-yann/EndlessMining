@@ -36,6 +36,7 @@ for _, layer in Config.Layers do
 	register(layer.material, "Stone", layer.color, Ores.byName.Stone)
 end
 register(Enum.Material.Grass, "Turf", Color3.fromRGB(124, 204, 84), nil)
+register(Enum.Material.Cobblestone, "Caprock", Color3.fromRGB(173, 151, 130), nil)
 codes[Enum.Material.Air] = 0
 Blocks.codes, Blocks.kinds = codes, kinds
 

@@ -31,22 +31,15 @@ function Mining.target(world, character, point, normal)
 	if not part or part.Parent ~= world.grid.folder then
 		return nil
 	end
-	return anchor, head.Position, params
+	return anchor
 end
 
-function Mining.selection(world, character, point, normal, count, power, space, allowed)
-	local anchor, eye, params = Mining.target(world, character, point, normal)
-	if not anchor then
+function Mining.selection(world, character, point, normal, power, space)
+	local center = Mining.target(world, character, point, normal)
+	if not center then
 		return {}
 	end
-	local function probe(center)
-		local part = Pattern.visiblePart(eye, center, normal, params)
-		if part and part.Parent == world.grid.folder then
-			return world:oreAt(center)
-		end
-		return nil
-	end
-	return Pattern.select(world.origin, anchor, normal, count, power, space, allowed, probe)
+	return Pattern.select(world.origin, center, world:oreAt(center), power, space)
 end
 
 function Mining.start(world, net, sessions, sync)
@@ -95,14 +88,7 @@ function Mining.start(world, net, sessions, sync)
 		if not world.ready or not sessions[player] or not Mining.validPoint(point) then
 			return
 		end
-		if
-			count ~= Profile.stat(sessions[player].profile, "Radius")
-			or type(mask) ~= "number"
-			or mask % 1 ~= 0
-			or mask <= 0
-			or mask >= 2 ^ count
-			or typeof(normal) ~= "Vector3"
-		then
+		if count ~= 1 or mask ~= 1 or typeof(normal) ~= "Vector3" then
 			return
 		end
 		if now + 0.07 < (nextPulse[player] or 0) or pending[player] then
@@ -112,7 +98,7 @@ function Mining.start(world, net, sessions, sync)
 		if not root or (point - root.Position).Magnitude > Config.Reach + 3 then
 			return
 		end
-		pending[player] = { point = point, normal = normal, count = count, mask = mask, time = now }
+		pending[player] = { point = point, normal = normal, time = now }
 		table.insert(queue, player)
 	end)
 
@@ -122,18 +108,13 @@ function Mining.start(world, net, sessions, sync)
 			hint(player, "Pack full • sell your ore", now)
 			return
 		end
-		if request.count ~= Profile.stat(profile, "Radius") then
-			return
-		end
 		local selected = Mining.selection(
 			world,
 			player.Character,
 			request.point,
 			request.normal,
-			request.count,
 			Profile.stat(profile, "Power"),
-			space,
-			request.mask
+			space
 		)
 		if #selected == 0 then
 			return
@@ -188,11 +169,10 @@ function Mining.start(world, net, sessions, sync)
 			end
 			if session and request and now - request.time < 1 then
 				local p = session.profile
-				local cost = request.count
-				if credit < cost then
+				if credit < 1 then
 					break
 				end
-				credit -= cost
+				credit -= 1
 				nextPulse[player] = now + Profile.stat(p, "Speed")
 				pulse(player, p, request, now)
 			end

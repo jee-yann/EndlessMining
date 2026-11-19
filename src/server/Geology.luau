@@ -39,9 +39,9 @@ function Geology:vein(a, b, c)
 		ore = ore,
 		lode = lode,
 		tilt = rng:NextNumber(-0.45, 0.45),
-		rx = if lode then 13 else rng:NextNumber(7, 11),
-		ry = if lode then 12 else rng:NextNumber(4, 7),
-		rz = if lode then 14 else rng:NextNumber(6, 10),
+		rx = if lode then 17 else rng:NextNumber(11, 15),
+		ry = if lode then 15 else rng:NextNumber(8, 12),
+		rz = if lode then 18 else rng:NextNumber(11, 15),
 	}
 	self.veins[key] = v
 	return v
@@ -49,6 +49,10 @@ end
 
 function Geology:sample(x, y, z)
 	local top = Config.ridgeHeight(self.seed, x, z)
+	-- The portal has its own stone roof. Keep generated turf behind its back edge.
+	if math.abs(x) < 12 and z > -8 and y > 12 then
+		return air, 0
+	end
 	if y > top then
 		return air, 0
 	end
@@ -62,6 +66,9 @@ function Geology:sample(x, y, z)
 		return air, 0
 	end
 	if y + Config.Cell > top then
+		if math.abs(x) <= 36 and z >= -56 then
+			return Enum.Material.Cobblestone, 1
+		end
 		return Enum.Material.Grass, math.clamp((top + 2 - y) / 4, 0.3, 1)
 	end
 	if shoulder > 0.4 and z > face - 8 and math.abs(y - 12 - math.sin(x / 14) * 3) < 2 then
@@ -85,6 +92,16 @@ function Geology:sample(x, y, z)
 			return air, 0
 		end
 		return v.ore.material, 1
+	end
+	-- Loose ore between veins gives single-block miners regular discoveries.
+	local hash = bit32.bxor(
+		math.floor(x / Config.Cell) * 73856093,
+		math.floor(y / Config.Cell) * 19349663,
+		math.floor(z / Config.Cell) * 83492791,
+		self.seed
+	)
+	if bit32.bxor(hash, bit32.rshift(hash, 13)) % 100 < 13 then
+		return if v.ore and layer.veinWeights[v.ore.name] then v.ore.material else Ores.byName.Coal.material, 1
 	end
 	if y >= -Config.DirtMaxDepth and y + Config.DirtThickness + Config.Cell > top then
 		return Ores.byName.Dirt.material, 1

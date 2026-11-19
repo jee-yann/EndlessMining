@@ -3,6 +3,10 @@
   "tree": {
     "$className": "DataModel",
     "$ignoreUnknownInstances": true,
+    "ReplicatedFirst": {
+      "$ignoreUnknownInstances": true,
+      "QuarryLoading": { "$path": "src/first/QuarryLoading.client.luau" }
+    },
     "ReplicatedStorage": {
       "$ignoreUnknownInstances": true,
       "Shared": {

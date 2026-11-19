@@ -59,20 +59,6 @@ function Icons.draw(parent, key, x, y, size, tint)
 		shape("Pack", 5, 8, 22, 21, W.orange, 5, 0, true)
 		shape("Fold", 7, 8, 18, 7, W.gold, 3, 0, true)
 		shape("Pocket", 9, 19, 14, 6, W.gold, 2, 0, true)
-	elseif key == "Radius" then
-		for i = 0, 3 do
-			shape(
-				"Stud",
-				4 + (i % 2) * 13,
-				4 + math.floor(i / 2) * 13,
-				11,
-				11,
-				if i == 2 then light else W.aqua,
-				2,
-				0,
-				true
-			)
-		end
 	elseif key == "Speed" then
 		for _, xx in { 8, 19 } do
 			shape("Upper chevron", xx, 5, 6, 14, W.gold, 2, -40, true)

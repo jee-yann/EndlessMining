@@ -12,10 +12,13 @@ local surface = workspace:WaitForChild("CitrineCove")
 local world = World.new(Config.Seed, surface)
 local site = Quarry.bind(surface, world)
 local landing = site.spawn.Position + Vector3.yAxis * 4
+local minePath = surface["Sand path and bridge"]["Mine path"]
+local entrance = minePath.Position + Vector3.yAxis * (minePath.Size.Y / 2 + 3.5)
 local net = Instance.new("Folder")
 net.Name = "EndlessMiningNet"
 net:SetAttribute("Origin", world.origin)
 net:SetAttribute("Landing", landing)
+net:SetAttribute("Entrance", entrance)
 net:SetAttribute("Ready", false)
 for _, name in { "Mine", "Action", "Feedback", "Dust", "FriendsBoard", "Swing" } do
 	local event = Instance.new(if name == "Dust" then "UnreliableRemoteEvent" else "RemoteEvent")
@@ -41,18 +44,18 @@ local function sync(player, p)
 	player.leaderstats.Gold.Value = p.gold
 	player.leaderstats.Depth.Value = Config.depthInBlocks(p.bestDepth)
 end
-local function toSurface(player, character)
+local function moveCharacter(character, destination)
 	local root = character and character:FindFirstChild("HumanoidRootPart")
 	if root then
 		root.AssemblyLinearVelocity, root.AssemblyAngularVelocity = Vector3.zero, Vector3.zero
-		character:PivotTo(CFrame.new(landing))
+		character:PivotTo(destination)
 	end
 end
 local function onCharacter(player, character)
 	if not character:WaitForChild("HumanoidRootPart", 10) or player.Character ~= character then
 		return
 	end
-	toSurface(player, character)
+	moveCharacter(character, CFrame.new(landing))
 	task.spawn(Pickaxe.equip, player, character)
 	local lamp = Instance.new("PointLight")
 	lamp.Name, lamp.Color, lamp.Range, lamp.Brightness = "Mining lamp", Color3.fromRGB(255, 232, 198), 32, 1.65
@@ -120,6 +123,17 @@ local function action(player, key, option, value)
 	if not s or type(key) ~= "string" then
 		return
 	end
+	if key == "ReturnReady" then
+		local travel = s.travel
+		if travel and travel.id == option then
+			s.travel = nil
+			if player.Character == travel.character then
+				moveCharacter(travel.character, CFrame.lookAt(entrance, entrance + Vector3.zAxis))
+			end
+			net.Feedback:FireClient(player, "arrive", option)
+		end
+		return
+	end
 	if key == "Preference" then
 		if Preferences.valid(option, value) and s.profile.preferences[option] ~= value then
 			s.profile.preferences[option] = value
@@ -154,11 +168,29 @@ local function action(player, key, option, value)
 	end
 	local p = s.profile
 	if key == "Surface" then
-		toSurface(player, player.Character)
+		local character = player.Character
+		local root = character and character:FindFirstChild("HumanoidRootPart")
+		if s.travel or not root then
+			return
+		end
+		s.tripId = (s.tripId or 0) + 1
+		local travel = { id = s.tripId, character = character }
+		s.travel = travel
+		local depth = math.max(0, Config.depthInBlocks(world.origin.Y - root.Position.Y))
+		net.Feedback:FireClient(player, "depart", travel.id, depth)
+		task.delay(10, function()
+			if s.travel == travel then
+				s.travel = nil
+				if player.Parent == Players then
+					net.Feedback:FireClient(player, "arrive", travel.id)
+				end
+			end
+		end)
 	elseif key == "Sell" then
+		local quantity = Profile.used(p)
 		local gold = Profile.sell(p, if player:GetAttribute("DoubleGold") then 2 else 1)
 		sync(player, p)
-		net.Feedback:FireClient(player, "sale", gold)
+		net.Feedback:FireClient(player, "sale", gold, quantity, p.gold)
 	elseif key == "Buy" and type(option) == "string" and Upgrades.items[option] then
 		local ok, msg = Profile.buy(p, option)
 		sync(player, p)
@@ -220,7 +252,7 @@ task.spawn(function()
 				or localPos.Z > Config.SurfaceMax.Z + 12
 				or localPos.Z < Config.Min.Z - 25
 			then
-				toSurface(player, player.Character)
+				moveCharacter(player.Character, CFrame.new(landing))
 			elseif Config.inside(localPos) then
 				local depthStuds = math.floor(-localPos.Y)
 				if depthStuds > s.profile.bestDepth then
@@ -229,7 +261,7 @@ task.spawn(function()
 					player.leaderstats.Depth.Value = Config.depthInBlocks(depthStuds)
 				end
 			elseif localPos.Y < -35 then
-				toSurface(player, player.Character)
+				moveCharacter(player.Character, CFrame.new(landing))
 			end
 		end
 	end

@@ -9,7 +9,7 @@ function Profile.new()
 	return {
 		version = 1,
 		gold = 0,
-		levels = { Radius = 1, Speed = 1, Power = 1, Capacity = 1 },
+		levels = { Speed = 1, Power = 1, Capacity = 1 },
 		bag = {},
 		mined = 0,
 		bestDepth = 0,
@@ -44,6 +44,9 @@ function Profile.valid(p)
 		if not integer(p[n], 9e15) then
 			return false
 		end
+	end
+	if p.levels.Radius ~= nil and (not integer(p.levels.Radius, 8) or p.levels.Radius < 1) then
+		return false
 	end
 	for _, k in Upgrades.order do
 		if not integer(p.levels[k], #Upgrades.items[k].values) or p.levels[k] < 1 then
@@ -82,6 +85,11 @@ function Profile.valid(p)
 end
 
 function Profile.upgradeSave(p)
+	-- Repay retired area upgrades once, using their original workshop prices.
+	for level = 1, (p.levels.Radius or 1) - 1 do
+		p.gold += math.floor(24 * 2.5 ^ (level - 1) + 0.5)
+	end
+	p.levels.Radius = nil
 	p.preferences = p.preferences or {}
 	for key, value in Preferences.defaults do
 		if p.preferences[key] == nil then

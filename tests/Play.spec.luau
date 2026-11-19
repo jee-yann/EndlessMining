@@ -1,4 +1,6 @@
 -- Temporary test drivers are inserted only into this CLI test's in-memory place.
+local previousTestMute = game.ReplicatedStorage:GetAttribute("MuteTestMusic")
+game.ReplicatedStorage:SetAttribute("MuteTestMusic", true)
 local function driver(class, parent, source)
 	local s = Instance.new(class)
 	s.Name, s.Source, s.Parent = "QuarryPlaytest", source, parent
@@ -35,7 +37,7 @@ report.OnServerEvent:Connect(function(player,stage,detail)
 		n.Feedback:FireClient(player,"page",detail)
 	elseif stage=="station" then
 		local island=workspace.CitrineCove
-		local positions={Sell=island["Shore market"].Sell["Service mat"],Gear=island["Shore market"].Upgrades["Service mat"],Store=island["Harbor Plaza"].Store.Counter}
+		local positions={Sell=island["Shore market"].Sell["Service mat"],Gear=island["Shore market"].Upgrades["Service mat"],Store=island["Harbor Plaza"].Store.Counter, Book=island["Harbor Plaza"].Book.Counter}
 		if positions[detail] then
 			player.Character:PivotTo(CFrame.new(positions[detail].Position+Vector3.yAxis*3))
 			player.Character.HumanoidRootPart.Anchored=true
@@ -74,9 +76,10 @@ local function test()
 	waitFor(function() return p.Character:FindFirstChild("Harbor pick") end,8,"equipped pickaxe")
 	local harbor=game.SoundService:WaitForChild("Harbor audio",8)
 	local song=harbor:WaitForChild("Prima Bossa Nova",5)
-	waitFor(function() return song.IsLoaded and song.IsPlaying and song.TimePosition>.1 end,20,"soundtrack playback")
+	assert(not song.IsPlaying and song.Volume < 0.1,"test music must stay muted")
+	waitFor(function() return gui:GetAttribute("ControllerReady") and not p.PlayerGui:FindFirstChild("QuarryLoading") end,18,"loading screen dismisses")
 	local audio=require(p.PlayerScripts.Client.HarborAudio)
-	for _,voice in harbor:GetChildren() do waitFor(function() return voice.IsLoaded end,8,voice.Name.." failed to load") end
+	for _,voice in harbor:GetChildren() do if voice==song then continue end waitFor(function() return voice.IsLoaded end,8,voice.Name.." failed to load") end
 	if r:GetAttribute("CheckSwing") then
 		local seenIds={}
 		for _,ore in require(rep.Shared.Ores).list do
@@ -101,7 +104,7 @@ local function test()
 	local overlay=gui.SafeArea.ShopOverlay
 	local menu=overlay["Harbor menu"]
 	local map=workspace.CitrineCove
-	local counters={Sell=map["Shore market"].Sell["Service mat"],Gear=map["Shore market"].Upgrades["Service mat"],Store=map["Harbor Plaza"].Store.Counter}
+	local counters={Sell=map["Shore market"].Sell["Service mat"],Gear=map["Shore market"].Upgrades["Service mat"],Store=map["Harbor Plaza"].Store.Counter,Book=map["Harbor Plaza"].Book.Counter}
 	local function visit(key,activate)
 		local pad=counters[key]
 		r:FireServer("station",key)
@@ -115,7 +118,7 @@ local function test()
 	end
 	for _,page in {"Pack","Settings","Gear","Jobs","Book","Store"} do
 		if counters[page] then visit(page,true) else r:FireServer("openPage",page) end
-		local listing=({Settings="Music volume",Gear="Mining area",Jobs="First strike",Book="Stone",Pack="Stone",Store="Double Gold"})[page]
+		local listing=({Settings="Music volume",Gear="Speed",Jobs="First strike",Book="Stone",Pack="Stone",Store="Double Gold"})[page]
 		waitFor(function() return overlay.Visible and menu.Listings:FindFirstChild(listing) end,5,"open "..page)
 		if page=="Book" then
 			assert(menu.Listings["Iron Shelf"].Depth.Text=="27 blocks","index depth in blocks")
@@ -261,11 +264,9 @@ local function test()
 		local hit=workspace:Raycast(head.Position,directions[i%#directions+1]*33,params)
 		if not hit then return end
 		local center=config.blockCenter(origin,hit.Position,hit.Normal)
-		local _,mask=pattern.select(origin,center,hit.Normal,count,1,36-p:GetAttribute("Used"),nil,function(pos)
-			local part=pattern.visiblePart(head.Position,pos,hit.Normal,params)
-			return if part then ores.byName[part.Name] else nil
-		end)
-		if mask==2^count-1 then n.Mine:FireServer(center,hit.Normal,count,mask) end
+		local part=pattern.visiblePart(head.Position,center,hit.Normal,params)
+		local selected=pattern.select(origin,center,part and ores.byName[part.Name],1,36-p:GetAttribute("Used"))
+		if #selected==1 then n.Mine:FireServer(center,hit.Normal,count,2^count-1) end
 	end
 	for i=1,650 do
 		dig(i,1)
@@ -279,6 +280,7 @@ local function test()
 	local quantity,total=0,0
 	for _,ore in ores.list do
 		local held=p:GetAttribute("Held"..ore.name)
+		if held>0 then assert(gui.SafeArea.Haul[ore.name].Visible and gui.SafeArea.Haul[ore.name].Quantity.Text=="×"..held,"live haul row") end
 		quantity+=held
 		total+=held*ore.value
 	end
@@ -287,24 +289,27 @@ local function test()
 	task.wait(.4)
 	assert(p:GetAttribute("Used")==36 and p:GetAttribute("Gold")==0,"exchange must require a visit")
 	visit("Sell",true)
+	waitFor(function() return gui.SafeArea:FindFirstChild("Sale receipt") end,4,"sale payout")
 	waitFor(function() return p:GetAttribute("Gold")==value and p:GetAttribute("Used")==0 end,6,"exchange")
 	for _,ore in ores.list do assert(p:GetAttribute("Held"..ore.name)==0) end
-	n.Action:FireServer("Buy","Radius")
+	n.Action:FireServer("Buy","Capacity")
 	task.wait(.4)
-	assert(p:GetAttribute("Radius")==1 and p:GetAttribute("Gold")==value,"workshop must require a visit")
+	assert(p:GetAttribute("Capacity")==1 and p:GetAttribute("Gold")==value,"workshop must require a visit")
 	visit("Gear",true)
-	n.Action:FireServer("Buy","Radius")
+	n.Action:FireServer("Buy","Capacity")
 	task.wait(.28)
-	if p:GetAttribute("Radius")==1 then n.Action:FireServer("Buy","Radius") end
-	waitFor(function() return p:GetAttribute("Radius")==2 and p:GetAttribute("Gold")==value-24 end,5,"purchase")
+	if p:GetAttribute("Capacity")==1 then n.Action:FireServer("Buy","Capacity") end
+	waitFor(function() return p:GetAttribute("Capacity")==2 and p:GetAttribute("Gold")==value-24 end,5,"purchase")
 	r:FireServer("position")
 	waitFor(function() return (p.Character.Head.Position-origin).Z<0 and not overlay.Visible end,5,"leave workshop")
-	for i=1,90 do
+	for i=1,6 do dig(i,2) task.wait(.12) end
+	assert(p:GetAttribute("Used")==0,"multi-block request was accepted")
+	for i=1,100 do
 		if p:GetAttribute("Used")==2 then break end
-		if p:GetAttribute("Used")==0 then dig(i,2) end
-		task.wait(.12)
+		dig(i,1)
+		task.wait(.14)
 	end
-	assert(p:GetAttribute("Used")==2,"the 2x1 upgrade should mine both highlighted cells")
+	assert(p:GetAttribute("Used")==2,"single-block mining after upgrade")
 	assert(p:GetAttribute("Found"..discovered) and p:GetAttribute("Mined")==38,"ore discovery and lifetime blocks")
 	n.Action:FireServer("Job",1)
 	waitFor(function() return p:GetAttribute("Jobs")==1 end,5,"first reward")
@@ -323,19 +328,30 @@ local function test()
 	visit("Store",true)
 	n.Action:FireServer("PreviewPass","PrismTrail")
 	waitFor(function() return p.Character.HumanoidRootPart:FindFirstChild("Prism Ribbon") end,5,"equipped trail")
+	r:FireServer("depthSample")
+	waitFor(function() return gui.SafeArea.Location.Depth.Text=="27 blocks" end,4,"return starting depth")
 	n.Action:FireServer("Surface")
-	local landing=n:GetAttribute("Landing")
+	local passage=p.PlayerGui.SurfaceReturn
+	waitFor(function() return passage.Enabled end,2,"surface fade begins")
+	local departed=os.clock()
+	local landing=n:GetAttribute("Entrance")
 	waitFor(function() return (p.Character.HumanoidRootPart.Position-landing).Magnitude<8 end,5,"surface recall")
-	return string.format("38 ore, %d gold sale, area 1×1→2×1, six menus, jobs, both passes, settings, recall (%.1fs)",value,os.clock()-first)
+	waitFor(function() return not passage.Enabled end,6,"surface fade completed")
+	assert(os.clock()-departed>.6 and not song.IsPlaying,"depth travel and test mute")
+	return string.format("38 blocks, %d gold sale, larger pack, physical ore index, settings, entrance return (%.1fs)",value,os.clock()-first)
 end
 local ok,result=pcall(test)
 r:FireServer(if ok then "passed" else "failed",tostring(result))
 ]==]
 )
 local studio = game:GetService("StudioTestService")
-local swing = studio:ExecutePlayModeAsync("Pick swing")
-print("QUARRY_SWING_RESULT", swing)
-assert(type(swing) == "string" and string.sub(swing, 1, 4) == "PASS", tostring(swing))
-local outcome = studio:ExecuteMultiplayerTestAsync(2, "CitrineCove")
-print("QUARRY_PLAYTEST_RESULT", outcome)
-assert(type(outcome) == "string" and string.sub(outcome, 1, 4) == "PASS", tostring(outcome))
+local ok, why = pcall(function()
+	local swing = studio:ExecutePlayModeAsync("Pick swing")
+	print("QUARRY_SWING_RESULT", swing)
+	assert(type(swing) == "string" and string.sub(swing, 1, 4) == "PASS", tostring(swing))
+	local outcome = studio:ExecuteMultiplayerTestAsync(2, "CitrineCove")
+	print("QUARRY_PLAYTEST_RESULT", outcome)
+	assert(type(outcome) == "string" and string.sub(outcome, 1, 4) == "PASS", tostring(outcome))
+end)
+game.ReplicatedStorage:SetAttribute("MuteTestMusic", previousTestMute)
+assert(ok, why)

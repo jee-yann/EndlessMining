@@ -21,7 +21,7 @@ local p = Profile.new()
 assert(not Profile.buy(p, "Radius"))
 p.bag = { Stone = 4, Coal = 3, Copper = 1 }
 assert(Profile.used(p) == 8 and Profile.sell(p) == 35 and Profile.used(p) == 0)
-assert(Profile.buy(p, "Radius") and p.gold == 11 and Profile.stat(p, "Radius") == 2)
+assert(Profile.buy(p, "Capacity") and p.gold == 11 and Profile.stat(p, "Capacity") == 80)
 p.gold = 1e7
 for _, key in require(Shared.Upgrades).order do
 	while Profile.buy(p, key) do
@@ -32,6 +32,10 @@ assert(Profile.stat(p, "Speed") == 0.20 and Profile.stat(p, "Power") == 6 and Pr
 p.bag.Stone = 7201
 assert(not Profile.valid(p))
 print("PASS sale, costs, level caps, upgrade effects, profile capacity validation")
+local retired = Profile.new()
+retired.levels.Radius = 4
+assert(Data.claim({ profile = retired }, "migration", 0).profile.gold == 234)
+assert(retired.levels.Radius == nil and Profile.upgradeSave(retired).gold == 234)
 local legacy = Profile.new()
 legacy.jobs, legacy.discoveries, legacy.bag, legacy.mined = nil, nil, { Coal = 3 }, 36
 legacy.preferences = nil
@@ -51,6 +55,14 @@ assert(loaded.preferences.MusicVolume == 0 and not loaded.preferences.MenuMotion
 assert(Profile.valid(loaded) and loaded.jobs == 2 and loaded.discoveries.Coal)
 print("PASS legacy ore collection, job order, duplicate claims, doubled sales and reload")
 
+local rimGeo = Geology.new(Config.Seed)
+for x = -34, 34, 4 do
+	for z = -54, -2, 4 do
+		for y = 2, 26, 4 do
+			assert(rimGeo:sample(x, y, z) ~= Enum.Material.Grass, "Turf intruded into the pithead")
+		end
+	end
+end
 local hashes = {}
 assert(Config.blockCoordinates(Vector3.zero) == Vector3.zero)
 assert(Config.blockCoordinates(Vector3.new(-0.1, -3.9, 4)) == Vector3.new(-1, 0, 1))
@@ -64,11 +76,18 @@ end
 for _, seed in { 11, 73129, 91003, 73129 } do
 	local geo = Geology.new(seed)
 	local hash, seen, lodes = 0, {}, 0
+	local rich, solid = 0, 0
 	for x = Config.Min.X + 2, Config.Max.X - 1, 8 do
 		for z = Config.Min.Z + 2, Config.Max.Z - 1, 8 do
 			for y = Config.Min.Y + 2, -2, 8 do
 				local mat = geo:sample(x, y, z)
 				local ore = Ores.byMaterial[mat]
+				if ore and y < -12 then
+					solid += 1
+					if not ore.host then
+						rich += 1
+					end
+				end
 				if ore then
 					assert(ore.host or Config.layer(-y).veinWeights[ore.name], "Ore outside its region")
 					if ore.name == "Dirt" then
@@ -88,7 +107,8 @@ for _, seed in { 11, 73129, 91003, 73129 } do
 	for _, ore in Ores.list do
 		assert(seen[ore.name], ore.name)
 	end
-	assert(lodes > 0)
+	assert(lodes > 0 and rich / solid > 0.20 and rich / solid < 0.55)
+	print("ORE_DENSITY", seed, rich / solid)
 	if hashes[seed] then
 		assert(hashes[seed] == hash)
 	end
@@ -168,6 +188,16 @@ for _, name in { "Exchange lights", "Workshop lights" } do
 		lamps:FindFirstChildWhichIsA("PointLight", true) and lamps:FindFirstChildWhichIsA("SurfaceLight", true),
 		name
 	)
+end
+for _, x in { -41, 41 } do
+	for z = 20, 42 do
+		assert(floorAt(x, z), "Incomplete creek crossing")
+	end
+end
+assert(not mapCopy["Harbor Plaza"]:FindFirstChild("Core samples"))
+local exhibit = mapCopy["Harbor Plaza"].Book
+for _, ore in Ores.list do
+	assert(exhibit:FindFirstChild(ore.name .. " sample") and exhibit:FindFirstChild(ore.name .. " label"))
 end
 assert(not floorAt(10, 32), "The inlet should pass completely under the bridge")
 assert(not floorAt(0, -10), "The gallery floor must be excavatable")
@@ -306,19 +336,11 @@ post.Size, post.Position, post.Anchored, post.Parent =
 	Vector3.new(5, 8, 2), head.Position + Vector3.new(0, 0, -5), true, workspace
 assert(not Mining.target(world, rig, anchor, normal))
 post:Destroy()
-local first, mask = Mining.selection(world, rig, anchor, normal, 1, 1, 36)
-assert(#first == 1 and first[1] == anchor and mask == 1)
-local full, fullMask = Mining.selection(world, rig, anchor, normal, 4, 6, 36)
-assert(#full == 4 and fullMask == 15, "2x2 at the starter face")
-local limited, limitedMask = Mining.selection(world, rig, anchor, normal, 4, 6, 2)
-assert(#limited == 2 and limitedMask ~= fullMask)
-local one, oneMask = Mining.selection(world, rig, anchor, normal, 4, 6, 36, 2)
-assert(#one == 1 and oneMask == 2 and one[1] ~= anchor)
-local sideLoot = world:excavate(one)
-assert(next(sideLoot) and not next((world:excavate(one))))
-local stale, staleMask = Mining.selection(world, rig, anchor, normal, 4, 6, 36, limitedMask)
-assert(staleMask == 1 and #stale == 1, "Stale preview must not substitute other blocks")
-local loot, finds = world:excavate(stale)
+local first = Mining.selection(world, rig, anchor, normal, 1, 36)
+assert(#first == 1 and first[1] == anchor)
+assert(#Mining.selection(world, rig, anchor, normal, 1, 0) == 0)
+local loot, finds = world:excavate(first)
+assert(not next((world:excavate(first))))
 assert(finds.Coal == anchor and not finds.Stone and not finds.Dirt)
 assert(loot.Coal == 1 and world:oreAt(anchor) == nil)
 local deeper = workspace:Raycast(head.Position, (anchor + normal * 2 - head.Position).Unit * 45)
@@ -327,28 +349,11 @@ assert(world:oreAt(anchor - normal * Config.Cell) ~= nil, "One hit takes just th
 human.Health = 0
 assert(not Mining.target(world, rig, anchor, normal))
 rig:Destroy()
-print("PASS part raycasts, power and pack limits, 2x2 faces, exact masks and shared depletion")
-
-local stats = require(Shared.Upgrades).items.Radius.values
-for _, n in { Vector3.xAxis, -Vector3.xAxis, Vector3.yAxis, -Vector3.yAxis, Vector3.zAxis, -Vector3.zAxis } do
-	for _, count in stats do
-		local center = world.origin + Vector3.new(2, -82, -98)
-		local offsets, bits = Pattern.select(world.origin, center, n, count, 6, 7200, nil, function()
-			return Ores.byName.Stone
-		end)
-		assert(#offsets == count and bits == 2 ^ count - 1 and offsets[1] == center)
-		local unique = {}
-		for _, pos in offsets do
-			assert((pos - center):Dot(n) == 0 and not unique[pos])
-			unique[pos] = true
-		end
-		local permitted, permMask, locked = Pattern.select(world.origin, center, n, count, 1, 7200, nil, function()
-			return Ores.byName.Diamond
-		end)
-		assert(#permitted == 0 and permMask == 0 and locked == Ores.byName.Diamond)
-	end
-end
--- Exercise the largest pattern on successive, exposed floors across chunk boundaries.
+print("PASS single-block cut, capacity, reach, obstructions and shared depletion")
+local selected, locked =
+	Pattern.select(world.origin, world.origin + Vector3.new(2, -82, -98), Ores.byName.Diamond, 1, 36)
+assert(#selected == 0 and locked == Ores.byName.Diamond)
+-- Cut straight down through chunk boundaries.
 local params = RaycastParams.new()
 params.FilterType = Enum.RaycastFilterType.Include
 params.FilterDescendantsInstances = { world.grid.folder }
@@ -371,21 +376,17 @@ for i = 1, 20 do
 	local c = Config.blockCenter(world.origin, floor.Position, floor.Normal)
 	local eye = c + Vector3.yAxis * 16
 	local t = os.clock()
-	local batch = Pattern.select(world.origin, c, Vector3.yAxis, 25, 6, 7200, nil, function(pos)
-		if Pattern.visiblePart(eye, pos, Vector3.yAxis, params) then
-			return world:oreAt(pos)
-		end
-		return nil
-	end)
-	assert(#batch == 25, "Expected contiguous 5x5 floor at step " .. i .. ", got " .. #batch)
+	assert(Pattern.visiblePart(eye, c, Vector3.yAxis, params))
+	local batch = Pattern.select(world.origin, c, world:oreAt(c), 6, 1)
+	assert(#batch == 1 and batch[1] == c)
 	local yield = world:excavate(batch)
 	local amount = 0
 	for _, n in yield do
 		amount += n
 	end
-	assert(amount == 25)
+	assert(amount == 1)
 	local elapsed = (os.clock() - t) * 1000
 	worst, total = math.max(worst, elapsed), total + elapsed
 end
-print(string.format("PASS 20 successive 5x5 cuts; mean %.2f ms, max %.2f ms", total / 20, worst))
+print(string.format("PASS 20 successive single-block cuts; mean %.2f ms, max %.2f ms", total / 20, worst))
 print("QUARRY_TESTS_PASSED")

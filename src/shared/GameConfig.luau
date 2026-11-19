@@ -56,7 +56,20 @@ function Config.ridgeHeight(seed, x, z)
 	local ridge = 16 + 3 * math.sin(x / 23 + seed % 11) + 2 * math.cos(z / 31)
 	ridge -= 7 * math.clamp((math.abs(x) - 12) / 15, 0, 1)
 	local shore = math.max(math.clamp((math.abs(x) - 69) / 23, 0, 1), math.clamp((-z - 37) / 48, 0, 1))
-	return ridge + (-9 - ridge) * shore
+	local top = ridge + (-9 - ridge) * shore
+	-- Keep the voxel roof below the walkable surface of the authored ridge trail.
+	if z <= -24 and z >= -105 and x >= -79 and x < 79 then
+		local trailTop
+		if z >= -53 then
+			trailTop = if x >= -12 and x < 19.5 then 16.4 - (-z - 23) * 2.4 / 30 else 1.6 + (-z - 24) * 10.35 / 29
+		elseif x >= -12 and x < 19.5 and z >= -63 then
+			trailTop = 14 - (-z - 53) * 2.05 / 10
+		else
+			trailTop = 11.95
+		end
+		top = math.min(top, trailTop - Config.Cell / 2 - 0.1)
+	end
+	return top
 end
 function Config.depthInBlocks(depthStuds)
 	return math.floor(depthStuds / Config.Cell)

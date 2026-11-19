@@ -1,8 +1,10 @@
 local Shared = game:GetService("ReplicatedStorage").Shared
+local Ores = require(Shared.Ores)
 local StarterGui = game:GetService("StarterGui")
 local Upgrades, Expeditions = require(Shared.Upgrades), require(Shared.Expeditions)
 local W, Icons, Menu = require(script.Parent.Widgets), require(script.Parent.Icons), require(script.Parent.HarborMenu)
 local Audio = require(script.Parent.HarborAudio)
+local rarityRank = { Common = 1, Uncommon = 2, Rare = 3, Epic = 4, Legendary = 5 }
 local Hud = {}
 Hud.__index = Hud
 local function card(parent, name, x, y, w, h, top, bottom)
@@ -30,19 +32,41 @@ function Hud.new(player, net, mobile)
 	root.Size, root.BackgroundTransparency = UDim2.fromScale(1, 1), 1
 	self.root = root
 	StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.PlayerList, false)
-	local wallet = card(root, "Wallet", 0, 0, 211, 79, Color3.fromRGB(235, 128, 32), W.ruby)
-	local purse = W.frame(wallet, "Coin badge", 7, 6, 40, 34, W.gold, 10)
-	W.stroke(purse, W.ink, 1.5)
-	W.frame(wallet, "Backpack panel", 5, 41, 201, 33, Color3.fromRGB(93, 49, 55), 8)
-	Icons.draw(wallet, "Coins", 9, 5, 38)
-	self.gold = W.title(wallet, "0", 52, 0, 151, 40, 31, W.gold, true)
+	local wallet = card(root, "Wallet", 0, 0, 224, 64, Color3.fromRGB(234, 148, 39), Color3.fromRGB(169, 74, 38))
+	self.wallet = wallet
+	Icons.draw(wallet, "Coins", 9, 7, 48)
+	W.text(wallet, "GOLD", 64, 2, 148, 18, 13, W.white, true)
+	self.gold = W.title(wallet, "0", 61, 15, 157, 45, 38, W.gold, true)
+	self.gold.TextScaled = true
+	local goldSize = Instance.new("UITextSizeConstraint")
+	goldSize.MinTextSize, goldSize.MaxTextSize, goldSize.Parent = 14, 38, self.gold
 	W.outlineText(self.gold)
-	Icons.draw(wallet, "Capacity", 12, 45, 24)
-	self.pack = W.text(wallet, "", 45, 39, 154, 19, 15, W.white, true)
-	local track = W.frame(wallet, "Capacity", 46, 63, 151, 7, W.ink, 4)
-	self.fill = W.frame(track, "Ore", 0, 0, 0, 7, W.green, 4)
-	self.status = W.text(wallet, "", 0, 80, 211, 15, 12, W.white, true)
+	self.status = W.text(wallet, "", 0, -18, 224, 16, 12, W.white, true)
 	self.status.TextStrokeTransparency = 0.2
+	local haul = card(root, "Haul", 0, 0, 215, 79, Color3.fromRGB(57, 117, 126), W.panel)
+	self.haul, self.rows = haul, {}
+	W.title(haul, "Your haul", 10, 4, 99, 24, 20, W.white, true)
+	self.pack = W.text(haul, "", 107, 5, 98, 21, 15, W.white)
+	local track = W.frame(haul, "Capacity", 10, 30, 195, 5, W.ink, 3)
+	self.fill = W.frame(track, "Ore", 0, 0, 0, 5, W.green, 3)
+	self.empty = W.text(haul, "Empty pack", 10, 38, 195, 20, 14, W.muted, true)
+	self.haulValue = W.text(haul, "", 10, 58, 195, 18, 13, W.gold, true)
+	for _, ore in Ores.list do
+		local row = W.frame(haul, ore.name, 10, 38, 195, 20, W.panel)
+		row.BackgroundTransparency = 1
+		W.text(row, ore.name, 0, 0, 75, 20, 15, ore.color:Lerp(W.white, 0.48), true)
+		W.text(row, ore.rarity, 76, 0, 74, 20, 12, W.muted, true)
+		local quantity = W.text(row, "", 150, 0, 45, 20, 15, W.white)
+		quantity.Name, quantity.TextXAlignment = "Quantity", Enum.TextXAlignment.Right
+		self.rows[ore.name] = row
+	end
+	local details = Instance.new("TextButton")
+	details.Name, details.Text, details.BackgroundTransparency = "Haul details", "", 1
+	details.Size, details.ZIndex, details.Parent = UDim2.fromScale(1, 1), 2, haul
+	Audio.bind(details, "Select")
+	details.Activated:Connect(function()
+		self:openPage("Pack")
+	end)
 	local taskCard = card(root, "Current job", 0, 0, 215, 86, Color3.fromRGB(157, 65, 190), Color3.fromRGB(77, 49, 149))
 	W.anchor(taskCard, 1, 0, UDim2.new(1, -12, 0, 9))
 	Icons.draw(taskCard, "Jobs", 8, 7, 27)
@@ -69,7 +93,7 @@ function Hud.new(player, net, mobile)
 	self.layer.Name = "Region"
 	self.depth = W.title(loc, "Surface", 10, 22, 99, 26, 18, W.white, true)
 	self.depth.Name = "Depth"
-	self.surface = W.button(loc, "Surface", 113, 22, 85, 27, W.aqua, "↑ Harbor", "Select")
+	self.surface = W.button(loc, "Surface", 113, 22, 85, 27, W.aqua, "↑ Surface", "Select")
 	self.surface.TextSize = 14
 	self.surface.Activated:Connect(function()
 		net.Action:FireServer("Surface")
@@ -77,11 +101,11 @@ function Hud.new(player, net, mobile)
 	self.coordinates = W.text(loc, "", 10, 50, 191, 20, 15, W.white, true)
 	self.coordinates.Name = "Coordinates"
 	self.stats = W.text(loc, "", 10, 71, 194, 18, 12, W.muted, true)
-	local dock = W.frame(root, "Action dock", 0, 0, 291, 64, W.ink)
+	local dock = W.frame(root, "Action dock", 0, 0, 217, 64, W.ink)
 	dock.BackgroundTransparency = 1
 	self.nav = {}
-	local cues = { Settings = "Open", Jobs = "Job", Book = "Open", Pack = "Select" }
-	for i, key in { "Pack", "Jobs", "Book", "Settings" } do
+	local cues = { Settings = "Open", Jobs = "Job", Book = "Open" }
+	for i, key in { "Jobs", "Book", "Settings" } do
 		local tint = Menu.pages[key].color
 		local b = W.button(dock, key, (i - 1) * 74, 0, 69, 61, tint, "", cues[key])
 		local badge = W.frame(b, "Medallion", 15, -6, 39, 39, tint:Lerp(W.white, 0.62), 13)
@@ -132,33 +156,57 @@ function Hud.new(player, net, mobile)
 		local open = self.overlay.Visible
 		backdrop.Enabled = open
 		self.mine.Visible = self.mobile and not open
-		for _, panel in { wallet, taskCard, loc, dock } do
+		for _, panel in { wallet, haul, taskCard, loc, dock } do
 			panel.Visible = not open
 		end
 		self.speech.Visible = false
+		if self.layout then
+			self.layout()
+		end
 	end)
-	local walletScale, taskScale, locScale, dockScale, speechScale, mineScale =
-		W.scale(wallet), W.scale(taskCard), W.scale(loc), W.scale(dock), W.scale(speech), W.scale(self.mine)
+	local walletScale, taskScale, haulScale, locScale, dockScale, speechScale, mineScale =
+		W.scale(wallet),
+		W.scale(taskCard),
+		W.scale(haul),
+		W.scale(loc),
+		W.scale(dock),
+		W.scale(speech),
+		W.scale(self.mine)
 	self.layout = function()
 		local width, height = root.AbsoluteSize.X, root.AbsoluteSize.Y
 		if width < 2 or height < 2 then
 			return
 		end
-		local s = math.clamp(math.min((width - 28) / 434, height / 447), 0.50, 1.36)
-		local ds = math.min(s, (width - 16) / 291)
+		local s = math.clamp(math.min((width - 26) / 450, height / 480), 0.52, 1.30)
 		local portrait = self.mobile and width < height
-		if self.mobile and not portrait then
-			ds = math.min(math.max(ds, 0.78), math.max(0.56, (width - 195) / 291))
-		end
-		walletScale.Scale, taskScale.Scale, locScale.Scale = s, s, s
-		dockScale.Scale, speechScale.Scale, mineScale.Scale = ds, math.min(s, (width - 20) / 320), math.max(0.88, s)
+		local shelf = if portrait then 113 elseif self.mobile then 69 else 12
+		local compact = width < 665 * s + 48
+		local showJob = height >= 480 or not self.mobile and height >= 400
+		taskCard.Visible = showJob and not self.overlay.Visible
+		walletScale.Scale, taskScale.Scale, haulScale.Scale, locScale.Scale, dockScale.Scale = s, s, s, s, s
+		speechScale.Scale, mineScale.Scale = math.min(s, (width - 20) / 320), math.max(0.82, s)
 		self.menu:layout(width, height, self.mobile)
-		W.anchor(wallet, 0, 0, UDim2.fromOffset(10, 9))
 		W.anchor(taskCard, 1, 0, UDim2.new(1, -10, 0, 9))
-		W.anchor(loc, 0, 0, UDim2.fromOffset(10, 12 + 96 * s))
-		local dockOffset = if portrait then 110 else 7
-		W.anchor(dock, 0.5, 1, UDim2.new(0.5, 0, 1, -dockOffset))
-		W.anchor(speech, 0.5, 1, UDim2.new(0.5, 0, 1, -dockOffset - 71 * ds))
+		W.anchor(haul, 1, 0, UDim2.new(1, -10, 0, if showJob then 16 + 86 * s else 9))
+		W.anchor(wallet, 0, 1, UDim2.new(0, 10, 1, -shelf))
+		W.anchor(loc, 0, 1, UDim2.new(0, 10, 1, -shelf - 86 * s))
+		if compact then
+			W.anchor(dock, 1, 1, UDim2.new(1, -10, 1, -shelf))
+		else
+			W.anchor(dock, 0.5, 1, UDim2.new(0.5, 0, 1, -shelf))
+		end
+		if compact then
+			speechScale.Scale = math.min(s, (width - 218 * s - 25) / 320)
+			W.anchor(speech, 1, 1, UDim2.new(1, -10, 1, -shelf - 78 * s))
+		else
+			W.anchor(speech, 0.5, 1, UDim2.new(0.5, 0, 1, -shelf - 78 * s))
+		end
+		W.anchor(
+			self.mine,
+			1,
+			1,
+			UDim2.new(1, -12, 1, if compact then -shelf - 78 * s - 52 * speechScale.Scale else -shelf)
+		)
 	end
 	root:GetPropertyChangedSignal("AbsoluteSize"):Connect(self.layout)
 	self.layout()
@@ -190,13 +238,45 @@ function Hud:refresh()
 		return p:GetAttribute(key) or 1
 	end
 	local used, cap = p:GetAttribute("Used") or 0, Upgrades.items.Capacity.values[level("Capacity")]
-	self.gold.Text = W.number(p:GetAttribute("Gold") or 0)
-	self.pack.Text = "Pack   " .. W.number(used) .. " / " .. W.number(cap)
+	if not self.countingGold then
+		self.gold.Text = W.goldAmount(p:GetAttribute("Gold") or 0)
+	end
+	self.pack.Text = W.number(used) .. " / " .. W.number(cap)
 	self.fill.BackgroundColor3 = if used >= cap then W.gold else W.green
 	if used ~= self.lastUsed or cap ~= self.lastCap then
 		self.lastUsed, self.lastCap = used, cap
 		W.tween(self.fill, 0.15, { Size = UDim2.fromScale(used / cap, 1) })
 	end
+	local held = {}
+	for _, ore in Ores.list do
+		local amount = p:GetAttribute("Held" .. ore.name) or 0
+		local row = self.rows[ore.name]
+		row.Visible = amount > 0
+		if row.Visible then
+			row.Quantity.Text = "×" .. amount
+			table.insert(held, { ore = ore, amount = amount, row = row })
+		end
+	end
+	table.sort(held, function(a, b)
+		if a.ore.rarity ~= b.ore.rarity then
+			return rarityRank[a.ore.rarity] > rarityRank[b.ore.rarity]
+		end
+		if a.amount ~= b.amount then
+			return a.amount > b.amount
+		end
+		return a.ore.value > b.ore.value
+	end)
+	for i, entry in held do
+		entry.row.Position = UDim2.fromOffset(10, 38 + (i - 1) * 20)
+	end
+	local visible = #held
+	self.empty.Visible = visible == 0
+	local footerY = 39 + math.max(1, visible) * 20
+	self.haulValue.Position = UDim2.fromOffset(10, footerY)
+	self.haulValue.Text = "Sell value   "
+		.. W.number((p:GetAttribute("BagValue") or 0) * (if p:GetAttribute("DoubleGold") then 2 else 1))
+		.. " G"
+	self.haul.Size = UDim2.fromOffset(215, footerY + 22)
 	local status = p:GetAttribute("SaveStatus")
 	self.status.Text = if status == "Saving enabled" then "" else status or "Opening pack…"
 	local mined, done = p:GetAttribute("Mined") or 0, p:GetAttribute("Jobs") or 0
@@ -212,9 +292,8 @@ function Hud:refresh()
 	self.jobCount.TextColor3 = if job and mined >= job.goal then W.green else W.muted
 	self.jobBadge.Visible = job ~= nil and mined >= job.goal
 	self.stats.Text = string.format(
-		"%s  ·  %s  ·  Power %d  ·  %.2fs",
+		"%s  ·  Power %d  ·  %.2fs",
 		rank.name,
-		Upgrades.describe("Radius", level("Radius")),
 		level("Power"),
 		Upgrades.items.Speed.values[level("Speed")]
 	)
@@ -237,8 +316,9 @@ function Hud:milestone(kind, name, color)
 	self.ribbonSerial = serial
 	self.ribbonType.Text, self.ribbonType.TextColor3, self.ribbonName.Text = kind, color:Lerp(W.white, 0.36), name
 	self.ribbon.Visible = true
-	self.ribbon.Position = UDim2.fromOffset(18, 88)
-	W.tween(self.ribbon, 0.2, { Position = UDim2.fromOffset(0, 88) })
+	local y = 94 + self.haul.Size.Y.Offset
+	self.ribbon.Position = UDim2.fromOffset(18, y)
+	W.tween(self.ribbon, 0.2, { Position = UDim2.fromOffset(0, y) })
 	task.delay(3.4, function()
 		if self.ribbonSerial == serial then
 			self.ribbon.Visible = false

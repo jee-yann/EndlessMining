@@ -2,14 +2,14 @@
 
 ![Citrine Cove in Roblox Studio](map/CitrineCove-preview.jpg)
 
-Citrine Cove is a multiplayer Roblox mining simulator. Aim at a cave wall or floor to highlight the exact blocks you can take, hold through the pickaxe swing, and bring the ore to the harbor. Each block face measures 4 × 4 studs. The starter tool takes one block per hit. The first Mining area upgrade costs 24 gold and takes two side by side. A starter pack holds 36 ore.
+Citrine Cove is a multiplayer Roblox mining simulator. Aim at a cave wall or floor to highlight a single block, hold through the pickaxe swing, and bring the ore to the harbor. Each block face measures 4 × 4 studs. Every pick takes one block per cut. Speed shortens the cut and Power unlocks harder ore. A starter pack holds 36 ore.
 
 ## Play locally
 
 1. Open `EndlessMining.rbxlx` from this folder in Roblox Studio, or use the existing **Endless Mining** Studio place connected to this project's Rojo server.
 2. Press **F5**. The island is already visible in edit mode. Play generates studded plastic bricks behind the cave mouth. Cross the bridge and walk beneath the golden crystal marked **MINE**. Aim at the dark starter seam and hold the left mouse button. On a touch device, aim with the center dot and hold **HOLD MINE**.
-3. After eight blocks, open **Jobs** and claim **First strike** for 25 gold. Walk to the cyan **Upgrades** stall, use its prompt and buy **Mining area** for 24 gold to cut two blocks per hit. Use the amber **Sell** counter to empty your pack. Open **Pack** anywhere to see quantities and sale values for each ore.
-4. Dig through the walls and floor to reach deeper regions. The location card shows your X, Y and Z in blocks from the mine entrance. Y drops by one for each full block you descend. At Y −27 you enter Iron Shelf. **Index** lists the vein chances at each depth. **↑ Harbor** brings you back to the surface to sell. Open **Settings** from the dock to adjust music, sound effects or menu animations.
+3. After eight blocks, open **Jobs** and claim **First strike** for 25 gold. Walk to the cyan **Upgrades** stall, use its prompt and buy **Capacity** for 24 gold to carry 80 blocks. Use the amber **Sell** counter to empty your pack. The side panel lists carried materials, rarest first, along with quantities and sale value. Select it to inspect the full pack.
+4. Dig through the walls and floor to reach deeper regions. The location card shows your X, Y and Z in blocks from the mine entrance. Y drops by one for each full block you descend. At Y −27 you enter Iron Shelf. **Index** lists the vein chances at each depth. **↑ Surface** brings you to the path outside the mine. The screen fades to black during the trip, with a longer return from deeper levels. Open **Settings** from the dock to adjust music, sound effects or menu animations.
 
 The place uses each player’s equipped Roblox avatar. If Studio Output reports an authentication error for a missing head or clothing texture, refresh the Studio sign-in and start another play session.
 
@@ -33,15 +33,15 @@ For live editing, run `rojo serve default.project.json` here if this project's s
 
 The harbor spans roughly 268 × 229 studs inside a continuous rock rim. The spawn compass opens onto a 95-stud-wide court. Follow the central bridge to the mine, the amber bullion sign to Sell, or the cyan pickaxe to Upgrades. Side paths pass ore wagons, gardens and the stepped waterfall. Both hillside paths climb to the rear cableway trail, where four grounded towers carry three moving ore cars.
 
-Music and effects have separate sliders in **Settings**. Volume and menu-motion preferences are saved with player progress. The music slider sets the volume of Anthony Mawer’s *Prima Bossa Nova*. The buttons use short bubble pops. Each ore has its own break sound, and gold, diamond and emerald add progressively longer rising notes. [Prima Bossa Nova](https://create.roblox.com/store/asset/1837070127) · [UI Cute Pop](https://create.roblox.com/store/asset/15675055424) · [UI Cute Goodbye](https://create.roblox.com/store/asset/15675081158)
+Music and effects have separate sliders in **Settings**. Volume and menu-motion preferences are saved with player progress. The track plays quietly beneath the mining cues. The music slider sets the volume of Anthony Mawer’s *Prima Bossa Nova*. The buttons use short bubble pops. Each ore has its own break sound, and gold, diamond and emerald add progressively longer rising notes. [Prima Bossa Nova](https://create.roblox.com/store/asset/1837070127) · [UI Cute Pop](https://create.roblox.com/store/asset/15675055424) · [UI Cute Goodbye](https://create.roblox.com/store/asset/15675081158)
 
-![Workshop menu in Roblox Studio](map/Workshop-preview.jpg)
+![The haul panel and gold balance at the mine entrance](map/Harbor-HUD.jpg)
 
-The harbor has a core sample table, dispatch board, ore museum, pass stall and a leaderboard court behind spawn. One board ranks the top five miners present by lifetime blocks. The other shows your standing alongside your Roblox friends. In published play it includes friends with saved scores even when they are offline. Local practice sessions use connected miners.
+The harbor has a dispatch board, a covered Ore Index with eight labeled samples, a pass stall and a leaderboard court behind spawn. One board ranks the top five miners present by lifetime blocks. The other shows your standing alongside your Roblox friends. In published play it includes friends with saved scores even when they are offline. Local practice sessions use connected miners.
 
 ![Friends and Server Miners boards behind spawn](map/Miners-Court.jpg)
 
-Digging opens a shared route through four regions. The percentages below describe the chance that a new vein in each region contains that ore. Host blocks fill the space between veins.
+Digging opens a shared route through four regions. The percentages below describe the chance that a new vein in each region contains that ore. Between veins, smaller ore finds are mixed into the host rock.
 
 | Region | Depth in blocks | Coal | Copper | Iron | Gold | Diamond | Emerald |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -60,7 +60,7 @@ The mine is 48 blocks wide, 56 blocks long and 288 blocks deep. Sunstone Hollow 
 
 The server keeps one byte per grid cell. Only exposed rock needs physical Parts. Within each 8 × 8 × 8 cell chunk, neighbouring exposed cells of the same shade share anchored plastic bricks. Cutting a block rebuilds the affected chunks and exposes the next layer. Excavations are shared for the lifetime of that server.
 
-Mining area upgrades unlock **1×1, 2×1, 2×2, 3×2, 3×3, 4×3, 4×4, and 5×5** face patterns. Each hit takes one layer. Mint borders follow the visible faces of each selected block. A flush wall shows one square. Exposed corners show multiple sides as you move the camera. A pick cursor marks a valid target. A red no-entry sign marks an ore above your power tier. Cracks spread across the selected blocks as the cut progresses. Nearby miners see a fading ore name and quantity at the mined block. Dirt and stone go straight into the pack. Holding a target plays a sequence of quick pickaxe swings while one meter fills for the cut. Releasing early or switching targets cancels the stroke. The outlines and on-screen count account for missing blocks, reach, obstructions, power and space in the pack. An almost-full pack selects the nearest blocks to the aim point first. The server checks the same pattern and intersects it with the squares the player saw. If another player takes one, the hit skips that square. Existing profiles retain their upgrade levels.
+Each completed cut removes the highlighted block. A mint border follows its exposed faces. A pick cursor marks a valid target, a red symbol marks ore above the current Power level, and cracks spread across the block during a cut. Releasing early or switching targets cancels the swing. The server checks reach, sight, power, and space before awarding a block. Returning players receive a one-time gold refund for retired mining-area purchases.
 
 ![Block borders in three Studio views, exposed, flush with the wall, and covered by another rock](map/Mining-area-preview.jpg)
 
@@ -73,7 +73,7 @@ Mining area upgrades unlock **1×1, 2×1, 2×2, 3×2, 3×3, 4×3, 4×4, and 5×5
 | Game pass IDs and perks | `src/shared/PassCatalog.luau`, `src/server/Passes.luau` |
 | Vein shapes, rich pockets and the starter seam | `src/server/Geology.luau` |
 | Editable island, signed stations, spawn and bridge | `map/CitrineCove.rbxmx` |
-| Studded brick geometry and face patterns | `src/server/MineBlocks.luau`, `src/shared/BlockPattern.luau` |
+| Studded brick geometry and visible targets | `src/server/MineBlocks.luau`, `src/shared/BlockPattern.luau` |
 | Region depths and vein weights | `src/shared/GameConfig.luau` |
 | Station binding | `src/server/Quarry.luau` |
 | Starting editor camera and lighting | `default.project.json` |
@@ -110,12 +110,12 @@ $playTest = (Resolve-Path '.\tests\Play.spec.luau').Path
 & $studioExe --task RunScript --localPlaceFile $quarryPlace --runScriptFile $terrainTest --outputFile "$env:TEMP\EndlessMining-terrain.log" --quitAfterExecution
 ```
 
-Look for a standalone `QUARRY_TESTS_PASSED` output line. The map checks cover the walk from spawn, both market counters, their lights, the outer paths and 360 directions around the rock rim. The mining checks cover save ownership, profile validation, economy, three seeds, shared depletion, server reach and obstructions, face previews on all six sides, stale selections and repeated 5×5 cuts. Then run the two-client check in a signed-in Studio session.
+Look for a standalone `QUARRY_TESTS_PASSED` output line. The map checks cover the walk from spawn, both market counters, their lights, the outer paths and 360 directions around the rock rim. The mining checks cover save ownership, profile validation, economy, three seeds, shared depletion, server reach and obstructions, single-block selection, ore density and cuts across chunk boundaries. Then run the two-client check in a signed-in Studio session.
 
 ```powershell
 & $studioExe --task RunScript --localPlaceFile $quarryPlace --runScriptFile $playTest --outputFile "$env:TEMP\EndlessMining-play.log" --quitAfterExecution
 ```
 
-The play check first uses a virtual mouse in a solo session to verify depth-tested face borders, the pickaxe grip through repeated swings, the visible cut meter, cancellation and collection. It then uses two clients with real client-to-server requests. Each miner must open all six menus, fill a pack, check its ore counts, visit the Sell counter, upgrade to a two-block cut, claim a job once, try both Studio passes, and return to the surface. The test checks that remote sales and out-of-range upgrades are declined, ore finds appear at the mined block, each sound loads, music and effects respond independently to their sliders, and an ore carrier moves. Look for `QUARRY_PLAYTEST_RESULT PASS` followed by both clients' results.
+The play check first uses a virtual mouse in a solo session to verify depth-tested face borders, the pickaxe grip through repeated swings, the visible cut meter, cancellation and collection. It then uses two clients with real client-to-server requests. Each miner must open all six menus, fill a pack, check its ore counts, visit the Sell counter, upgrade pack capacity, claim a job once, try both Studio passes, and return to the surface. The test checks that remote sales and out-of-range upgrades are declined, ore finds appear at the mined block, effects load and respond to their slider, the soundtrack stays muted during automated playtests, and an ore carrier moves. Look for `QUARRY_PLAYTEST_RESULT PASS` followed by both clients' results.
 
 For hands-on checks, choose **Server & Clients** in Studio's Test selector and start two players. Mine the same face, compare balances and verify both players see the same missing bricks. Use the device emulator to check the shop, hold/release control, thumbstick and jump in phone landscape and portrait. A persistence round trip requires a separate published test place with Studio API access enabled. Sell ore, buy an upgrade, stop the session and rejoin to verify the balance and level.

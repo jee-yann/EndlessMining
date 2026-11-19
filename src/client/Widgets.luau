@@ -77,6 +77,10 @@ function W.tween(obj, d, props)
 	t:Play()
 	return t
 end
+function W.goldAmount(n)
+	local grouped = string.format("%.0f", n):reverse():gsub("(%d%d%d)", "%1,"):reverse():gsub("^,", "")
+	return grouped
+end
 function W.number(n)
 	if n >= 1e6 then
 		return string.format("%.1fM", n / 1e6)
