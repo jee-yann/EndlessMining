@@ -1,10 +1,13 @@
 local rgb = Color3.fromRGB
+local Pattern = require(script.Parent.BlockPattern)
 local upgrades = {
 	Radius = {
-		values = { 5, 7, 9, 12, 15, 19, 23, 28 },
+		-- Keep the saved level key for existing profiles.
+		label = "Mining area",
+		values = { 1, 2, 4, 6, 9, 12, 16, 25 },
 		base = 24,
 		growth = 2.5,
-		icon = "◎",
+		icon = "▦",
 		color = rgb(93, 224, 252),
 	},
 	Speed = {
@@ -40,7 +43,7 @@ end
 function api.describe(key, level)
 	local v = upgrades[key].values[level]
 	if key == "Radius" then
-		return v .. " studs"
+		return string.format("%d×%d", Pattern.dimensions(v))
 	end
 	if key == "Speed" then
 		return string.format("%.2fs / pulse", v)

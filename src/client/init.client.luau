@@ -9,14 +9,15 @@ local shared = Rep:WaitForChild("Shared")
 for _, name in { "Mine", "Action", "Feedback", "Dust" } do
 	net:WaitForChild(name)
 end
-for _, name in { "GameConfig", "Ores", "Upgrades" } do
+for _, name in { "BlockPattern", "GameConfig", "Ores", "Upgrades" } do
 	shared:WaitForChild(name)
 end
 local Config, Ores, Upgrades = require(shared.GameConfig), require(shared.Ores), require(shared.Upgrades)
+local Pattern = require(shared.BlockPattern)
 local Hud, Effects, W = require(script.Hud), require(script.Effects), require(script.Widgets)
 local mobile = UIS.PreferredInput == Enum.PreferredInput.Touch
 local hud = Hud.new(player, net, mobile)
-local fx = Effects.new(hud.reticle.Parent)
+local fx = Effects.new()
 local held, lastSend, firstHaul = nil, 0, false
 local tapPending = false
 local params = RaycastParams.new()
@@ -87,7 +88,7 @@ UIS:GetPropertyChangedSignal("PreferredInput"):Connect(function()
 	release()
 end)
 
-net.Feedback.OnClientEvent:Connect(function(kind, a, point, radius)
+net.Feedback.OnClientEvent:Connect(function(kind, a, point, spread)
 	if kind == "loot" then
 		firstHaul = true
 		local best = Ores.byName.Stone
@@ -101,7 +102,7 @@ net.Feedback.OnClientEvent:Connect(function(kind, a, point, radius)
 				table.insert(lines, string.format("%d %s", n, ore.name))
 			end
 		end
-		fx:burst(point, radius, best)
+		fx:burst(point, spread, best)
 		local rare = best.hardness >= 4
 		hud:notice(
 			if rare then best.flash else "+" .. pieces .. " ore  ·  " .. value .. " G",
@@ -126,8 +127,8 @@ net.Feedback.OnClientEvent:Connect(function(kind, a, point, radius)
 		hud:notice(a, "", W.gold)
 	end
 end)
-net.Dust.OnClientEvent:Connect(function(point, radius, ore)
-	fx:burst(point, radius, Ores.byName[ore], true)
+net.Dust.OnClientEvent:Connect(function(point, spread, ore)
+	fx:burst(point, spread, Ores.byName[ore], true)
 end)
 
 local elapsed = 0
@@ -159,35 +160,54 @@ RunService.RenderStepped:Connect(function(dt)
 	local screen = if mobile then camera.ViewportSize * 0.5 else UIS:GetMouseLocation()
 	local ray = camera:ViewportPointToRay(screen.X, screen.Y)
 	local hit = workspace:Raycast(ray.Origin, ray.Direction * (Config.Reach + 48), params)
-	local center = if hit then Config.brushCenter(origin, hit.Position, hit.Normal) else nil
-	local valid = ready
-		and hit
-		and hit.Instance == workspace.Terrain
-		and (hit.Position - head.Position).Magnitude <= Config.Reach
-		and Config.inside(center - origin)
-	local radius = Upgrades.items.Radius.values[player:GetAttribute("Radius") or 1]
-	fx:aim(if valid then center else nil, radius)
+	local cap = Upgrades.items.Capacity.values[player:GetAttribute("Capacity") or 1]
+	local space = cap - (player:GetAttribute("Used") or 0)
+	local count = Upgrades.items.Radius.values[player:GetAttribute("Radius") or 1]
+	local power = Upgrades.items.Power.values[player:GetAttribute("Power") or 1]
+	local center, normal, cells, mask, locked = nil, nil, nil, 0, nil
+	if ready and space > 0 and hit and hit.Instance.Parent:HasTag(Config.MineBlockTag) then
+		normal = hit.Normal
+		center = Config.blockCenter(origin, hit.Position, normal)
+		local anchorPart = Pattern.visiblePart(head.Position, center, normal, params)
+		if anchorPart and anchorPart.Parent:HasTag(Config.MineBlockTag) then
+			local function probe(pos)
+				local part = if pos == center
+					then anchorPart
+					else Pattern.visiblePart(head.Position, pos, normal, params)
+				if part and part.Parent:HasTag(Config.MineBlockTag) then
+					return if part.Name == "Turf" then Ores.byName.Stone else Ores.byName[part.Name]
+				end
+				return nil
+			end
+			cells, mask, locked = Pattern.select(origin, center, normal, count, power, space, nil, probe)
+		end
+	end
+	fx:aim(cells, normal)
+	local valid = mask ~= 0
 	hud.reticle.Visible = mobile
 	if mobile then
 		hud.reticle.BackgroundColor3 = if valid then W.aqua else W.white
 	end
-	local cap = Upgrades.items.Capacity.values[player:GetAttribute("Capacity") or 1]
-	local full = (player:GetAttribute("Used") or 0) >= cap
 	if not ready then
 		hud:guide("Opening the quarry…", "Preparing your pack and the mine", true)
-	elseif full then
+	elseif space <= 0 then
 		hud:guide("Backpack full", "Tap SELL to cash in your haul", true)
-	elseif not firstHaul then
+	elseif not valid and locked then
+		hud:guide(locked.name .. " needs Power " .. locked.hardness, "Upgrade Power at the workshop", true)
+	elseif valid or not firstHaul then
 		local help = if mobile
-			then "Aim at the rock and hold MINE"
-			else "Aim at the rock and hold the left mouse button"
-		hud:guide(if valid then "Hold to mine" else "Follow the path to the crystal cave", help, true)
+			then "Hold MINE on the highlighted blocks"
+			else "Hold the left mouse button to mine"
+		local title = if valid
+			then string.format("%d block%s selected", #cells, if #cells == 1 then "" else "s")
+			else "Follow the path to the crystal cave"
+		hud:guide(title, help, true)
 	else
 		hud:guide("", "", false)
 	end
-	if (held or tapPending) and valid and not full and os.clock() - lastSend >= 0.085 then
+	if (held or tapPending) and valid and os.clock() - lastSend >= 0.085 then
 		lastSend = os.clock()
-		net.Mine:FireServer(hit.Position)
+		net.Mine:FireServer(center, normal, count, mask)
 	end
 	tapPending = false
 end)

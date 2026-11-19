@@ -2,19 +2,20 @@ local Config = {
 	Seed = 73129,
 	-- Grid coordinates are relative to the entrance. One voxel is four studs.
 	Cell = 4,
-	Chunk = 16,
+	Chunk = 8,
+	MineBlockTag = "EndlessMiningBlockFolder",
 	Min = Vector3.new(-96, -352, -224),
 	Max = Vector3.new(96, 40, 0),
-	-- Keep the gallery inside a native terrain render chunk, away from its edge.
+	-- Fallback origin when the mine is built without an authored surface.
 	Origin = Vector3.new(0, 24, 4),
 	SurfaceName = "Citrine Cove",
 	Reach = 34,
 	StoreName = "EndlessMining_v1",
 	LeaseSeconds = 180,
 	AutosaveSeconds = 45,
-	-- Maximum bounding-box cells scheduled per second, shared by the server.
-	CellBudget = 50000,
-	BurstCells = 7200,
+	-- Maximum pattern faces checked per second across all players.
+	CellBudget = 2400,
+	BurstCells = 100,
 }
 Config.Layers = {
 	{
@@ -57,9 +58,9 @@ function Config.layer(depth)
 	end
 	return Config.Layers[1]
 end
-function Config.brushCenter(origin, position, normal)
-	-- Step past a half-cell boundary before choosing the first solid cell.
-	local point = position - origin - normal * (Config.Cell * 0.56)
+function Config.blockCenter(origin, position, normal)
+	-- Step just inside the struck brick, including bricks that span several cells.
+	local point = position - origin - normal * (Config.Cell * 0.01)
 	return origin + ((point / Config.Cell):Floor() + Vector3.one * 0.5) * Config.Cell
 end
 function Config.inside(p)

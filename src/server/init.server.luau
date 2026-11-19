@@ -7,7 +7,6 @@ local Data, Profile, Mining =
 
 local surface = workspace:WaitForChild("CitrineCove")
 local world = World.new(Config.Seed, surface)
-Quarry.palette()
 local site = Quarry.bind(surface, world)
 local landing = site.spawn.Position + Vector3.yAxis * 4
 local net = Instance.new("Folder")

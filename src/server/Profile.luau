@@ -82,6 +82,6 @@ function Profile.buy(p, key)
 	end
 	p.gold -= price
 	p.levels[key] += 1
-	return true, key .. " upgraded!"
+	return true, (item.label or key) .. " upgraded!"
 end
 return Profile

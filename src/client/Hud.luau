@@ -85,7 +85,7 @@ function Hud.new(player, net, mobile)
 		local tile = W.frame(row, "Icon", 10, 12, 43, 43, item.color, 4)
 		W.bevel(tile)
 		W.text(tile, item.icon, 0, 0, 43, 43, 29, W.ink)
-		local title = W.text(row, key, 65, 7, 242, 24, 20, W.ink, true)
+		local title = W.text(row, item.label or key, 65, 7, 242, 24, 20, W.ink, true)
 		local benefit = W.text(row, "", 65, 35, 251, 22, 15, W.panel, true)
 		local buy = W.button(row, "Purchase", 320, 12, 99, 40, W.green, "")
 		buy.Activated:Connect(function()
@@ -185,8 +185,8 @@ function Hud:refresh()
 		then "SELL  " .. W.number(p:GetAttribute("BagValue") or 0) .. " G"
 		else "SELL"
 	self.stats.Text = string.format(
-		"Radius %d    ·    Power %d\nPulse every %.2fs",
-		stat("Radius"),
+		"Area %s    ·    Power %d\nPulse every %.2fs",
+		Upgrades.describe("Radius", level("Radius")),
 		stat("Power"),
 		stat("Speed")
 	)
@@ -197,7 +197,7 @@ function Hud:refresh()
 	for key, row in self.rows do
 		local lvl = level(key)
 		local price = Upgrades.price(key, lvl)
-		row.title.Text = key .. "   ·   Lv " .. lvl
+		row.title.Text = (Upgrades.items[key].label or key) .. "   ·   Lv " .. lvl
 		row.benefit.Text = Upgrades.describe(key, lvl)
 			.. (if price then "  →  " .. Upgrades.describe(key, lvl + 1) else "")
 		row.buy.Text = if price then W.number(price) .. " G" else "MAX"

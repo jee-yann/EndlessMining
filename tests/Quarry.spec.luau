@@ -3,6 +3,7 @@ local Server = game:GetService("ServerScriptService").Server
 local Shared = game:GetService("ReplicatedStorage").Shared
 local Config, Ores = require(Shared.GameConfig), require(Shared.Ores)
 local Geology, World = require(Server.Geology), require(Server.MineWorld)
+local Pattern = require(Shared.BlockPattern)
 local Profile = require(Server.Profile)
 assert(Profile.valid(Profile.new()))
 local Data = require(Server.DataService)
@@ -20,7 +21,7 @@ local p = Profile.new()
 assert(not Profile.buy(p, "Radius"))
 p.bag = { Stone = 4, Coal = 3, Copper = 1 }
 assert(Profile.used(p) == 8 and Profile.sell(p) == 35 and Profile.used(p) == 0)
-assert(Profile.buy(p, "Radius") and p.gold == 11 and Profile.stat(p, "Radius") == 7)
+assert(Profile.buy(p, "Radius") and p.gold == 11 and Profile.stat(p, "Radius") == 2)
 p.gold = 1e7
 for _, key in require(Shared.Upgrades).order do
 	while Profile.buy(p, key) do
@@ -94,7 +95,7 @@ for _, x in { -3, 0, 3 } do
 	end
 end
 assert(not floorAt(10, 32), "The inlet should pass completely under the bridge")
-assert(not floorAt(0, -10), "The gallery floor must be excavatable terrain")
+assert(not floorAt(0, -10), "The gallery floor must be excavatable")
 assert(
 	not workspace:Raycast(world.origin + Vector3.new(0, 6, -6), Vector3.new(0, 0, -42), onMap),
 	"The starter seam must be clear of scenery"
@@ -105,7 +106,18 @@ for _, prompt in site.stations do
 end
 mapCopy:Destroy()
 print("PASS authored surface, continuous bridge crossing, both service pads and edit-face removal")
+local terrainCells = workspace.Terrain:CountCells()
 world:generate()
+local bricks = world.grid.folder:GetChildren()
+assert(#bricks > 0 and #bricks < 3500, "Starting brick count: " .. #bricks)
+for _, part in bricks do
+	assert(
+		part:IsA("Part") and part.Material == Enum.Material.Plastic and part.Anchored and part.CanCollide
+	)
+	assert(part.TopSurface == Enum.SurfaceType.Studs and part.BackSurface == Enum.SurfaceType.Studs)
+end
+assert(workspace.Terrain:CountCells() == terrainCells)
+print("PASS studded plastic mine with", #bricks, "starting parts")
 local Mining = require(Server.MiningService)
 local rig = Instance.new("Model")
 local human = Instance.new("Humanoid")
@@ -115,57 +127,106 @@ head.Name, head.Anchored, head.Position, head.Parent =
 	"Head", true, world.origin + Vector3.new(0, 6, -8), rig
 rig.Parent = workspace
 local face = workspace:Raycast(head.Position + Vector3.new(0, 0, -2), Vector3.new(0, 0, -32))
-assert(face and face.Instance == workspace.Terrain and Mining.target(world, rig, face.Position))
-assert(not Mining.target(world, rig, world.origin + Vector3.new(0, 0, -100)))
+assert(face and face.Instance.Parent == world.grid.folder)
+local anchor = Config.blockCenter(world.origin, face.Position, face.Normal)
+local normal = face.Normal
+assert(Mining.target(world, rig, anchor, normal))
+assert(not Mining.target(world, rig, world.origin + Vector3.new(0, 0, -100), normal))
+assert(not Mining.target(world, rig, anchor, -normal))
+assert(not Mining.target(world, rig, anchor, Vector3.one))
 local post = Instance.new("Part")
 post.Size, post.Position, post.Anchored, post.Parent =
 	Vector3.new(5, 8, 2), head.Position + Vector3.new(0, 0, -5), true, workspace
-assert(not Mining.target(world, rig, face.Position))
+assert(not Mining.target(world, rig, anchor, normal))
 post:Destroy()
+local first, mask = Mining.selection(world, rig, anchor, normal, 1, 1, 36)
+assert(#first == 1 and first[1] == anchor and mask == 1)
+local full, fullMask = Mining.selection(world, rig, anchor, normal, 4, 6, 36)
+assert(#full == 4 and fullMask == 15, "2x2 at the starter face")
+local limited, limitedMask = Mining.selection(world, rig, anchor, normal, 4, 6, 2)
+assert(#limited == 2 and limitedMask ~= fullMask)
+local one, oneMask = Mining.selection(world, rig, anchor, normal, 4, 6, 36, 2)
+assert(#one == 1 and oneMask == 2 and one[1] ~= anchor)
+local sideLoot = world:excavate(one)
+assert(next(sideLoot) and not next(world:excavate(one)))
+local stale, staleMask = Mining.selection(world, rig, anchor, normal, 4, 6, 36, limitedMask)
+assert(staleMask == 1 and #stale == 1, "Stale preview must not substitute other blocks")
+local loot = world:excavate(stale)
+assert(loot.Coal == 1 and world:oreAt(anchor) == nil)
+local deeper = workspace:Raycast(head.Position, (anchor + normal * 2 - head.Position).Unit * 45)
+assert(deeper and deeper.Instance.Parent == world.grid.folder and deeper.Position.Z < face.Position.Z - 3)
+assert(world:oreAt(anchor - normal * Config.Cell) ~= nil, "One hit takes just the highlighted layer")
 human.Health = 0
-assert(not Mining.target(world, rig, face.Position))
+assert(not Mining.target(world, rig, anchor, normal))
 rig:Destroy()
-print("PASS server reach, solid obstructions and character state")
-local function dig(localPoint, r, power, space)
-	return world:excavate(world.origin + localPoint, r, power, space)
-end
-local center = Vector3.new(2, -82, -98)
-local region =
-	Region3.new(world.origin + center - Vector3.one * 34, world.origin + center + Vector3.one * 34)
-workspace.Terrain:FillRegion(region, 4, Ores.byName.Diamond.material)
-local closed, hard = dig(center, 28, 4, 7200)
-assert(not next(closed) and hard.name == "Diamond")
-local partial = dig(center, 28, 5, 7)
-assert(partial.Diamond == 7)
-local counted = 0
-for x = -7, 7 do
-	for y = -7, 7 do
-		for z = -7, 7 do
-			if x * x + y * y + z * z <= 49 then
-				counted += 1
-			end
+print("PASS part raycasts, power and pack limits, 2x2 faces, exact masks and shared depletion")
+
+local stats = require(Shared.Upgrades).items.Radius.values
+for _, n in { Vector3.xAxis, -Vector3.xAxis, Vector3.yAxis, -Vector3.yAxis, Vector3.zAxis, -Vector3.zAxis } do
+	for _, count in stats do
+		local center = world.origin + Vector3.new(2, -82, -98)
+		local offsets, bits = Pattern.select(world.origin, center, n, count, 6, 7200, nil, function()
+			return Ores.byName.Stone
+		end)
+		assert(#offsets == count and bits == 2 ^ count - 1 and offsets[1] == center)
+		local unique = {}
+		for _, pos in offsets do
+			assert((pos - center):Dot(n) == 0 and not unique[pos])
+			unique[pos] = true
 		end
+		local permitted, permMask, locked = Pattern.select(
+			world.origin,
+			center,
+			n,
+			count,
+			1,
+			7200,
+			nil,
+			function()
+				return Ores.byName.Diamond
+			end
+		)
+		assert(#permitted == 0 and permMask == 0 and locked == Ores.byName.Diamond)
 	end
 end
-local rest = dig(center, 28, 5, 7200)
-assert(rest.Diamond == counted - 7)
-assert(not next(dig(center, 28, 6, 7200)))
-assert(not next(dig(center, 28, 6, 0)))
-print("PASS shared depletion, hardness, remaining capacity and exact sphere", counted, "cells")
-local worst, total = 0, 0
-for _ = 1, 20 do
-	workspace.Terrain:FillRegion(region, 4, Ores.byName.Diamond.material)
-	local t = os.clock()
-	assert(dig(center, 28, 6, 7200).Diamond == counted)
-	local elapsed = (os.clock() - t) * 1000
-	worst = math.max(worst, elapsed)
-	total += elapsed
+-- Exercise the largest pattern on successive, exposed floors across chunk boundaries.
+local params = RaycastParams.new()
+params.FilterType = Enum.RaycastFilterType.Include
+params.FilterDescendantsInstances = { world.grid.folder }
+local Blocks = require(Server.MineBlocks)
+local top = Vector3.new(-42, -82, -98)
+local mid = ((top - Config.Min) / Config.Cell):Floor()
+local low, high = mid - Vector3.new(3, 20, 3), mid + Vector3.new(3, 4, 3)
+for z = low.Z, high.Z do
+	for y = low.Y, high.Y do
+		local id = if y > mid.Y then 0 else Blocks.codes[Ores.byName.Diamond.material]
+		buffer.fill(world.grid.cells, Blocks.index(low.X, y, z), id, 7)
+	end
 end
-print(
-	string.format(
-		"PASS 20 maximum-radius operations; mean %.2f ms, max %.2f ms (local Studio)",
-		total / 20,
-		worst
-	)
-)
+world.grid:refresh(low, high)
+local start = world.origin + top + Vector3.yAxis * 14
+local worst, total = 0, 0
+for i = 1, 20 do
+	local floor = workspace:Raycast(start, -Vector3.yAxis * 180, params)
+	assert(floor and floor.Normal == Vector3.yAxis)
+	local c = Config.blockCenter(world.origin, floor.Position, floor.Normal)
+	local eye = c + Vector3.yAxis * 16
+	local t = os.clock()
+	local batch = Pattern.select(world.origin, c, Vector3.yAxis, 25, 6, 7200, nil, function(pos)
+		if Pattern.visiblePart(eye, pos, Vector3.yAxis, params) then
+			return world:oreAt(pos)
+		end
+		return nil
+	end)
+	assert(#batch == 25, "Expected contiguous 5x5 floor at step " .. i .. ", got " .. #batch)
+	local yield = world:excavate(batch)
+	local amount = 0
+	for _, n in yield do
+		amount += n
+	end
+	assert(amount == 25)
+	local elapsed = (os.clock() - t) * 1000
+	worst, total = math.max(worst, elapsed), total + elapsed
+end
+print(string.format("PASS 20 successive 5x5 cuts; mean %.2f ms, max %.2f ms", total / 20, worst))
 print("QUARRY_TESTS_PASSED")

@@ -1,13 +1,12 @@
 local Shared = game:GetService("ReplicatedStorage").Shared
 local Config = require(Shared.GameConfig)
-local Ores = require(Shared.Ores)
+local Blocks = require(script.Parent.MineBlocks)
 local Geology = require(script.Parent.Geology)
 local World = {}
 World.__index = World
 local terrain = workspace.Terrain
 local cell = Config.Cell
 local chunk = Config.Chunk * cell
-local brush = {}
 
 local function emptySite(origin, surface)
 	local bottom = origin + Config.Min
@@ -46,7 +45,12 @@ function World.new(seed, surface)
 		else Config.Origin
 	for _ = 1, 32 do
 		if emptySite(origin, surface) then
-			return setmetatable({ origin = origin, seed = seed, ready = false }, World)
+			return setmetatable({
+				origin = origin,
+				seed = seed,
+				ready = false,
+				grid = Blocks.new(origin, surface or workspace),
+			}, World)
 		end
 		origin += Vector3.new(512, 0, 0)
 	end
@@ -55,106 +59,55 @@ end
 
 function World:generate()
 	local geology = Geology.new(self.seed)
-	for x = Config.Min.X, Config.Max.X - 1, chunk do
-		for z = Config.Min.Z, Config.Max.Z - 1, chunk do
-			for y = Config.Min.Y, Config.Max.Y - 1, chunk do
-				local lower = Vector3.new(x, y, z)
-				local upper = (lower + Vector3.one * chunk):Min(Config.Max)
-				local size = (upper - lower) / cell
-				local mats, fill = table.create(size.X), table.create(size.X)
-				for i = 1, size.X do
-					mats[i], fill[i] = table.create(size.Y), table.create(size.Y)
-					for j = 1, size.Y do
-						local row, density = table.create(size.Z), table.create(size.Z)
-						mats[i][j], fill[i][j] = row, density
-						for k = 1, size.Z do
-							row[k], density[k] = geology:sample(
-								x + (i - 0.5) * cell,
-								y + (j - 0.5) * cell,
-								z + (k - 0.5) * cell
-							)
-						end
-					end
-				end
-				terrain:WriteVoxels(Region3.new(self.origin + lower, self.origin + upper), cell, mats, fill)
-				task.wait()
+	local grid, size = self.grid, Blocks.size
+	for z = 0, size.Z - 1 do
+		local pz = Config.Min.Z + (z + 0.5) * cell
+		for y = 0, size.Y - 1 do
+			local py = Config.Min.Y + (y + 0.5) * cell
+			local start = Blocks.index(0, y, z)
+			for x = 0, size.X - 1 do
+				local mat = geology:sample(Config.Min.X + (x + 0.5) * cell, py, pz)
+				buffer.writeu8(grid.cells, start + x, Blocks.codes[mat])
 			end
 		end
+		if z % Config.Chunk == Config.Chunk - 1 then
+			task.wait()
+		end
+	end
+	for z = 0, math.ceil(size.Z / Config.Chunk) - 1 do
+		for y = 0, math.ceil(size.Y / Config.Chunk) - 1 do
+			for x = 0, math.ceil(size.X / Config.Chunk) - 1 do
+				grid:rebuild(x, y, z)
+			end
+		end
+		task.wait()
 	end
 	self.ready = true
 end
 
-local function stencil(radius)
-	if brush[radius] then
-		return brush[radius]
-	end
-	local extent = math.floor(radius / cell)
-	local offsets = {}
-	for x = -extent, extent do
-		for y = -extent, extent do
-			for z = -extent, extent do
-				local d = x * x + y * y + z * z
-				if d * cell * cell <= radius * radius then
-					table.insert(offsets, { x = x, y = y, z = z, d = d })
-				end
-			end
-		end
-	end
-	table.sort(offsets, function(a, b)
-		return a.d < b.d
-	end)
-	brush[radius] = offsets
-	return offsets
+function World:oreAt(point)
+	local p = ((point - self.grid.corner) / cell):Floor()
+	local kind = Blocks.kinds[buffer.readu8(self.grid.cells, Blocks.index(p.X, p.Y, p.Z))]
+	return if kind then kind.ore else nil
 end
 
--- A single non-yielding read/modify/write transaction. The native material
--- grid doubles as the resource cache and the record of what's already gone.
-function World:excavate(point, radius, power, space)
-	local p = point - self.origin
-	local loot, locked = {}, nil
-	if space <= 0 or not Config.inside(p) then
-		return loot, locked
-	end
-	local center = (p / cell):Floor() * cell
-	local extent = math.floor(radius / cell) * cell
-	local lower = (center - Vector3.one * extent):Max(Config.Min)
-	local upper = (center + Vector3.one * (extent + cell)):Min(Config.Max)
-	local region = Region3.new(self.origin + lower, self.origin + upper)
-	local mats, fill = terrain:ReadVoxels(region, cell)
-	local index = (center - lower) / cell + Vector3.one
-	local taken = 0
-	for _, o in stencil(radius) do
-		local i, j, k = index.X + o.x, index.Y + o.y, index.Z + o.z
-		local x, y, z = center.X + o.x * cell, center.Y + o.y * cell, center.Z + o.z * cell
-		-- Leave one cell of bedrock around the sides, back, bottom and buried front.
-		if
-			x > Config.Min.X
-			and x < Config.Max.X - cell
-			and y > Config.Min.Y
-			and y < upper.Y
-			and z > Config.Min.Z
-			and z < upper.Z
-			and (z < -cell or y >= -cell)
-		then
-			local row = mats[i] and mats[i][j]
-			local ore = row and Ores.byMaterial[row[k]]
-			if ore and fill[i][j][k] > 0 then
-				if ore.hardness <= power then
-					loot[ore.name] = (loot[ore.name] or 0) + 1
-					row[k], fill[i][j][k] = Enum.Material.Air, 0
-					taken += 1
-					if taken >= space then
-						break
-					end
-				elseif not locked or ore.hardness < locked.hardness then
-					locked = ore
-				end
-			end
+-- The server has checked the selected faces together in this same, non-yielding pulse.
+function World:excavate(selected)
+	local loot, lower, upper = {}, Blocks.size, Vector3.zero
+	for _, point in selected do
+		local p = ((point - self.grid.corner) / cell):Floor()
+		local i = Blocks.index(p.X, p.Y, p.Z)
+		local kind = Blocks.kinds[buffer.readu8(self.grid.cells, i)]
+		if kind then
+			buffer.writeu8(self.grid.cells, i, 0)
+			local name = kind.ore.name
+			loot[name] = (loot[name] or 0) + 1
+			lower, upper = lower:Min(p), upper:Max(p)
 		end
 	end
-	if taken > 0 then
-		terrain:WriteVoxels(region, cell, mats, fill)
+	if next(loot) then
+		self.grid:refresh(lower, upper)
 	end
-	return loot, locked
+	return loot
 end
 return World

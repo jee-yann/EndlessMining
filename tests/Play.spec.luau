@@ -24,6 +24,7 @@ report.OnServerEvent:Connect(function(player,stage,detail)
 		local char=player.Character
 		local x=if player.UserId%2==0 then -3 else 4
 		char:PivotTo(CFrame.new(n:GetAttribute("Origin")+Vector3.new(x,4,-8)))
+		char.HumanoidRootPart.Anchored=true
 	elseif stage=="passed" then
 		done[player]=detail
 		local results={}
@@ -51,7 +52,7 @@ local function test()
 	waitFor(function() return n:GetAttribute("Ready") and p:GetAttribute("ProfileReady") and p.Character and p.Character:FindFirstChild("Head") end,30,"profile/world readiness")
 	local gui=p.PlayerGui:WaitForChild("QuarryHUD",10)
 	assert(gui and gui.SafeArea:FindFirstChild("ShopOverlay"),"HUD did not mount")
-	waitFor(function() return p.PlayerGui:FindFirstChild("BrushRadius",true) end,8,"aim controller did not start")
+	waitFor(function() return workspace:FindFirstChild("MiningSelection") end,8,"aim controller did not start")
 	assert(p:GetAttribute("SaveStatus")=="Practice session","local data scope")
 	r:FireServer("position")
 	local origin=n:GetAttribute("Origin")
@@ -59,12 +60,28 @@ local function test()
 	local first=os.clock()
 	local params=RaycastParams.new()
 	params.FilterType=Enum.RaycastFilterType.Include
-	params.FilterDescendantsInstances={workspace.Terrain}
+	params.FilterDescendantsInstances={workspace.CitrineCove:WaitForChild("MineBlocks")}
 	local head=p.Character.Head
-	local directions={Vector3.new(0,-1,0),Vector3.new(0,-.45,-1),Vector3.new(-.6,-.5,-.6),Vector3.new(.6,-.4,-.6),Vector3.new(0,.1,-1)}
-	for i=1,240 do
-		local hit=workspace:Raycast(head.Position,directions[i%#directions+1].Unit*33,params)
-		if hit then n.Mine:FireServer(hit.Position) end
+	local config=require(rep.Shared.GameConfig)
+	local pattern=require(rep.Shared.BlockPattern)
+	local ores=require(rep.Shared.Ores)
+	local directions={}
+	for x=-3,3 do
+		for y=-3,1 do table.insert(directions,Vector3.new(x*.21,y*.25,-1).Unit) end
+	end
+	table.insert(directions,-Vector3.yAxis)
+	local function dig(i,count)
+		local hit=workspace:Raycast(head.Position,directions[i%#directions+1]*33,params)
+		if not hit then return end
+		local center=config.blockCenter(origin,hit.Position,hit.Normal)
+		local _,mask=pattern.select(origin,center,hit.Normal,count,1,36-p:GetAttribute("Used"),nil,function(pos)
+			local part=pattern.visiblePart(head.Position,pos,hit.Normal,params)
+			return if part then ores.byName[part.Name] else nil
+		end)
+		if mask==2^count-1 then n.Mine:FireServer(center,hit.Normal,count,mask) end
+	end
+	for i=1,650 do
+		dig(i,1)
 		if p:GetAttribute("Used")==36 then break end
 		task.wait(.12)
 	end
@@ -77,11 +94,17 @@ local function test()
 	task.wait(.28)
 	if p:GetAttribute("Radius")==1 then n.Action:FireServer("Buy","Radius") end
 	waitFor(function() return p:GetAttribute("Radius")==2 and p:GetAttribute("Gold")==value-24 end,5,"purchase")
+	for i=1,90 do
+		if p:GetAttribute("Used")==2 then break end
+		if p:GetAttribute("Used")==0 then dig(i,2) end
+		task.wait(.12)
+	end
+	assert(p:GetAttribute("Used")==2,"the 2x1 upgrade should mine both highlighted cells")
 	task.wait(.25)
 	n.Action:FireServer("Surface")
 	local landing=n:GetAttribute("Landing")
 	waitFor(function() return (p.Character.HumanoidRootPart.Position-landing).Magnitude<8 end,5,"surface recall")
-	return string.format("36 ore, %d gold sale, radius 5→7, surface recall (%.1fs)",value,os.clock()-first)
+	return string.format("36 ore, %d gold sale, area 1×1→2×1, surface recall (%.1fs)",value,os.clock()-first)
 end
 local ok,result=pcall(test)
 r:FireServer(if ok then "passed" else "failed",tostring(result))

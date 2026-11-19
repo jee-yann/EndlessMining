@@ -1,21 +1,16 @@
+local shared = game:GetService("ReplicatedStorage").Shared
+local Config, Pattern = require(shared.GameConfig), require(shared.BlockPattern)
 local Tween = game:GetService("TweenService")
 local Debris = game:GetService("Debris")
 local SoundService = game:GetService("SoundService")
 local Effects = {}
 Effects.__index = Effects
 local rng = Random.new()
-function Effects.new(aimGui)
-	local self = setmetatable({ activeChips = 0, lastBurst = 0 }, Effects)
-	local ring = Instance.new("Frame")
-	ring.Name, ring.AnchorPoint, ring.BorderSizePixel = "BrushRadius", Vector2.new(0.5, 0.5), 0
-	ring.BackgroundColor3, ring.BackgroundTransparency = Color3.fromRGB(89, 232, 224), 0.965
-	local corner = Instance.new("UICorner")
-	corner.CornerRadius, corner.Parent = UDim.new(1, 0), ring
-	local stroke = Instance.new("UIStroke")
-	stroke.Color, stroke.Thickness, stroke.Transparency, stroke.Parent =
-		ring.BackgroundColor3, 2, 0.18, ring
-	ring.Visible, ring.Parent = false, aimGui
-	self.ring = ring
+function Effects.new()
+	local self = setmetatable({ activeChips = 0, lastBurst = 0, markers = {} }, Effects)
+	local preview = Instance.new("Folder")
+	preview.Name, preview.Parent = "MiningSelection", workspace
+	self.preview = preview
 	local impact = Instance.new("Sound")
 	impact.Name, impact.SoundId, impact.Volume, impact.Parent =
 		"Rock impact", "rbxasset://sounds/action_jump_land.mp3", 0.19, SoundService
@@ -38,23 +33,37 @@ function Effects:chime(pitch)
 	self.coin.PlaybackSpeed = pitch
 	SoundService:PlayLocalSound(self.coin)
 end
-function Effects:aim(point, radius)
-	local camera = workspace.CurrentCamera
-	self.ring.Visible = point ~= nil and camera ~= nil
-	if not self.ring.Visible then
+function Effects:aim(cells, normal)
+	local count = if cells then #cells else 0
+	for i, marker in self.markers do
+		if i > count then
+			marker.Parent = nil
+		end
+	end
+	if count == 0 then
 		return
 	end
-	local screen = camera:WorldToViewportPoint(point)
-	if screen.Z <= 0.1 then
-		self.ring.Visible = false
-		return
+	local across, up = Pattern.axes(normal)
+	for i, center in cells do
+		local marker = self.markers[i]
+		if not marker then
+			marker = Instance.new("Part")
+			marker.Name, marker.Anchored, marker.CastShadow = "Selected face", true, false
+			marker.CanCollide, marker.CanTouch, marker.CanQuery = false, false, false
+			marker.Size = Vector3.new(Config.Cell - 0.10, Config.Cell - 0.10, 0.045)
+			marker.Color, marker.Material, marker.Transparency =
+				Color3.fromRGB(94, 255, 218), Enum.Material.Neon, 0.77
+			local outline = Instance.new("SelectionBox")
+			outline.Adornee, outline.Color3, outline.LineThickness =
+				marker, Color3.fromRGB(156, 255, 233), 0.048
+			outline.SurfaceTransparency, outline.Parent = 1, marker
+			self.markers[i] = marker
+		end
+		marker.CFrame = CFrame.fromMatrix(center + normal * (Config.Cell / 2 + 0.045), across, up, normal)
+		marker.Parent = self.preview
 	end
-	local edge = camera:WorldToViewportPoint(point + camera.CFrame.RightVector * radius)
-	local diameter = 2 * math.abs(edge.X - screen.X)
-	self.ring.Position = UDim2.fromOffset(screen.X, screen.Y)
-	self.ring.Size = UDim2.fromOffset(diameter, diameter)
 end
-function Effects:burst(point, radius, ore, quiet)
+function Effects:burst(point, spread, ore, quiet)
 	local now = os.clock()
 	if now - self.lastBurst < 0.085 then
 		return
@@ -88,7 +97,7 @@ function Effects:burst(point, radius, ore, quiet)
 			if rare and i % 2 == 0 then Enum.Material.Neon else Enum.Material.Plastic
 		chip.TopSurface, chip.BottomSurface = Enum.SurfaceType.Studs, Enum.SurfaceType.Smooth
 		local drift = Vector3.new(rng:NextNumber(-1, 1), rng:NextNumber(-0.3, 1), rng:NextNumber(-1, 1))
-		local start = point + outward * 2.5 + drift * math.min(radius * 0.5, 4)
+		local start = point + outward * 2.5 + drift * math.min(spread * 0.5, 4)
 		chip.CFrame = CFrame.new(start) * CFrame.Angles(i, 0, i * 0.7)
 		chip.Parent = workspace
 		self.activeChips += 1

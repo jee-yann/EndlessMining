@@ -1,7 +1,3 @@
-local Shared = game:GetService("ReplicatedStorage").Shared
-local Config = require(Shared.GameConfig)
-local Ores = require(Shared.Ores)
-
 local Quarry = {}
 
 function Quarry.bind(map, world)
@@ -21,16 +17,4 @@ function Quarry.bind(map, world)
 	}
 end
 
-function Quarry.palette()
-	if workspace.Terrain:CountCells() ~= 0 then
-		return
-	end
-	for _, ore in Ores.list do
-		workspace.Terrain:SetMaterialColor(ore.material, ore.color)
-	end
-	for _, layer in Config.Layers do
-		workspace.Terrain:SetMaterialColor(layer.material, layer.color)
-	end
-	workspace.Terrain:SetMaterialColor(Enum.Material.Grass, Color3.fromRGB(118, 201, 84))
-end
 return Quarry
