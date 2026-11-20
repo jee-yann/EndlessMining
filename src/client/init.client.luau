@@ -34,7 +34,7 @@ for _, gradient in tags:GetTagged("MiningPadShine") do
 	shine(gradient)
 end
 local Swing = require(script.PickSwing)
-local held, firstHaul, rig = nil, false, nil
+local held, rig, hintDeadline
 local target, targetSide, strokeStart
 local finishedCell, retryAt
 local aimPoint, aimSide, aimOre, aimPart
@@ -137,7 +137,6 @@ GuiService.MenuOpened:Connect(release)
 hud.overlay:GetPropertyChangedSignal("Visible"):Connect(release)
 UIS:GetPropertyChangedSignal("PreferredInput"):Connect(function()
 	mobile = UIS.PreferredInput == Enum.PreferredInput.Touch
-	hud.mobile, hud.mine.Visible = mobile, mobile and not hud.overlay.Visible
 	hud:placePanels(mobile)
 	release()
 end)
@@ -146,7 +145,7 @@ net.Feedback.OnClientEvent:Connect(function(kind, a, point, spread, finds, norma
 	if kind == "achievement" or kind == "titleUnlocked" then
 		hud.unlocks:show(kind, a)
 	elseif kind == "loot" then
-		firstHaul = true
+		hintDeadline = 0
 		local best = Ores.byName.Dirt
 		for name in a do
 			local ore = Ores.byName[name]
@@ -312,14 +311,15 @@ local function sampleAim()
 	if mobile then
 		hud.reticle.BackgroundColor3 = if valid then W.aqua else W.white
 	end
+	hintDeadline = hintDeadline or (os.clock() + 8)
 	if not ready then
 		hud:guide("Opening the mine…", "Preparing your pack and the mine", true)
 	elseif space <= 0 then
 		hud:guide("Backpack full", "Bring your haul to the amber Sell counter", true)
 	elseif not valid and locked then
 		hud:guide(targetName(locked, center) .. " needs Power " .. required, "Upgrade Power at the workshop", true)
-	elseif valid or not firstHaul then
-		local help = if mobile then "Hold MINE on the highlighted blocks" else "Hold the left mouse button to mine"
+	elseif valid or ((player:GetAttribute("Mined") or 0) == 0 and os.clock() < hintDeadline) then
+		local help = if mobile then "Aim at a block and hold Mine" else "Hold the left mouse button to mine"
 		if valid then
 			local ore = Ores.byName[hit.Instance.Name]
 			local worth = if ore.secret and not player:GetAttribute("Found" .. ore.name)
@@ -330,7 +330,7 @@ local function sampleAim()
 		local title = if valid
 			then "Mine " .. string.lower(targetName(Ores.byName[hit.Instance.Name], center))
 			elseif localPos.Y < -2 then "Aim at the wall or floor to keep digging"
-			else "Follow the path to the crystal cave"
+			else "Follow the path to the mine"
 		hud:guide(title, help, true)
 	else
 		hud:guide("", "", false)

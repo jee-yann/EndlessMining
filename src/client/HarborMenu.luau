@@ -10,6 +10,7 @@ local Guide = require(Shared.FieldGuide)
 local Menu = {}
 Menu.__index = Menu
 Menu.pages = {
+	Menu = { name = "Menu", color = W.aqua },
 	Inventory = { name = "Inventory", color = W.gold },
 	Pets = { name = "Pets", color = W.violet },
 	Skills = { name = "Skill tree", color = W.green },
@@ -49,7 +50,8 @@ function Menu.new(root, player, net, close)
 	W.stroke(self.iconWell, W.ink, 2)
 	self.heading = W.title(header, "", 74, 4, 322, 37, 30, W.ink, true)
 	self.sub = W.text(header, "", 76, 39, 329, 23, 15, W.ink, true)
-	local closeButton = W.button(header, "Close", 416, 16, 37, 37, W.white, "×", "Close")
+	local closeButton = W.button(header, "Close", 404, 9, 55, 55, W.white, "×", "Close")
+	self.closeButton = closeButton
 	closeButton.TextSize = 25
 	closeButton.Activated:Connect(close)
 	local list = Instance.new("ScrollingFrame")
@@ -82,10 +84,13 @@ function Menu:layout(width, height, touch)
 	local designHeight = if touch and width > height then math.clamp(height - 14, 270, 408) else 408
 	self.scale.Scale = math.clamp(math.min((width - 18) / 480, (height - 14) / designHeight), 0.3, 1.38)
 	self.modal.Size = UDim2.fromOffset(480, designHeight)
+	local closeSize = if touch then math.clamp(math.ceil(44 / self.scale.Scale), 48, 72) else 48
+	self.closeButton.Size = UDim2.fromOffset(closeSize, closeSize)
+	self.closeButton.Position = UDim2.fromOffset(462 - closeSize, (73 - closeSize) / 2)
 	local extra = if self.tabs.Visible then 35 else 0
 	self.designHeight = designHeight
 	self.list.Position = UDim2.fromOffset(11, 89 + extra)
-	self.list.Size = UDim2.fromOffset(458, designHeight - 135 - extra)
+	self.list.Size = UDim2.fromOffset(458, designHeight - (if self.page == "Menu" then 99 else 135) - extra)
 	self.footer.Position = UDim2.fromOffset(11, designHeight - 37)
 end
 function Menu:row(i, name, icon, color)
@@ -151,22 +156,29 @@ function Menu:jobs()
 	return #Expeditions.jobs
 end
 function Menu:pack()
+	local rows = {}
 	for i, ore in Ores.list do
-		local title, detail, b = self:row(i, ore.name, "Crystal", ore.color)
-		b.Interactable = false
-		table.insert(self.updates, function()
-			local held = self.player:GetAttribute("Held" .. ore.name) or 0
-			local hidden = ore.secret and not self.player:GetAttribute("Found" .. ore.name)
-			title.Text = if hidden then "???" else ore.name
-			local each = ore.value * (if self.player:GetAttribute("DoubleGold") then 2 else 1)
-			detail.Text = if hidden
-				then "Undiscovered"
-				else string.format("%d G each  ·  %s G in pack", each, W.number(held * each))
-			b.Text = "×" .. held
-			title.Parent.Visible = not hidden
-		end)
+		local title, detail, count = self:row(i, ore.name, "Crystal", ore.color)
+		count.Interactable = false
+		rows[ore.name] = { row = title.Parent, detail = detail, count = count }
 	end
-	return #Ores.list
+	local empty = W.text(self.list, "Your pack is empty", 0, 8, 447, 45, 18, W.muted)
+	table.insert(self.updates, function()
+		local held = Ores.carried(self.player)
+		for _, item in rows do
+			item.row.Visible = false
+		end
+		for i, entry in held do
+			local item = rows[entry.ore.name]
+			local each = entry.ore.value * (if self.player:GetAttribute("DoubleGold") then 2 else 1)
+			item.row.Position, item.row.Visible = UDim2.fromOffset(1, 1 + (i - 1) * 69), true
+			item.count.Text = "×" .. entry.amount
+			item.detail.Text = string.format("%d G each  ·  %s G in pack", each, W.number(entry.amount * each))
+		end
+		empty.Visible = #held == 0
+		self.list.CanvasSize = UDim2.fromOffset(0, #held * 69)
+	end)
+	return 0
 end
 function Menu:store()
 	for i, item in Catalog do
@@ -215,7 +227,37 @@ function Menu:store()
 	end
 	return #Catalog
 end
+local function shortcuts(self)
+	local destinations = { "Inventory", "Skills", "Achievements", "Book", "Jobs", "Settings", "Pets", "Miners" }
+	for i, key in destinations do
+		local page = Menu.pages[key]
+		local color = if page then page.color else W.aqua
+		local button = W.button(
+			self.list,
+			key,
+			4 + ((i - 1) % 2) * 224,
+			3 + math.floor((i - 1) / 2) * 77,
+			214,
+			71,
+			color,
+			"",
+			"Select"
+		)
+		local icon = if key == "Miners" then "Crew" elseif key == "Inventory" then "Pack" else key
+		Icons.draw(button, icon, 9, 16, 38, color)
+		W.title(button, if page then page.name else "Server miners", 51, 0, 158, 71, 17, W.ink, true)
+		button.Activated:Connect(function()
+			if key == "Miners" then
+				self.showMiners()
+			else
+				self:open(key)
+			end
+		end)
+	end
+	return math.ceil(#destinations / 2)
+end
 local builders = {
+	Menu = shortcuts,
 	Gear = Menu.gear,
 	Inventory = Field.titles,
 	Pets = Field.pets,
@@ -244,7 +286,7 @@ function Menu:open(key)
 	end
 	local extra = if self.tabs.Visible then 35 else 0
 	self.list.Position = UDim2.fromOffset(11, 89 + extra)
-	self.list.Size = UDim2.fromOffset(458, (self.designHeight or 408) - 135 - extra)
+	self.list.Size = UDim2.fromOffset(458, (self.designHeight or 408) - (if key == "Menu" then 99 else 135) - extra)
 	self.list:ClearAllChildren()
 	if self.icon then
 		self.icon:Destroy()
@@ -256,6 +298,7 @@ function Menu:open(key)
 			and RunService:IsStudio()
 			and game.GameId == 0
 		then "Studio trials last for this session."
+		elseif key == "Menu" then ""
 		elseif key == "Inventory" then "Select an unlocked title to wear it."
 		elseif key == "Pets" then "Equip one companion at a time."
 		elseif key == "Skills" then "Earn one point per level. Follow the connected branches."
@@ -267,7 +310,9 @@ function Menu:open(key)
 		elseif key == "Store" then "Permanent passes for this experience."
 		else "Upgrades stay equipped between visits."
 	local rows = builders[key](self)
-	self.list.CanvasSize, self.list.CanvasPosition = UDim2.fromOffset(0, rows * 69), Vector2.zero
+	self.footer.Visible = key ~= "Menu"
+	self.list.CanvasSize, self.list.CanvasPosition =
+		UDim2.fromOffset(0, rows * (if key == "Menu" then 77 else 69)), Vector2.zero
 	if self.motion then
 		self.motion:Cancel()
 	end
@@ -307,7 +352,9 @@ function Menu:refresh()
 		return
 	end
 	local p = self.player
-	if self.page == "Inventory" then
+	if self.page == "Menu" then
+		self.sub.Text = ""
+	elseif self.page == "Inventory" then
 		local xp = p:GetAttribute("MiningXP") or 0
 		local level = Expeditions.level(xp)
 		self.sub.Text = string.format(

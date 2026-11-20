@@ -26,6 +26,10 @@ function Icons.draw(parent, key, x, y, size, tint)
 		shape("Pick head", 8, 5, 16, 6, light, 2, 20, true)
 		shape("Pick tip", 21, 8, 7, 5, W.aqua, 1, 39, true)
 		shape("Rear pick", 4, 6, 7, 4, W.aqua, 1, -23, true)
+	elseif key == "Menu" then
+		for i, color in { W.gold, W.aqua, W.green, W.pink } do
+			shape("Tile", 3 + ((i - 1) % 2) * 14, 3 + math.floor((i - 1) / 2) * 14, 12, 12, color, 3, 0, true)
+		end
 	elseif key == "Settings" then
 		for i, xx in { 8, 16, 24 } do
 			shape("Rail", xx - 1, 4, 3, 24, W.panel, 2)

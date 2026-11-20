@@ -148,9 +148,27 @@ local function test()
 	assert(me and me.Level.Text == "1" and me.Gold.Text == "0" and me.Title.Text == "Noob Miner")
 	assert(gui.SafeArea.Wallet["Level progress"]["XP track"]["XP fill"])
 	assert(gui.SafeArea["Action dock"]:FindFirstChild("Achievements"))
+	local safe = gui.SafeArea
+	local originalSize = safe.Size
+	for _, size in { Vector2.new(760, 323), Vector2.new(320, 615), Vector2.new(568, 250) } do
+		safe.Size = UDim2.fromOffset(size.X, size.Y)
+		game:GetService("RunService").PreRender:Wait()
+		waitFor(function()
+			return safe.AbsoluteSize == size and safe["Edge shortcuts"].Visible
+		end, 3, "compact HUD")
+		assert(not safe.Haul.Visible and not safe["Current job"].Visible and not safe["Action dock"].Visible)
+		local pack = safe["Edge shortcuts"].Pack
+		local menuButton = safe["Edge shortcuts"].Menu
+		assert(pack.AbsoluteSize.Y >= 44 and menuButton.AbsoluteSize.Y >= 44, "edge tap targets")
+		assert(
+			safe.Wallet.AbsolutePosition.X + safe.Wallet.AbsoluteSize.X <= safe.Location.AbsolutePosition.X,
+			"corner stats overlap"
+		)
+	end
+	safe.Size = originalSize
 	assert(not menu["Inventory tabs"]:FindFirstChild("Achievements"))
 	for _, page in
-		{ "Pack", "Settings", "Inventory", "Pets", "Skills", "Achievements", "Gear", "Jobs", "Book", "Store" }
+		{ "Menu", "Pack", "Settings", "Inventory", "Pets", "Skills", "Achievements", "Gear", "Jobs", "Book", "Store" }
 	do
 		if counters[page] then
 			visit(page, true)
@@ -158,6 +176,7 @@ local function test()
 			r:FireServer("openPage", page)
 		end
 		local listing = ({
+			Menu = "Miners",
 			Settings = "Music volume",
 			Inventory = "Prismatic Excavator",
 			Pets = "Pocket Rock",

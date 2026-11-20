@@ -14,7 +14,8 @@ local badge = widgets.frame(location, "Ore vision status", 50, 52, 160, 23, widg
 badge.Visible = false
 local label = widgets.title(badge, "", 0, 0, 160, 23, 13, widgets.aqua)
 local function placeBadge()
-	badge.Position = UDim2.fromOffset(50, if surface.Visible then 82 else 52)
+	badge.AnchorPoint = Vector2.new(1, 0)
+	badge.Position = UDim2.new(1, 0, 1, if surface.Visible then 52 else 4)
 end
 surface:GetPropertyChangedSignal("Visible"):Connect(placeBadge)
 placeBadge()

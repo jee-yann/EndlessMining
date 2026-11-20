@@ -129,4 +129,24 @@ local effort = {
 local function cutTime(base, ore, strength)
 	return base * effort[ore.name] * (1 + 0.45 * ((strength or 1) - 1))
 end
-return { list = list, byName = byName, byMaterial = byMaterial, cutTime = cutTime }
+local rarityRank = { Common = 1, Uncommon = 2, Rare = 3, Epic = 4, Legendary = 5, Mythic = 6, Celestial = 7 }
+local function carried(player)
+	local entries = {}
+	for _, ore in list do
+		local amount = player:GetAttribute("Held" .. ore.name) or 0
+		if amount > 0 then
+			table.insert(entries, { ore = ore, amount = amount })
+		end
+	end
+	table.sort(entries, function(a, b)
+		if a.ore.rarity ~= b.ore.rarity then
+			return rarityRank[a.ore.rarity] > rarityRank[b.ore.rarity]
+		end
+		if a.amount ~= b.amount then
+			return a.amount > b.amount
+		end
+		return a.ore.value > b.ore.value
+	end)
+	return entries
+end
+return { list = list, byName = byName, byMaterial = byMaterial, cutTime = cutTime, carried = carried }
