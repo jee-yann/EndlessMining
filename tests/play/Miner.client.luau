@@ -12,18 +12,7 @@ local function waitFor(check, seconds, msg)
 	error(msg)
 end
 local function test()
-	local loading = p.PlayerGui:WaitForChild("MiningLoading", 6)
-	assert(loading and loading.Cover.BackgroundTransparency == 0, "opaque loading screen")
-	local cover = loading.Cover
-	local sawReveal, prematureReveal = false, false
-	local monitor = cover:GetPropertyChangedSignal("BackgroundTransparency"):Connect(function()
-		if cover.BackgroundTransparency > 0 and cover.BackgroundTransparency < 1 then
-			sawReveal = true
-			if cover["Load panel"]["Loading bar"].Status.Text ~= "Ready to dig" then
-				prematureReveal = true
-			end
-		end
-	end)
+	assert(not p.PlayerGui:FindFirstChild("MiningLoading"), "custom loading screen removed")
 	local n = rep:WaitForChild("EndlessMiningNet", 25)
 	assert(n, "server bootstrap")
 	waitFor(function()
@@ -49,9 +38,8 @@ local function test()
 	assert(not song.IsPlaying and song.Volume < 0.1, "test music must stay muted")
 	waitFor(function()
 		return gui:GetAttribute("ControllerReady") and not p.PlayerGui:FindFirstChild("MiningLoading")
-	end, 18, "loading screen dismisses")
-	monitor:Disconnect()
-	assert(sawReveal and not prematureReveal, "loading fades only after readiness")
+	end, 18, "controller starts without a loading screen")
+	assert(not p.Character.HumanoidRootPart.Anchored, "free to move at spawn")
 	local ownerVision
 	if p.UserId == 45241447 then
 		ownerVision = p.PlayerGui:WaitForChild("OwnerOreVision", 3)
@@ -59,19 +47,10 @@ local function test()
 	else
 		assert(not p.PlayerGui:FindFirstChild("OwnerOreVision"), "ore vision granted to another player")
 	end
-	local mount = p.Character.HumanoidRootPart:FindFirstChild("Lamp mount")
-	assert(
-		mount and mount:FindFirstChildOfClass("PointLight") and p.Character:GetAttribute("MiningViewReady"),
-		"spawn camera and character light on reveal"
-	)
-	local gallery = workspace.CitrineCove["Citrine Mine"]:FindFirstChild("Gallery glow")
-	assert(gallery and gallery:FindFirstChildOfClass("PointLight"), "gallery lighting on reveal")
-	local centerLamp = workspace.CitrineCove["Working gallery"]["Center lantern"]
-	local light = centerLamp:FindFirstChildOfClass("SurfaceLight")
-	assert(
-		light and light.Enabled and light.Face == Enum.NormalId.Bottom and light.Brightness >= 0.94,
-		"central work light on reveal"
-	)
+	waitFor(function()
+		local mount = p.Character.HumanoidRootPart:FindFirstChild("Lamp mount")
+		return mount and mount:FindFirstChildOfClass("PointLight") and p.Character:GetAttribute("MiningViewReady")
+	end, 10, "spawn camera and character light")
 	local audio = require(p.PlayerScripts.Client.HarborAudio)
 	for _, voice in harbor:GetChildren() do
 		if voice == song then
@@ -147,11 +126,12 @@ local function test()
 	local me = roster.Miners:WaitForChild(tostring(p.UserId), 3)
 	assert(me and me.Level.Text == "1" and me.Gold.Text == "0" and me.Title.Text == "Noob Miner")
 	local wallet = gui.SafeArea.Wallet
-	local ring = wallet["Level progress"]
+	local controls = gui.SafeArea["Equipment and level"]
+	local ring = controls["Level progress"]
 	assert(ring:IsA("GuiButton") and ring:FindFirstChild("XP segment"), "interactive XP ring")
 	assert(wallet.BackgroundTransparency == 1 and gui.SafeArea.Location.BackgroundTransparency == 1)
 	for _, key in { "Power", "Speed", "Capacity" } do
-		assert(wallet.Equipment[key]:FindFirstChild(key .. " icon"), "equipment icon " .. key)
+		assert(controls.Equipment[key]:FindFirstChild(key .. " icon"), "equipment icon " .. key)
 	end
 	assert(gui.SafeArea["Action dock"]:FindFirstChild("Achievements"))
 	local safe = gui.SafeArea
@@ -175,8 +155,22 @@ local function test()
 	end
 	safe.Size = originalSize
 	assert(not menu["Inventory tabs"]:FindFirstChild("Achievements"))
+	assert(menu["Inventory tabs"]:FindFirstChild("Passes") and not menu["Inventory tabs"]:FindFirstChild("Skills"))
 	for _, page in
-		{ "Menu", "Pack", "Settings", "Inventory", "Pets", "Skills", "Achievements", "Gear", "Jobs", "Book", "Store" }
+		{
+			"Menu",
+			"Pack",
+			"Settings",
+			"Inventory",
+			"Passes",
+			"Pets",
+			"Skills",
+			"Achievements",
+			"Gear",
+			"Jobs",
+			"Book",
+			"Store",
+		}
 	do
 		if counters[page] then
 			visit(page, true)
@@ -188,7 +182,7 @@ local function test()
 			Settings = "Music volume",
 			Inventory = "Prismatic Excavator",
 			Pets = "Pocket Rock",
-			Skills = "Skill map",
+			Passes = "Prism Trail",
 			Achievements = "Once Is Luck, Twice Is Skill",
 			Gear = "Speed",
 			Jobs = "First strike",
@@ -197,6 +191,9 @@ local function test()
 			Store = "Double Gold",
 		})[page]
 		waitFor(function()
+			if page == "Skills" then
+				return overlay["Skill map"].Visible and not menu.Visible
+			end
 			return overlay.Visible and menu.Listings:FindFirstChild(listing)
 		end, 5, "open " .. page)
 		if page == "Achievements" then
@@ -239,12 +236,11 @@ local function test()
 		r:FireServer("depthSample")
 		local location = gui.SafeArea.Location
 		waitFor(function()
-			return location.Coordinates.Text == "X -1    Y 0    Z -4"
-				and location.Depth.Text == "0 blocks"
+			return location.Depth.Text == "Mine entrance"
 				and location.Region.Text == "SUNSTONE HOLLOW"
 				and p.leaderstats.Depth.Value == 0
 		end, 8, "block coordinates and region on the hut floor")
-		assert(location.Coordinates.TextFits and location.Depth.TextFits, "location readout clipped")
+		assert(not location:FindFirstChild("Coordinates") and location.Depth.TextFits, "location readout clipped")
 	end
 	if r:GetAttribute("CheckSwing") then
 		assert(p.CameraMaxZoomDistance <= 28)
@@ -265,6 +261,18 @@ local function test()
 		local pos = p.Character.Head.Position - origin
 		return pos.Z < 0 and math.abs(pos.Y - 4) < 3
 	end, 8, "placement at starter seam")
+	waitFor(function()
+		local gallery = workspace.CitrineCove["Citrine Mine"]:FindFirstChild("Gallery glow")
+		local center = workspace.CitrineCove:FindFirstChild("Working gallery")
+		local lamp = center and center:FindFirstChild("Center lantern")
+		local light = lamp and lamp:FindFirstChildOfClass("SurfaceLight")
+		return gallery
+			and gallery:FindFirstChildOfClass("PointLight")
+			and light
+			and light.Enabled
+			and light.Face == Enum.NormalId.Bottom
+			and light.Brightness >= 0.94
+	end, 8, "streamed mine lighting")
 	local first = os.clock()
 	local discovered
 	n.Feedback.OnClientEvent:Connect(function(kind, title, name)
@@ -318,12 +326,43 @@ local function test()
 		waitFor(function()
 			return not overlay.Visible
 		end, 2, "animated close")
-		clickAt(ring.AbsolutePosition + ring.AbsoluteSize * 0.5 + game:GetService("GuiService"):GetGuiInset())
+		local ringPoint = ring.AbsolutePosition + ring.AbsoluteSize * 0.5 + game.GuiService:GetGuiInset()
+		input:SendMousePosition(ringPoint)
+		waitFor(function()
+			return ring["Interaction scale"].Scale > 1.02
+		end, 2, "hover feedback")
+		input:SendMouseButton(ringPoint, Enum.UserInputType.MouseButton1, true)
+		waitFor(function()
+			return ring["Interaction scale"].Scale < 0.98
+		end, 2, "press feedback")
+		input:SendMouseButton(ringPoint, Enum.UserInputType.MouseButton1, false)
 		waitFor(function()
 			return overlay.Visible
-				and menu.Listings:FindFirstChild("Skill map")
-				and menu.Marquee.Summary.Text:find("0 / 20 XP", 1, true)
+				and overlay["Skill map"].Visible
+				and overlay["Skill map"]["Map header"].Summary.Text:find("0 / 20 XP", 1, true)
 		end, 3, "tap the level ring for exact XP")
+		local map = overlay["Skill map"]
+		local viewport = map["Map viewport"]
+		local canvas = viewport.Branches
+		local before = canvas.AbsolutePosition
+		local dragStart = viewport.AbsolutePosition
+			+ viewport.AbsoluteSize * Vector2.new(0.55, 0.24)
+			+ game.GuiService:GetGuiInset()
+		input:SendMousePosition(dragStart)
+		input:SendMouseButton(dragStart, Enum.UserInputType.MouseButton1, true)
+		task.wait(0.08)
+		input:SendMousePosition(dragStart + Vector2.new(70, 28))
+		task.wait(0.12)
+		input:SendMouseButton(dragStart + Vector2.new(70, 28), Enum.UserInputType.MouseButton1, false)
+		waitFor(function()
+			return (canvas.AbsolutePosition - before).Magnitude > 50
+		end, 2, "drag skill tree")
+		task.wait(0.15)
+		local node = canvas.Reach
+		clickAt(node.AbsolutePosition + node.AbsoluteSize * 0.5 + game.GuiService:GetGuiInset())
+		waitFor(function()
+			return map["Skill details"].Learn.Visible and map["Skill details"].Learn.Text == "Need 1 point"
+		end, 2, "inspect skill")
 		r:FireServer("closePage")
 		waitFor(function()
 			return not overlay.Visible
@@ -657,7 +696,7 @@ local function test()
 	assert(quantity == 36 and total == value, "pack quantities and value")
 	assert(p:GetAttribute("MiningXP") == earnedXP, "XP from each material in the first haul")
 	local level = require(rep.Shared.Expeditions).level(earnedXP)
-	assert(p:GetAttribute("Level") == level and gui.SafeArea.Wallet.Equipment.Power.Visible, "level and equipment HUD")
+	assert(p:GetAttribute("Level") == level and controls.Equipment.Power.Visible, "level and equipment HUD")
 	n.Action:FireServer("Sell")
 	task.wait(0.4)
 	assert(p:GetAttribute("Used") == 36 and p:GetAttribute("Gold") == 0, "exchange must require a visit")
@@ -707,6 +746,29 @@ local function test()
 	waitFor(function()
 		return p:GetAttribute("Jobs") == 2 and p:GetAttribute("ClaimedJobs") == 3
 	end, 5, "two eligible jobs claimed back to back in reverse order")
+	r:FireServer("openPage", "Book")
+	waitFor(function()
+		return p:GetAttribute("SeenBookDirt") and menu.Listings.Dirt:FindFirstChildOfClass("UIStroke").Enabled
+	end, 5, "reading a discovered ore")
+	r:FireServer("openPage", "Book")
+	waitFor(function()
+		local stroke = menu.Listings.Dirt:FindFirstChildOfClass("UIStroke")
+		return stroke and not stroke.Enabled
+	end, 4, "seen ore stays read on return")
+	r:FireServer("openPage", "Achievements")
+	waitFor(function()
+		return menu.Visible and menu.Listings:FindFirstChild("Pet Rock, Proper Noun")
+	end, 4, "achievement list")
+	task.wait(0.55)
+	assert(not p:GetAttribute("SeenAchievementsPetName"), "offscreen achievement incorrectly marked read")
+	local petAward = menu.Listings["Pet Rock, Proper Noun"]
+	menu.Listings.CanvasPosition = Vector2.new(
+		0,
+		petAward.AbsolutePosition.Y - menu.Listings.AbsolutePosition.Y - menu.Listings.AbsoluteWindowSize.Y * 0.4
+	)
+	waitFor(function()
+		return p:GetAttribute("SeenAchievementsPetName")
+	end, 5, "scroll reads new achievement")
 	local afterJob = p:GetAttribute("Gold")
 	assert(afterJob == value - 24 + 80 + 25)
 	task.wait(0.25)
@@ -728,12 +790,19 @@ local function test()
 	waitFor(function()
 		return p.Character.HumanoidRootPart:FindFirstChild("Prism Ribbon")
 	end, 5, "equipped trail")
+	for _, enabled in { false, true } do
+		n.Action:FireServer("Preference", "TrailEnabled", enabled)
+		waitFor(function()
+			return p.Character.HumanoidRootPart["Prism Ribbon"].Enabled == enabled
+		end, 3, "toggle owned trail")
+	end
 	r:FireServer("minedShaft")
 	waitFor(function()
 		local blocks = p:GetAttribute("TestShaftDepth")
 		return blocks
 			and blocks >= 1
-			and gui.SafeArea.Location.Depth.Text == (if blocks == 1 then "1 block" else blocks .. " blocks")
+			and gui.SafeArea.Location.Depth.Text
+				== (if blocks == 1 then "1 block deep" else blocks .. " blocks deep")
 	end, 4, "return starts inside the mined shaft")
 	n.Action:FireServer("Surface")
 	local passage = p.PlayerGui.SurfaceReturn

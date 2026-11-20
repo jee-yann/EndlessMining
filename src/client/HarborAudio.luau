@@ -77,7 +77,10 @@ local signatures = {
 	{ "Emberglass", 9116394545, 0.23, 0.90, 0.75 },
 	{ "Starfall", 9116395089, 0.24, 1.6, 0.90 },
 }
-local dirt = sound("Dirt break", "rbxassetid://15675081158", 0.46, 0.68)
+-- Pro Sound Effects, Gravel Shovel And Scrape 1. Keep the short gritty attack.
+local dirt = sound("Dirt break", "rbxassetid://9114657970", 0.40, 1.02)
+dirt.PlaybackRegionsEnabled = true
+dirt.PlaybackRegion = NumberRange.new(0, 0.48)
 
 local oreVoices = {}
 for _, cue in signatures do

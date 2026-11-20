@@ -103,15 +103,6 @@ local function moveCharacter(character, destination)
 		character:PivotTo(destination)
 	end
 end
-local loadingRoots = {}
-local function enter(player)
-	player:SetAttribute("EnteredMineSite", true)
-	local root = loadingRoots[player]
-	if root and root.Parent then
-		root.Anchored = false
-	end
-	loadingRoots[player] = nil
-end
 local function mineFit(char, inside)
 	local base = char:GetAttribute("SurfaceScale")
 	if inside and not base then
@@ -134,15 +125,6 @@ local function onCharacter(player, character)
 		return
 	end
 	moveCharacter(character, CFrame.new(landing))
-	if not player:GetAttribute("EnteredMineSite") then
-		root.Anchored = true
-		loadingRoots[player] = root
-		task.delay(18, function()
-			if loadingRoots[player] == root and player.Parent == Players then
-				enter(player)
-			end
-		end)
-	end
 	-- Avatar appearance can replace the head after spawn. Keep the light on the rig.
 	if not root:FindFirstChild("Lamp mount") then
 		local mount = Instance.new("Attachment")
@@ -194,6 +176,9 @@ local function join(player)
 	for key, value in session.profile.preferences do
 		player:SetAttribute(key, value)
 	end
+	for entry in session.profile.viewed do
+		player:SetAttribute("Seen" .. entry, true)
+	end
 	sync(player, session.profile)
 	applySkills(player, session.profile)
 	player:SetAttribute("ProfileReady", true)
@@ -205,7 +190,6 @@ local function join(player)
 	end
 end
 local function leave(player)
-	loadingRoots[player] = nil
 	local session = sessions[player]
 	if not session then
 		return
@@ -227,10 +211,6 @@ end
 
 local counterFor = { Sell = "Sell", Buy = "Shop", PreviewPass = "Store", Pass = "Store" }
 local function action(player, key, option, value)
-	if key == "Entered" then
-		enter(player)
-		return
-	end
 	local s = sessions[player]
 	if not s or type(key) ~= "string" then
 		return
@@ -248,7 +228,16 @@ local function action(player, key, option, value)
 		end
 		return
 	end
+	if key == "Viewed" then
+		if Profile.markViewed(s.profile, option, value) then
+			player:SetAttribute("Seen" .. option .. value, true)
+		end
+		return
+	end
 	if key == "Preference" then
+		if option == "TrailEnabled" and not player:GetAttribute("PrismTrail") then
+			return
+		end
 		if Preferences.valid(option, value) and s.profile.preferences[option] ~= value then
 			s.profile.preferences[option] = value
 			player:SetAttribute(option, value)

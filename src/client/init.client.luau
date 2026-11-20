@@ -99,13 +99,13 @@ if player.Character then
 end
 
 UIS.InputBegan:Connect(function(input, processed)
-	if not processed and input.KeyCode == Enum.KeyCode.Tab and not player.PlayerGui:FindFirstChild("MiningLoading") then
+	if not processed and input.KeyCode == Enum.KeyCode.Tab then
 		if not hud.overlay.Visible then
 			hud.roster:toggle()
 		end
 		return
 	end
-	if processed or player.PlayerGui:FindFirstChild("MiningLoading") or hud.overlay.Visible or passage.active then
+	if processed or hud.overlay.Visible or passage.active then
 		return
 	end
 	if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -113,10 +113,7 @@ UIS.InputBegan:Connect(function(input, processed)
 	end
 end)
 hud.mine.InputBegan:Connect(function(input)
-	if
-		not player.PlayerGui:FindFirstChild("MiningLoading")
-		and (input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1)
-	then
+	if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
 		held = input
 	end
 end)
@@ -241,7 +238,7 @@ for _, other in Players:GetPlayers() do
 end
 
 require(script.RockCompanions)()
-local lastCoordinates
+local lastDepth, lastRegion
 local function targetName(ore, center)
 	if ore.secret and not player:GetAttribute("Found" .. ore.name) then
 		return "???"
@@ -264,18 +261,20 @@ local function sampleAim()
 		return
 	end
 	local localPos = root.Position - origin
-	local coords = Config.blockCoordinates(localPos)
-	if coords ~= lastCoordinates then
-		lastCoordinates = coords
-		local depth = math.max(0, -coords.Y)
-		local inHarbor = not Config.inMine(localPos)
-		hud.coordinates.Text = string.format("X %d    Y %d    Z %d", coords.X, coords.Y, coords.Z)
-		hud.depth.Text = if inHarbor then "Surface" elseif depth == 1 then "1 block" else depth .. " blocks"
-		hud.layer.Text =
-			string.upper(if inHarbor then Config.SurfaceName else Config.layer(Config.FloorY - localPos.Y).name)
+	local inMine = Config.inMine(localPos)
+	local depth = math.max(0, -Config.blockCoordinates(localPos).Y)
+	local region = if inMine then Config.layer(Config.FloorY - localPos.Y).name else Config.SurfaceName
+	if lastRegion ~= region or lastDepth ~= depth then
+		lastRegion, lastDepth = region, depth
+		hud.depth.Text = if not inMine
+			then "Surface"
+			elseif depth == 0 then "Mine entrance"
+			elseif depth == 1 then "1 block deep"
+			else depth .. " blocks deep"
+		hud.layer.Text = string.upper(region)
 	end
 	hud.surface.Visible = not passage.active and Config.inMine(localPos) and (root.Position - entrance).Magnitude > 7
-	if hud.overlay.Visible or passage.active or player.PlayerGui:FindFirstChild("MiningLoading") then
+	if hud.overlay.Visible or passage.active then
 		hud:aimAt(nil)
 		local station = if hud.menu.page == "Gear" then "Shop" elseif hud.menu.page == "Store" then "Store" else nil
 		if station then

@@ -43,18 +43,19 @@ function Hud.new(player, net, mobile)
 	root.Size, root.BackgroundTransparency = UDim2.fromScale(1, 1), 1
 	self.root = root
 	StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.PlayerList, false)
-	local wallet = clearFrame(root, "Wallet", 0, 0, 202, 85)
+	local wallet = clearFrame(root, "Wallet", 0, 0, 220, 52)
 	self.wallet = wallet
-	Icons.draw(wallet, "Coins", 0, -1, 43)
-	self.gold = W.title(wallet, "0", 45, -1, 157, 45, 39, W.gold, true)
+	Icons.draw(wallet, "Coins", 0, 1, 47)
+	self.gold = W.title(wallet, "0", 50, -1, 170, 52, 46, W.gold, true)
 	self.gold.TextScaled = true
 	local goldSize = Instance.new("UITextSizeConstraint")
-	goldSize.MinTextSize, goldSize.MaxTextSize, goldSize.Parent = 17, 39, self.gold
+	goldSize.MinTextSize, goldSize.MaxTextSize, goldSize.Parent = 17, 46, self.gold
 	W.outlineText(self.gold, 3)
-	self.levelRing = LevelRing.new(wallet, function()
+	local tools = clearFrame(root, "Equipment and level", 0, 0, 200, 46)
+	self.levelRing = LevelRing.new(tools, function()
 		self:openPage("Skills")
 	end)
-	self.status = W.text(wallet, "", 0, 85, 210, 17, 13, W.gold, true)
+	self.status = W.text(wallet, "", 0, 52, 210, 17, 13, W.gold, true)
 	W.outlineText(self.status, 1.5)
 	local haul = clearFrame(root, "Haul", 0, 0, 215, 79)
 	self.haul, self.rows = haul, {}
@@ -97,30 +98,21 @@ function Hud.new(player, net, mobile)
 		self:openPage("Jobs")
 	end)
 	local loc = clearFrame(root, "Location", 0, 0, 244, 55)
-	self.layer = W.title(loc, "CITRINE COVE", 0, 0, 244, 33, 27, W.gold)
+	self.layer = W.title(loc, "CITRINE COVE", 0, 0, 244, 39, 32, W.gold)
 	self.layer.Name, self.layer.TextScaled = "Region", true
 	local regionFont = Instance.new("UITextSizeConstraint")
-	regionFont.MinTextSize, regionFont.MaxTextSize, regionFont.Parent = 14, 28, self.layer
+	regionFont.MinTextSize, regionFont.MaxTextSize, regionFont.Parent = 16, 33, self.layer
 	W.outlineText(self.layer, 2.6)
-	self.depth = W.text(loc, "Surface", 0, 32, 78, 19, 14, W.white)
+	self.depth = W.text(loc, "Surface", 0, 37, 244, 21, 15, W.white)
 	self.depth.Name = "Depth"
-	self.coordinates = W.text(loc, "", 78, 32, 166, 19, 13, W.white)
-	self.coordinates.Name = "Coordinates"
-	self.depth.TextXAlignment, self.coordinates.TextXAlignment = Enum.TextXAlignment.Right, Enum.TextXAlignment.Left
-	for _, label in { self.depth, self.coordinates } do
-		local limit = Instance.new("UITextSizeConstraint")
-		limit.MinTextSize, limit.MaxTextSize, limit.Parent = 9, label.TextSize, label
-		label.TextScaled = true
-	end
-	W.outlineText(self.depth, 1.6)
-	W.outlineText(self.coordinates, 1.5)
-	self.surface = W.clearButton(loc, "Surface", 0, 0, 112, 44, "Select")
-	W.anchor(self.surface, 0.5, 0, UDim2.new(0.5, 0, 1, 0))
-	W.outlineText(W.title(self.surface, "↑ Surface", 0, 0, 112, 38, 17, W.gold), 2)
+	W.outlineText(self.depth, 1.8)
+	self.surface = W.button(loc, "Surface", 0, 0, 112, 44, W.gold, "↑ Surface", "Select")
+	W.anchor(self.surface, 0.5, 0, UDim2.new(0.5, 0, 1, 3))
 	self.surface.Activated:Connect(function()
 		net.Action:FireServer("Surface")
 	end)
-	local gear = clearFrame(wallet, "Equipment", 0, 39, 150, 46)
+	local gear = clearFrame(tools, "Equipment", 0, 0, 150, 46)
+	self.levelRing.button.Position = UDim2.fromOffset(154, 0)
 	self.gearChips = {}
 	for i, key in { "Power", "Speed", "Capacity" } do
 		local chip = W.clearButton(gear, key, (i - 1) * 50, 0, 49, 46, "Select")
@@ -140,6 +132,9 @@ function Hud.new(player, net, mobile)
 	end
 	local dockWidth = 476
 	local dock = clearFrame(root, "Action dock", 0, 0, dockWidth, 82)
+	self.navDots = {}
+	self.jobDot = W.dot(taskCard, -14, 4)
+	self.levelDot = W.dot(self.levelRing.button, -10, -1)
 	local navX = 0
 	for _, key in { "Inventory", "Skills", "Achievements", "Book", "Settings" } do
 		local tint = Menu.pages[key].color
@@ -149,10 +144,8 @@ function Hud.new(player, net, mobile)
 		Icons.draw(b, if key == "Inventory" then "Pack" else key, (width - 58) / 2, 0, 58, tint)
 		local caption = W.title(b, if key == "Book" then "Index" else key, 0, 55, width, 25, 17, W.white)
 		W.outlineText(caption, 2.2)
-		if key == "Skills" then
-			self.jobBadge = W.frame(b, "Reward ready", width - 22, 2, 18, 18, W.pink, 9)
-			W.stroke(self.jobBadge, W.ink, 2)
-			W.title(self.jobBadge, "!", 0, 0, 18, 18, 14, W.ink)
+		if key == "Skills" or key == "Achievements" or key == "Book" then
+			self.navDots[key] = W.dot(b, -19, 3)
 		end
 		b.Activated:Connect(function()
 			self:openPage(key)
@@ -176,7 +169,7 @@ function Hud.new(player, net, mobile)
 	local countSize = Instance.new("UITextSizeConstraint")
 	countSize.MinTextSize, countSize.MaxTextSize, countSize.Parent = 9, 12, self.edgeCount
 	local menuButton = shortcut("Menu", W.aqua, "Menu")
-	self.edgeAlert = W.frame(menuButton, "Available reward", 65, 3, 8, 8, W.pink, 4)
+	self.edgeAlert = W.dot(menuButton, -13, 2)
 	self.mine = W.clearButton(root, "Mine", 0, 0, 68, 58, "Mine")
 	Icons.draw(self.mine, "Power", 14, 0, 40, W.gold)
 	W.outlineText(W.title(self.mine, "Hold mine", 0, 36, 68, 20, 14, W.white), 1.8)
@@ -228,6 +221,20 @@ function Hud.new(player, net, mobile)
 		self.menu:close()
 		self.layout()
 	end
+	local restoreChat
+	self.menu.map.screen:GetPropertyChangedSignal("Visible"):Connect(function()
+		local open = self.menu.map.screen.Visible
+		dim.BackgroundTransparency = if open then 0 else 0.23
+		if open then
+			restoreChat = StarterGui:GetCoreGuiEnabled(Enum.CoreGuiType.Chat)
+			if restoreChat then
+				StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Chat, false)
+			end
+		elseif restoreChat then
+			StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Chat, true)
+			restoreChat = nil
+		end
+	end)
 	self.overlay = self.menu.overlay
 	self.overlay:GetPropertyChangedSignal("Visible"):Connect(function()
 		backdrop.Enabled = self.overlay.Visible
@@ -238,6 +245,9 @@ function Hud.new(player, net, mobile)
 	end)
 	local walletScale, taskScale, haulScale = W.scale(wallet), W.scale(taskCard), W.scale(haul)
 	local locScale, dockScale, speechScale = W.scale(loc), W.scale(dock), W.scale(speech)
+	local toolScale = W.scale(tools)
+	local legacyChat
+	local chatWindow = game:GetService("TextChatService"):FindFirstChildOfClass("ChatWindowConfiguration")
 	local chatInput = game:GetService("TextChatService"):FindFirstChildOfClass("ChatInputBarConfiguration")
 	self.layout = function()
 		local width, height = root.AbsoluteSize.X, root.AbsoluteSize.Y
@@ -252,6 +262,7 @@ function Hud.new(player, net, mobile)
 		local margin = if edge then 4 else 10
 		self.menu:layout(width, height, self.mobile)
 		walletScale.Scale, taskScale.Scale, haulScale.Scale, speechScale.Scale = s, s, s, s
+		toolScale.Scale = s
 		locScale.Scale = s
 		local navScale = math.clamp(math.min(width / 1120, height / 655), 0.98, 1.65)
 		dockScale.Scale = navScale
@@ -260,27 +271,25 @@ function Hud.new(player, net, mobile)
 		local device = GuiService:GetInsetArea(Enum.ScreenInsets.DeviceSafeInsets)
 		local bar = GuiService:GetInsetArea(Enum.ScreenInsets.TopbarSafeInsets)
 		-- These rectangles all use the core-safe origin, including negative top/left offsets.
-		local outerLeft = math.min(margin, full.Min.X + 12)
+		local leftEdge = math.max(margin, device.Min.X + 3)
 		local outerRight = math.max(width - margin, width + full.Max.X - core.Max.X - 12)
 		local freeLeft = math.max(0, bar.Min.X) + 5
 		local freeRight = if bar.Max.X >= core.Max.X - 1 then outerRight else width + bar.Max.X - core.Max.X - 5
-		local top = math.max(full.Min.Y + 5, device.Min.Y + 2)
+		local top = math.max(full.Min.Y + 11, device.Min.Y + 8)
 		local pairWidth = 172
 		local topActions = edge and width >= height and freeRight - freeLeft >= pairWidth + 189
 		local titleRight = freeRight - (if topActions then pairWidth + 8 else 0)
 		local inTopbar = titleRight - freeLeft >= 148
-		local locWidth = if inTopbar then math.min(252, (titleRight - freeLeft) / s) else math.min(205, width * 0.58)
+		local locWidth = if inTopbar then math.min(290, (titleRight - freeLeft) / s) else math.min(205, width * 0.58)
 		local titleHalf = locWidth * s / 2
 		local titleX = if inTopbar
 			then math.max(freeLeft + titleHalf, math.min(width / 2, titleRight - titleHalf))
 			else width - locWidth * s / 2 - margin
-		loc.Size = UDim2.fromOffset(locWidth, 53)
-		self.layer.Size = UDim2.fromOffset(locWidth, 33)
-		self.depth.Size = UDim2.new(0.40, -4, 0, 18)
-		self.coordinates.Position, self.coordinates.Size = UDim2.new(0.40, 4, 0, 32), UDim2.new(0.60, -4, 0, 18)
-		W.anchor(loc, 0.5, 0, UDim2.fromOffset(titleX, if inTopbar then top else 1))
+		loc.Size = UDim2.fromOffset(locWidth, 58)
+		self.layer.Size = UDim2.fromOffset(locWidth, 39)
+		self.depth.Size = UDim2.fromOffset(locWidth, 21)
+		W.anchor(loc, 0.5, 0, UDim2.fromOffset(titleX, if inTopbar then top else 7))
 		local narrow = width < 515
-		W.anchor(self.surface, if narrow then 1 else 0.5, 0, UDim2.new(if narrow then 1 else 0.5, 0, 1, 0))
 		local rosterHeight, browsing = self.roster:layout(s, margin, edge, height - 18 - self.haul.Size.Y.Offset * s)
 		self.roster.panel.Visible = playing and (not edge or browsing)
 		shortcuts.Visible = playing and edge and not typing and not (browsing and narrow)
@@ -289,25 +298,75 @@ function Hud.new(player, net, mobile)
 		haul.Visible = playing and not edge and not browsing
 		wallet.Visible = playing and not (edge and (typing or (browsing and narrow)))
 		loc.Visible = playing and not (edge and browsing)
+		tools.Visible = wallet.Visible
 		if edge then
-			local walletTop = if narrow and not inTopbar then 55 else 0
-			W.anchor(wallet, 0, 0, UDim2.fromOffset(outerLeft, walletTop))
-			-- Keep touchable gear inside the guaranteed safe width alongside a landscape cutout.
-			gear.Position = UDim2.fromOffset(math.max(0, device.Min.X - outerLeft), 39)
-			self.levelRing.button.Position = UDim2.fromOffset(154 + gear.Position.X.Offset, 39)
-			if topActions then
-				shortcuts.Position = UDim2.fromOffset(freeRight - pairWidth, top)
-			else
-				shortcuts.Position =
-					UDim2.fromOffset(margin, walletTop + 87 + (if self.status.Text == "" then 0 else 18))
+			local chatRects = {}
+			local function addBounds(chat)
+				if chat.AbsoluteSize.X > 0 and chat.AbsoluteSize.Y > 0 then
+					local pos = chat.AbsolutePosition - root.AbsolutePosition
+					table.insert(chatRects, Rect.new(pos, pos + chat.AbsoluteSize))
+				end
 			end
-			local row = topActions or height < 310
-			shortcuts.Size = UDim2.fromOffset(if row then pairWidth else 84, if row then 48 else 100)
-			menuButton.Position = if row then UDim2.fromOffset(88, 0) else UDim2.fromOffset(0, 52)
+			for _, chat in { chatWindow, chatInput } do
+				if chat.Enabled then
+					addBounds(chat)
+				end
+			end
+			if legacyChat and legacyChat.Parent and legacyChat.Parent.Enabled and legacyChat.Visible then
+				addBounds(legacyChat)
+			end
+			table.sort(chatRects, function(a, b)
+				return a.Min.Y < b.Min.Y
+			end)
+			local function belowChat(x, y, w, h)
+				for _, rect in chatRects do
+					if x < rect.Max.X and x + w > rect.Min.X and y < rect.Max.Y and y + h > rect.Min.Y then
+						y = rect.Max.Y + 6
+					end
+				end
+				return y
+			end
+			local locationY = belowChat(titleX - titleHalf, loc.Position.Y.Offset, locWidth, 39)
+			loc.Position = UDim2.fromOffset(titleX, locationY)
+			local depthY = belowChat(titleX - 58, locationY + 37, 116, 21)
+			self.depth.Position = UDim2.fromOffset(0, depthY - locationY)
+			local surfaceY = belowChat(titleX - 56, depthY + 24, 112, 44)
+			self.surface.Position = UDim2.new(0.5, 0, 0, surfaceY - locationY)
+			local right = if topActions then freeRight else width - margin
+			local toolRight = math.min(right, width - margin)
+			local rowY = if topActions then top elseif inTopbar then 4 else math.max(73, depthY + 26)
+			if
+				self.surface.Visible
+				and titleX + 56 > right - pairWidth
+				and titleX - 56 < right
+				and rowY + 48 > surfaceY
+				and rowY < surfaceY + 44
+			then
+				rowY = surfaceY + 46
+			end
+			rowY = belowChat(right - pairWidth, rowY, pairWidth, 48)
+			local gearY = belowChat(toolRight - 200, rowY + 51, 200, 46)
+			local walletTop = belowChat(leftEdge, math.floor(height * (if width > height then 0.36 else 0.42)), 220, 52)
+			if narrow and leftEdge + 220 > toolRight - 200 and walletTop < gearY + 46 and walletTop + 52 > rowY then
+				walletTop = gearY + 50
+			end
+			local walletLeft = if walletTop + 52 > height - 100 then leftEdge + 92 else leftEdge
+			W.anchor(wallet, 0, 0, UDim2.fromOffset(walletLeft, math.min(walletTop, height - 56)))
+			shortcuts.Size = UDim2.fromOffset(pairWidth, 48)
+			shortcuts.Position = UDim2.fromOffset(right - pairWidth, rowY)
+			menuButton.Position = UDim2.fromOffset(88, 0)
+			W.anchor(tools, 1, 0, UDim2.fromOffset(toolRight, gearY))
 		else
-			gear.Position = UDim2.fromOffset(0, 39)
-			self.levelRing.button.Position = UDim2.fromOffset(154, 39)
-			W.anchor(wallet, 0, 1, UDim2.new(0, margin, 1, -margin - (if self.status.Text == "" then 0 else 19 * s)))
+			self.depth.Position = UDim2.fromOffset(0, 37)
+			self.surface.Position = UDim2.new(0.5, 0, 1, 3)
+			local bottom = margin
+			W.anchor(tools, 0, 1, UDim2.new(0, margin, 1, -bottom))
+			W.anchor(
+				wallet,
+				0,
+				1,
+				UDim2.new(0, margin, 1, -bottom - 46 * s - (if self.status.Text == "" then 0 else 18 * s))
+			)
 			W.anchor(dock, 0.5, 1, UDim2.new(0.5, 0, 1, -margin))
 			local rightY = margin + rosterHeight + 4
 			W.anchor(taskCard, 1, 0, UDim2.new(1, -margin, 0, rightY))
@@ -341,24 +400,45 @@ function Hud.new(player, net, mobile)
 		local speechBottom = if edge then footer else margin + 82 * navScale + 8
 		W.anchor(speech, 0.5, 1, UDim2.new(0.5, 0, 1, -speechBottom))
 	end
-	local function watchJump(button)
-		if button.Name == "JumpButton" and button:IsA("GuiObject") then
-			button:GetPropertyChangedSignal("AbsolutePosition"):Connect(self.layout)
-			button:GetPropertyChangedSignal("AbsoluteSize"):Connect(self.layout)
-			task.defer(self.layout)
+	local function watchControl(button)
+		local layer = button.Parent
+		if
+			button.Name == "Frame"
+			and button:IsA("Frame")
+			and layer
+			and layer:IsA("ScreenGui")
+			and layer.Name == "Chat"
+		then
+			legacyChat = button
+			button:GetPropertyChangedSignal("Visible"):Connect(self.layout)
+			layer:GetPropertyChangedSignal("Enabled"):Connect(self.layout)
+		elseif button.Name ~= "JumpButton" or not button:IsA("GuiObject") then
+			return
 		end
+		button:GetPropertyChangedSignal("AbsolutePosition"):Connect(self.layout)
+		button:GetPropertyChangedSignal("AbsoluteSize"):Connect(self.layout)
+		task.defer(self.layout)
 	end
-	gui.Parent.DescendantAdded:Connect(watchJump)
+	gui.Parent.DescendantAdded:Connect(watchControl)
+	local chatLayer = gui.Parent:FindFirstChild("Chat")
+	if chatLayer and chatLayer:FindFirstChild("Frame") then
+		watchControl(chatLayer.Frame)
+	end
 	local touch = gui.Parent:FindFirstChild("TouchGui")
 	if touch then
 		local jump = touch:FindFirstChild("JumpButton", true)
 		if jump then
-			watchJump(jump)
+			watchControl(jump)
 		end
+	end
+	for _, chat in { chatWindow, chatInput } do
+		chat:GetPropertyChangedSignal("AbsolutePosition"):Connect(self.layout)
+		chat:GetPropertyChangedSignal("AbsoluteSize"):Connect(self.layout)
 	end
 	if chatInput then
 		chatInput:GetPropertyChangedSignal("IsFocused"):Connect(self.layout)
 	end
+	self.surface:GetPropertyChangedSignal("Visible"):Connect(self.layout)
 	self.status:GetPropertyChangedSignal("Text"):Connect(self.layout)
 	GuiService:GetPropertyChangedSignal("TopbarInset"):Connect(self.layout)
 	root:GetPropertyChangedSignal("AbsolutePosition"):Connect(self.layout)
@@ -428,7 +508,7 @@ function Hud:refresh()
 	self.status.Text = if status == "Saving enabled" or status == "Practice session" then "" else status or ""
 	local mined = p:GetAttribute("Mined") or 0
 	local xp = p:GetAttribute("MiningXP") or 0
-	self.levelRing:update(xp, p:GetAttribute("EnteredMineSite") == true)
+	self.levelRing:update(xp, p:GetAttribute("ProfileReady") == true)
 	local job
 	for i, candidate in Expeditions.jobs do
 		if not Expeditions.jobClaimed(p:GetAttribute("ClaimedJobs") or 0, i) then
@@ -442,8 +522,14 @@ function Hud:refresh()
 		elseif job then string.format("%d / %d  ·  %s G", mined, job.goal, W.number(job.reward))
 		else "All jobs collected"
 	self.jobCount.TextColor3 = if job and mined >= job.goal then W.green else W.gold
-	self.jobBadge.Visible = (p:GetAttribute("SkillPoints") or 0) > 0
-	self.edgeAlert.Visible = self.jobBadge.Visible or (job ~= nil and mined >= job.goal)
+	local any = self.menu:attention("Jobs")
+	self.jobDot.Visible = any
+	for key, dot in self.navDots do
+		dot.Visible = self.menu:attention(key)
+		any = any or dot.Visible
+	end
+	self.edgeAlert.Visible = any
+	self.levelDot.Visible = self.navDots.Skills.Visible
 	for _, key in Upgrades.order do
 		self.gearChips[key].Text = tostring(level(key))
 	end

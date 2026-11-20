@@ -9,8 +9,11 @@ local width, rowHeight = 240, 34
 function Roster.new(root, relayout)
 	local self = setmetatable({ rows = {}, count = 0, relayout = relayout }, Roster)
 	local panel = W.frame(root, "Server leaderboard", 0, 0, width, 32, W.panel, 10)
+	W.stroke(panel, W.ink, 2)
 	self.panel, self.scale = panel, W.scale(panel)
 	local toggle = W.clearButton(panel, "Toggle miners", 0, 0, width, 44, "Select")
+	local tab = W.frame(toggle, "Header", 0, 0, width, 44, W.panel, 10)
+	W.enamel(tab, W.ocean, W.panel)
 	local heading = W.title(toggle, "Server miners", 9, 0, 170, 44, 18, W.white)
 	heading.TextXAlignment = Enum.TextXAlignment.Right
 	W.outlineText(heading, 2)
@@ -108,11 +111,11 @@ function Roster:layout(scale, top, compact, availableHeight)
 	self.scale.Scale = scale
 	local rows = math.min(self.count, maxRows)
 	local height = if expanded then 65 + rows * rowHeight else 44
-	self.panel.BackgroundTransparency = if expanded then 0.18 else 1
+	self.panel.BackgroundTransparency = if expanded then 0.08 else 0.12
 	self.panel.Size = UDim2.fromOffset(width, height)
 	self.list.Size = UDim2.fromOffset(width - 7, rows * rowHeight)
 	self.list.Visible, self.headers.Visible = expanded, expanded
-	self.caption.Text = self.count .. (if expanded then "   ▴" else "   ▾")
+	self.caption.Text = self.count .. (if expanded then "   ▲" else "   ▼")
 	W.anchor(self.panel, 1, 0, UDim2.new(1, -10, 0, top))
 	return height * scale, compact and expanded
 end

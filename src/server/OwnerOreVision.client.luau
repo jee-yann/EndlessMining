@@ -55,12 +55,7 @@ local function unmark(part)
 	end
 end
 Input.InputBegan:Connect(function(key, processed)
-	if
-		processed
-		or key.KeyCode ~= Enum.KeyCode.X
-		or Input:GetFocusedTextBox()
-		or playerGui:FindFirstChild("MiningLoading")
-	then
+	if processed or key.KeyCode ~= Enum.KeyCode.X or Input:GetFocusedTextBox() then
 		return
 	end
 	if badge.Visible then

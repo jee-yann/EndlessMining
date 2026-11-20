@@ -9,7 +9,19 @@ local function equip(player, char)
 		return
 	end
 	local root = char:WaitForChild("HumanoidRootPart", 8)
-	if not root or char ~= player.Character or root:FindFirstChild("Prism Ribbon") then
+	if not root or char ~= player.Character then
+		return
+	end
+	local enabled = player:GetAttribute("TrailEnabled") == true
+	local existing = root:FindFirstChild("Prism Ribbon")
+	if existing then
+		existing.Enabled = enabled
+		if not enabled then
+			existing:Clear()
+		end
+		return
+	end
+	if not enabled then
 		return
 	end
 	local a, b = Instance.new("Attachment"), Instance.new("Attachment")
@@ -35,6 +47,11 @@ local function grant(player, item)
 	end
 end
 function Passes.join(player)
+	player:GetAttributeChangedSignal("TrailEnabled"):Connect(function()
+		if player.Character then
+			task.spawn(equip, player, player.Character)
+		end
+	end)
 	player.CharacterAdded:Connect(function(c)
 		task.spawn(equip, player, c)
 	end)

@@ -39,7 +39,7 @@ assert(retired.levels.Radius == nil and Profile.upgradeSave(retired).gold == 234
 local legacy = Profile.new()
 legacy.jobs, legacy.discoveries, legacy.bag, legacy.mined = nil, nil, { Coal = 3 }, 36
 legacy.preferences, legacy.claimedJobs, legacy.recentCuts, legacy.earned = nil, nil, nil, nil
-legacy.counts = nil
+legacy.counts, legacy.viewed = nil, nil
 legacy.bestDepth = 361
 local upgraded = Data.claim({ profile = legacy }, "harbor", 0).profile
 assert(upgraded.discoveries.Coal and upgraded.jobs == 0)
@@ -50,8 +50,17 @@ assert(Profile.claimJob(upgraded, 1).reward == 25 and not Profile.claimJob(upgra
 assert(Profile.sell(upgraded, 2) == 30 and upgraded.gold == 135 and upgraded.discoveries.Coal)
 assert(upgraded.preferences.MusicVolume == 55 and upgraded.preferences.SfxVolume == 80)
 upgraded.preferences.MusicVolume, upgraded.preferences.MenuMotion = 0, false
+assert(upgraded.preferences.TrailEnabled)
+upgraded.preferences.TrailEnabled = false
+assert(Profile.markViewed(upgraded, "Book", "Coal") and not Profile.markViewed(upgraded, "Book", "Coal"))
+assert(
+	not Profile.markViewed(upgraded, "Book", "Starfall")
+		and not Profile.markViewed(upgraded, "Achievements", "LuckAndSkill")
+)
+assert(Profile.markViewed(upgraded, "Achievements", "PocketChange"))
 local snapshot = Data.commit({ owner = "harbor" }, "harbor", upgraded, 100, true)
 local loaded = Data.claim(snapshot, "again", 101).profile
+assert(loaded.viewed.BookCoal and loaded.viewed.AchievementsPocketChange and loaded.preferences.TrailEnabled == false)
 assert(loaded.bestDepth == 450 and Config.depthInBlocks(loaded.bestDepth) == 90)
 assert(loaded.preferences.MusicVolume == 0 and not loaded.preferences.MenuMotion)
 assert(Profile.valid(loaded) and loaded.jobs == 2 and loaded.discoveries.Coal)

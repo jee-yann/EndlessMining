@@ -6,10 +6,28 @@ function Icons.draw(parent, key, x, y, size, tint)
 	canvas.BackgroundTransparency = 1
 	W.scale(canvas).Scale = size / 32
 	local function shape(name, sx, sy, w, h, color, r, angle, outline)
+		if outline and w >= 7 and h >= 6 then
+			local side = W.frame(canvas, "Extruded edge", sx + 0.6, sy + 1.6, w, h, color:Lerp(W.ink, 0.52), r)
+			side.Rotation = angle or 0
+			W.stroke(side, W.ink, 1.35)
+		end
 		local f = W.frame(canvas, name, sx, sy, w, h, color, r)
 		f.Rotation = angle or 0
 		if outline then
-			W.stroke(f, W.ink, 1.5)
+			W.stroke(f, W.ink, 1.15)
+			local finish = Instance.new("UIGradient")
+			finish.Rotation = 68
+			finish.Color = ColorSequence.new({
+				ColorSequenceKeypoint.new(0, Color3.new(1, 1, 1)),
+				ColorSequenceKeypoint.new(0.52, Color3.fromRGB(255, 249, 229)),
+				ColorSequenceKeypoint.new(1, Color3.fromRGB(170, 153, 192)),
+			})
+			finish.Parent = f
+			if w >= 8 and h >= 6 then
+				local gleam =
+					W.frame(f, "Polished edge", math.ceil(w * 0.16), 1, math.max(3, w * 0.44), 1.3, W.white, 1)
+				gleam.BackgroundTransparency = 0.21
+			end
 		end
 		return f
 	end
@@ -26,6 +44,42 @@ function Icons.draw(parent, key, x, y, size, tint)
 		shape("Pick head", 8, 5, 16, 6, light, 2, 20, true)
 		shape("Pick tip", 21, 8, 7, 5, W.aqua, 1, 39, true)
 		shape("Rear pick", 4, 6, 7, 4, W.aqua, 1, -23, true)
+		shape("Leather wrap", 11, 19, 6, 2, W.grape, 1, 38)
+		shape("Leather wrap", 8, 23, 6, 2, W.grape, 1, 38)
+	elseif key == "Hook" then
+		shape("Cable", 7, 13, 4, 16, W.gold, 2, 29, true)
+		shape("Hook shank", 12, 5, 5, 17, W.aqua, 2, 29, true)
+		shape("Curve", 16, 4, 11, 5, light, 2, 16, true)
+		shape("Barb", 24, 7, 4, 8, W.aqua, 1, -15, true)
+	elseif key == "Tempo" then
+		shape("Stopwatch", 5, 7, 21, 22, W.gold, 10, 0, true)
+		shape("Dial", 8, 10, 15, 15, W.panel, 8)
+		shape("Stem", 12, 3, 8, 5, W.aqua, 2, 0, true)
+		shape("Minute hand", 15, 11, 2, 8, light, 1, 20)
+		shape("Second hand", 16, 17, 6, 2, W.gold, 1, -12)
+	elseif key == "Boot" or key == "Spring" then
+		shape("Boot upper", 11, 5, 11, 16, W.orange, 2, -7, true)
+		shape("Boot toe", 6, 17, 18, 8, W.gold, 3, -5, true)
+		shape("Tread", 5, 24, 22, 4, W.panel, 2, -5, true)
+		if key == "Spring" then
+			for i = 0, 2 do
+				shape("Wing feather", 18 + i, 8 + i * 3, 10 - i * 2, 3, light, 1, -26, true)
+			end
+		else
+			shape("Lace", 12, 11, 8, 2, light, 1, 8)
+			shape("Lace", 12, 15, 8, 2, light, 1, 8)
+		end
+	elseif key == "Lamp" or key == "Beacon" then
+		if key == "Beacon" then
+			for _, xx in { 2, 27 } do
+				shape("Beam", xx, 9, 3, 12, W.gold, 1, if xx == 2 then -18 else 18)
+			end
+		end
+		shape("Bail", 10, 2, 12, 11, W.panel, 5, 0, true)
+		shape("Glass", 7, 10, 18, 16, W.gold, 4, 0, true)
+		shape("Flame", 13, 14, 6, 9, light, 3, 12)
+		shape("Cap", 5, 7, 22, 5, W.aqua, 2, 0, true)
+		shape("Foot", 6, 25, 20, 4, W.aqua, 2, 0, true)
 	elseif key == "Menu" then
 		for i, color in { W.gold, W.aqua, W.green, W.pink } do
 			shape("Tile", 3 + ((i - 1) % 2) * 14, 3 + math.floor((i - 1) / 2) * 14, 12, 12, color, 3, 0, true)
@@ -50,6 +104,9 @@ function Icons.draw(parent, key, x, y, size, tint)
 			shape("Entry", 6, 11 + i * 3, 6, 1, W.line, 1, 5)
 		end
 		shape("Gem print", 20, 11, 5, 7, W.green, 2, 25, true)
+	elseif key == "Passes" then
+		shape("Pass", 3, 7, 26, 18, W.violet, 4, -9, true)
+		shape("Prism stamp", 12, 10, 9, 10, W.gold, 2, 35, true)
 	elseif key == "Store" then
 		shape("Shop", 5, 10, 22, 17, light, 2, 0, true)
 		shape("Window", 8, 15, 7, 8, W.aqua, 1, 0, true)
@@ -63,11 +120,12 @@ function Icons.draw(parent, key, x, y, size, tint)
 		shape("Pack", 5, 8, 22, 21, W.orange, 5, 0, true)
 		shape("Fold", 7, 8, 18, 7, W.gold, 3, 0, true)
 		shape("Pocket", 9, 19, 14, 6, W.gold, 2, 0, true)
+		shape("Buckle", 14, 14, 5, 6, light, 1, 0, true)
 	elseif key == "Skills" then
 		shape("Stem", 15, 9, 3, 16, W.panel, 1)
 		shape("Fork", 6, 17, 20, 3, W.panel, 1)
 		for _, p in { { 12, 3 }, { 2, 16 }, { 21, 16 }, { 12, 23 } } do
-			shape("Talent", p[1], p[2], 8, 8, W.green, 3, 0, true)
+			shape("Talent", p[1], p[2], 7, 7, W.green, 1, 45, true)
 		end
 	elseif key == "Pets" then
 		shape("Rock", 3, 10, 26, 17, W.muted, 6, -5, true)

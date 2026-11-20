@@ -54,49 +54,13 @@ function Pages.pets(menu)
 	end)
 	return 3
 end
-function Pages.skills(menu)
-	local panel = W.frame(menu.list, "Skill map", 1, 0, 447, 273, W.ink, 10)
-	local function link(a, b)
-		local d = b - a
-		local edge = W.frame(panel, "Prerequisite", 0, 0, d.Magnitude, 3, W.line, 1)
-		edge.AnchorPoint = Vector2.new(0.5, 0.5)
-		edge.Position = UDim2.fromOffset((a.X + b.X) / 2, (a.Y + b.Y) / 2)
-		edge.Rotation = math.deg(math.atan2(d.Y, d.X))
-		return edge
-	end
-	local root = Vector2.new(224, 17)
-	for _, node in Guide.skills do
-		local parent = Guide.byId[node.parent or ""]
-		local path = link(if parent then Vector2.new(parent.x, parent.y) else root, Vector2.new(node.x, node.y))
-		table.insert(menu.updates, function()
-			path.BackgroundColor3 = if menu.player:GetAttribute("Skill" .. node.id) then W.green else W.line
-		end)
-	end
-	local badge = W.frame(panel, "Origin", 169, 4, 110, 26, W.gold, 12)
-	W.title(badge, "Prospector", 0, 0, 110, 26, 15, W.ink)
-	for _, node in Guide.skills do
-		local b = W.button(panel, node.id, node.x - 65, node.y - 25, 130, 50, W.muted, "", "Select")
-		W.title(b, node.name, 2, 2, 126, 22, 16, W.ink)
-		W.text(b, node.detail, 1, 21, 128, 15, 11, W.ink)
-		local state = W.text(b, "", 0, 36, 130, 13, 10, W.ink)
-		b.Activated:Connect(function()
-			menu.net.Action:FireServer("Skill", node.id)
-		end)
-		table.insert(menu.updates, function()
-			local learned = menu.player:GetAttribute("Skill" .. node.id)
-			local available = not node.parent or menu.player:GetAttribute("Skill" .. node.parent)
-			local points = menu.player:GetAttribute("SkillPoints") or 0
-			b.BackgroundColor3 = if learned then W.green elseif available and points > 0 then W.gold else W.muted
-			b.Interactable = not learned and available == true and points > 0
-			state.Text = if learned then "Learned" elseif not available then "Locked" else "1 skill point"
-		end)
-	end
-	return 4
-end
 function Pages.achievements(menu)
 	for i, award in Guide.achievements do
 		local tint = if award.ore then W.orange else W.aqua
 		local title, detail, badge = menu:row(i, award.name, "Achievements", tint)
+		menu:watchRow(title.Parent, award.id, function()
+			return (menu.player:GetAttribute("Award" .. award.id) or 0) >= award.goal
+		end)
 		title.Size = UDim2.fromOffset(251, 24)
 		title.TextSize = 18
 		detail.Position, detail.Size = UDim2.fromOffset(67, 28), UDim2.fromOffset(247, 32)
@@ -117,6 +81,9 @@ function Pages.index(menu)
 	W.title(menu.list, "Depth & ore odds", 228, 0, 213, 25, 19, W.aqua, true)
 	for i, ore in Ores.list do
 		local card = W.frame(menu.list, ore.name, 1, 30 + (i - 1) * 56, 216, 52, W.card, 8)
+		menu:watchRow(card, ore.name, function()
+			return menu.player:GetAttribute("Found" .. ore.name)
+		end)
 		local bar = W.frame(card, "Swatch", 5, 7, 6, 38, W.muted, 3)
 		local name = W.title(card, "", 17, 1, 193, 21, 16, W.white, true)
 		local worth = W.text(card, "", 17, 23, 196, 23, 12, W.muted, true)

@@ -32,6 +32,7 @@ local function copy(p)
 		bag = table.clone(p.bag),
 		jobs = p.jobs,
 		discoveries = table.clone(p.discoveries),
+		viewed = table.clone(p.viewed),
 	}
 end
 

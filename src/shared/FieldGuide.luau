@@ -3,14 +3,14 @@ local Ores = require(script.Parent.Ores)
 local Guide = {}
 -- One point per earned level. Links and positions are shared by the map and server.
 Guide.skills = {
-	{ id = "Reach", name = "Long Arm", detail = "+5 studs of pick reach", x = 77, y = 73 },
-	{ id = "Stride", name = "Quick Feet", detail = "+3 walk speed", x = 225, y = 73 },
-	{ id = "Lamp", name = "Lantern Wick", detail = "+8 studs of light", x = 373, y = 73 },
-	{ id = "ReachII", name = "Far Reach", detail = "+5 more studs of reach", parent = "Reach", x = 77, y = 151 },
-	{ id = "Spring", name = "Spring Step", detail = "Jump 25% higher", parent = "Stride", x = 225, y = 151 },
-	{ id = "Lantern", name = "Afterglow", detail = "+8 more studs of light", parent = "Lamp", x = 373, y = 151 },
-	{ id = "Tempo", name = "Steady Hands", detail = "Cut blocks 10% faster", parent = "ReachII", x = 77, y = 229 },
-	{ id = "Scout", name = "Trail Runner", detail = "+3 more walk speed", parent = "Spring", x = 225, y = 229 },
+	{ id = "Reach", name = "Long Arm", detail = "+5 studs of pick reach", x = -154, y = -36 },
+	{ id = "Stride", name = "Quick Feet", detail = "+3 walk speed", x = 38, y = 108 },
+	{ id = "Lamp", name = "Lantern Wick", detail = "+8 studs of light", x = 150, y = -46 },
+	{ id = "ReachII", name = "Far Reach", detail = "+5 more studs of reach", parent = "Reach", x = -278, y = -148 },
+	{ id = "Spring", name = "Spring Step", detail = "Jump 25% higher", parent = "Stride", x = -85, y = 177 },
+	{ id = "Lantern", name = "Afterglow", detail = "+8 more studs of light", parent = "Lamp", x = 286, y = -155 },
+	{ id = "Tempo", name = "Steady Hands", detail = "Cut blocks 10% faster", parent = "ReachII", x = -424, y = -78 },
+	{ id = "Scout", name = "Trail Runner", detail = "+3 more walk speed", parent = "Spring", x = 41, y = 254 },
 }
 Guide.byId = {}
 for _, node in Guide.skills do

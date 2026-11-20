@@ -5,7 +5,7 @@ LevelRing.__index = LevelRing
 local steps = 20
 
 function LevelRing.new(parent, openSkills)
-	local button = W.clearButton(parent, "Level progress", 154, 39, 46, 46, "Select")
+	local button = W.clearButton(parent, "Level progress", 154, 0, 46, 46, "Select")
 	button.Activated:Connect(openSkills)
 	local ticks = {}
 	for index = 1, steps do

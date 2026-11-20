@@ -24,6 +24,7 @@ function Profile.new()
 		jobs = 0,
 		claimedJobs = 0,
 		discoveries = {},
+		viewed = {},
 		preferences = table.clone(Preferences.defaults),
 	}
 end
@@ -140,6 +141,16 @@ function Profile.valid(p)
 			end
 		end
 	end
+	if p.viewed ~= nil then
+		if type(p.viewed) ~= "table" then
+			return false
+		end
+		for key, value in p.viewed do
+			if type(key) ~= "string" or value ~= true then
+				return false
+			end
+		end
+	end
 	if p.preferences ~= nil then
 		if type(p.preferences) ~= "table" then
 			return false
@@ -165,6 +176,7 @@ function Profile.upgradeSave(p)
 			p.xp += Ores.byName[name].xp * count
 		end
 	end
+	p.viewed = p.viewed or {}
 	p.skills = p.skills or {}
 	if p.counts == nil then
 		-- Earlier fields measured records in four-stud blocks.
@@ -203,6 +215,30 @@ function Profile.upgradeSave(p)
 		end
 	end
 	return p
+end
+
+function Profile.markViewed(p, page, id)
+	if type(id) ~= "string" then
+		return false
+	end
+	if page == "Book" then
+		if not p.discoveries[id] then
+			return false
+		end
+	elseif page == "Achievements" then
+		local award = Guide.awardsById[id]
+		if not award or Guide.progress(p, award) < award.goal then
+			return false
+		end
+	else
+		return false
+	end
+	local key = page .. id
+	if p.viewed[key] then
+		return false
+	end
+	p.viewed[key] = true
+	return true
 end
 
 function Profile.unlock(p, id)

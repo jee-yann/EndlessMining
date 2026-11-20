@@ -63,10 +63,69 @@ function W.outlineText(label, thickness)
 		label.TextStrokeColor3, label.TextStrokeTransparency = W.ink, 0.15
 	end
 end
+local function animateButton(button)
+	local scale = Instance.new("UIScale")
+	scale.Name, scale.Parent = "Interaction scale", button
+	local over, pressed, focused, tween = false, false, false, nil
+	local function update()
+		local enabled = button.Interactable and game.Players.LocalPlayer:GetAttribute("MenuMotion") ~= false
+		local target = if not enabled then 1 elseif pressed then 0.94 elseif over or focused then 1.045 else 1
+		if tween then
+			tween:Cancel()
+		end
+		tween = W.tween(scale, if pressed then 0.07 else 0.13, { Scale = target })
+	end
+	button.MouseEnter:Connect(function()
+		over = true
+		update()
+	end)
+	button.MouseLeave:Connect(function()
+		over, pressed = false, false
+		update()
+	end)
+	button.SelectionGained:Connect(function()
+		focused = true
+		update()
+	end)
+	button.SelectionLost:Connect(function()
+		focused, pressed = false, false
+		update()
+	end)
+	button.InputBegan:Connect(function(input)
+		if
+			input.UserInputType == Enum.UserInputType.MouseButton1
+			or input.UserInputType == Enum.UserInputType.Touch
+			or input.KeyCode == Enum.KeyCode.ButtonA
+		then
+			pressed = true
+			update()
+		end
+	end)
+	button.InputEnded:Connect(function(input)
+		if
+			input.UserInputType == Enum.UserInputType.MouseButton1
+			or input.UserInputType == Enum.UserInputType.Touch
+			or input.KeyCode == Enum.KeyCode.ButtonA
+		then
+			pressed = false
+			update()
+		end
+	end)
+	button:GetPropertyChangedSignal("Interactable"):Connect(update)
+end
+
+function W.dot(parent, x, y)
+	local dot = W.frame(parent, "Notification", 0, 0, 12, 12, Color3.fromRGB(255, 68, 82), 6)
+	dot.Position, dot.ZIndex = UDim2.new(1, x, 0, y), 3
+	W.stroke(dot, W.ink, 1.6)
+	dot.Visible = false
+	return dot
+end
 function W.clearButton(parent, name, x, y, w, h, cue)
 	local b = Instance.new("TextButton")
 	b.Name, b.Text, b.BackgroundTransparency = name, "", 1
 	b.Position, b.Size, b.Parent = off(x, y), off(w, h), parent
+	animateButton(b)
 	Audio.bind(b, cue)
 	return b
 end
@@ -80,6 +139,7 @@ function W.button(parent, name, x, y, w, h, tint, label, cue)
 	local gleam = W.frame(b, "Enamel highlight", 8, 2, w - 16, 2, W.white, 1)
 	gleam.BackgroundTransparency = 0.48
 	b.Parent = parent
+	animateButton(b)
 	Audio.bind(b, cue)
 	return b
 end

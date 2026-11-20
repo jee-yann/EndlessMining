@@ -1,8 +1,8 @@
 local Preferences = {}
-Preferences.defaults = { MusicVolume = 55, SfxVolume = 80, MenuMotion = true }
+Preferences.defaults = { MusicVolume = 55, SfxVolume = 80, MenuMotion = true, TrailEnabled = true }
 
 function Preferences.valid(key, value)
-	if key == "MenuMotion" then
+	if key == "MenuMotion" or key == "TrailEnabled" then
 		return type(value) == "boolean"
 	end
 	return (key == "MusicVolume" or key == "SfxVolume")

@@ -7,12 +7,14 @@ local Catalog = require(Shared.PassCatalog)
 local W, Icons = require(script.Parent.Widgets), require(script.Parent.Icons)
 local Field = require(script.Parent.FieldPages)
 local Guide = require(Shared.FieldGuide)
+local SkillMap = require(script.Parent.SkillMap)
 local Menu = {}
 Menu.__index = Menu
 Menu.pages = {
 	Menu = { name = "Menu", color = W.aqua },
 	Inventory = { name = "Inventory", color = W.gold },
 	Pets = { name = "Pets", color = W.violet },
+	Passes = { name = "Game passes", color = W.violet },
 	Skills = { name = "Skill tree", color = W.green },
 	Achievements = { name = "Achievements", color = W.orange },
 	Titles = { name = "Miner titles", color = W.gold },
@@ -71,8 +73,8 @@ function Menu.new(root, player, net, close)
 	self.tabs = tabs
 	self.tabButtons = {}
 	local tabX = 4
-	for _, key in { "Inventory", "Pets", "Skills" } do
-		local caption = if key == "Inventory" then "Titles" else key
+	for _, key in { "Inventory", "Pets", "Passes" } do
+		local caption = if key == "Inventory" then "Titles" elseif key == "Passes" then "Passes" else key
 		local width = 147
 		local b = W.button(tabs, key, tabX, 2, width, 28, Menu.pages[key].color, caption, "Select")
 		tabX += width + 4
@@ -81,6 +83,15 @@ function Menu.new(root, player, net, close)
 			self:open(key)
 		end)
 	end
+	self.map = SkillMap.new(shade, player, net, close)
+	self.seenRows = {}
+	game:GetService("RunService").Heartbeat:Connect(function()
+		local now = os.clock()
+		if shade.Visible and not self.closing and #self.seenRows > 0 and now >= (self.nextRead or 0) then
+			self.nextRead = now + 0.12
+			self:observeRows(now)
+		end
+	end)
 	tabs.Visible = false
 	return self
 end
@@ -184,6 +195,103 @@ function Menu:pack()
 	end)
 	return 0
 end
+function Menu:passes()
+	for i, item in Catalog do
+		local _, detail, b = self:row(i, item.name, item.icon, item.color)
+		if item.key == "PrismTrail" then
+			b.Activated:Connect(function()
+				self.net.Action:FireServer(
+					"Preference",
+					"TrailEnabled",
+					self.player:GetAttribute("TrailEnabled") ~= true
+				)
+			end)
+		end
+		table.insert(self.updates, function()
+			local owned = self.player:GetAttribute(item.key) == true
+			local toggle = owned and item.key == "PrismTrail"
+			local enabled = self.player:GetAttribute("TrailEnabled") ~= false
+			detail.Text = if not owned
+				then "Available at Outfitters"
+				elseif toggle then (if enabled then "Rainbow trail equipped" else "Rainbow trail hidden")
+				else item.detail
+			setButton(
+				b,
+				if toggle then (if enabled then "Disable" else "Enable") elseif owned then "Active" else "Unowned",
+				if owned then item.color else W.muted,
+				toggle
+			)
+		end)
+	end
+	return #Catalog
+end
+
+function Menu:attention(key)
+	local p = self.player
+	if key == "Skills" then
+		if (p:GetAttribute("SkillPoints") or 0) < 1 then
+			return false
+		end
+		for _, node in Guide.skills do
+			if
+				not p:GetAttribute("Skill" .. node.id) and (not node.parent or p:GetAttribute("Skill" .. node.parent))
+			then
+				return true
+			end
+		end
+	elseif key == "Jobs" then
+		for i, job in Expeditions.jobs do
+			if
+				(p:GetAttribute("Mined") or 0) >= job.goal
+				and not Expeditions.jobClaimed(p:GetAttribute("ClaimedJobs") or 0, i)
+			then
+				return true
+			end
+		end
+	elseif key == "Book" then
+		for _, ore in Ores.list do
+			if p:GetAttribute("Found" .. ore.name) and not p:GetAttribute("SeenBook" .. ore.name) then
+				return true
+			end
+		end
+	elseif key == "Achievements" then
+		for _, award in Guide.achievements do
+			if
+				(p:GetAttribute("Award" .. award.id) or 0) >= award.goal
+				and not p:GetAttribute("SeenAchievements" .. award.id)
+			then
+				return true
+			end
+		end
+	end
+	return false
+end
+function Menu:watchRow(frame, id, unlocked)
+	local border = W.stroke(frame, W.gold, 2)
+	border.Enabled = false
+	table.insert(self.seenRows, { frame = frame, id = id, unlocked = unlocked, border = border })
+end
+function Menu:observeRows(now)
+	local top = self.list.AbsolutePosition.Y
+	local bottom = top + self.list.AbsoluteWindowSize.Y
+	for _, entry in self.seenRows do
+		if entry.sent or self.player:GetAttribute("Seen" .. self.page .. entry.id) or not entry.unlocked() then
+			continue
+		end
+		entry.border.Enabled = true
+		local mid = entry.frame.AbsolutePosition.Y + entry.frame.AbsoluteSize.Y / 2
+		if mid >= top and mid <= bottom then
+			entry.since = entry.since or now
+			if now - entry.since >= 0.35 then
+				entry.sent = true
+				self.net.Action:FireServer("Viewed", self.page, entry.id)
+			end
+		else
+			entry.since = nil
+		end
+	end
+end
+
 function Menu:store()
 	for i, item in Catalog do
 		local _, detail, b = self:row(i, item.name, item.icon, item.color)
@@ -247,6 +355,10 @@ local function shortcuts(self)
 			"",
 			"Select"
 		)
+		local dot = W.dot(button, -16, 4)
+		table.insert(self.updates, function()
+			dot.Visible = self:attention(key)
+		end)
 		local icon = if key == "Miners" then "Crew" elseif key == "Inventory" then "Pack" else key
 		Icons.draw(button, icon, 9, 16, 38, color)
 		W.title(button, if page then page.name else "Server miners", 51, 0, 158, 71, 17, W.ink, true)
@@ -265,7 +377,7 @@ local builders = {
 	Gear = Menu.gear,
 	Inventory = Field.titles,
 	Pets = Field.pets,
-	Skills = Field.skills,
+	Passes = Menu.passes,
 	Achievements = Field.achievements,
 	Settings = function(self)
 		return self.preferences:build(self)
@@ -283,7 +395,21 @@ function Menu:open(key)
 	if not page then
 		return
 	end
-	self.updates = {}
+	self.updates, self.seenRows = {}, {}
+	if self.motion then
+		self.motion:Cancel()
+	end
+	self.closing = false
+	self.modal.Visible = key ~= "Skills"
+	self.map.screen.Visible = key == "Skills"
+	if key == "Skills" then
+		self.page = key
+		self.overlay.Visible = true
+		self.map.selected = nil
+		self.map:home()
+		self.map:refresh()
+		return
+	end
 	self.tabs.Visible = self.tabButtons[key] ~= nil
 	for k, b in self.tabButtons do
 		b.BackgroundColor3 = if key == k then W.white else Menu.pages[k].color
@@ -305,7 +431,7 @@ function Menu:open(key)
 		elseif key == "Menu" then ""
 		elseif key == "Inventory" then "Select an unlocked title to wear it."
 		elseif key == "Pets" then "Equip one companion at a time."
-		elseif key == "Skills" then "Earn one point per level. Follow the connected branches."
+		elseif key == "Passes" then "Visit Outfitters for game passes."
 		elseif key == "Achievements" then "Mine, explore and try new things. ??? reveals when you find the ore."
 		elseif key == "Pack" then "Take your haul to the amber Sell counter."
 		elseif key == "Jobs" then "Claim any finished job to collect its gold."
@@ -317,10 +443,6 @@ function Menu:open(key)
 	self.footer.Visible = key ~= "Menu"
 	self.list.CanvasSize, self.list.CanvasPosition =
 		UDim2.fromOffset(0, rows * (if key == "Menu" then 77 else 69)), Vector2.zero
-	if self.motion then
-		self.motion:Cancel()
-	end
-	self.closing = false
 	self.overlay.Visible = true
 	local center = UDim2.fromScale(0.5, 0.5)
 	if self.preferences.values.MenuMotion then
@@ -337,6 +459,11 @@ function Menu:close()
 	end
 	if self.motion then
 		self.motion:Cancel()
+	end
+	if self.page == "Skills" then
+		self.map.screen.Visible = false
+		self.overlay.Visible = false
+		return
 	end
 	if not self.preferences.values.MenuMotion then
 		self.overlay.Visible = false
@@ -369,16 +496,8 @@ function Menu:refresh()
 			level + 1
 		)
 	elseif self.page == "Skills" then
-		local xp = p:GetAttribute("MiningXP") or 0
-		local level = Expeditions.level(xp)
-		local start = Expeditions.levelXP(level)
-		self.sub.Text = string.format(
-			"Lv %d  ·  %d / %d XP  ·  %d points",
-			level,
-			xp - start,
-			Expeditions.levelXP(level + 1) - start,
-			p:GetAttribute("SkillPoints") or 0
-		)
+		self.map:refresh()
+		return
 	elseif self.page == "Pets" then
 		self.sub.Text = if p:GetAttribute("Pet") == "Rock"
 			then "Equipped   ·   " .. (p:GetAttribute("PetName") or "Pebble")
