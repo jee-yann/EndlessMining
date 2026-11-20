@@ -9,23 +9,25 @@ local width, rowHeight = 240, 34
 function Roster.new(root, relayout)
 	local self = setmetatable({ rows = {}, count = 0, relayout = relayout }, Roster)
 	local panel = W.frame(root, "Server leaderboard", 0, 0, width, 32, W.panel, 10)
-	W.stroke(panel, W.ink, 2)
 	self.panel, self.scale = panel, W.scale(panel)
-	local toggle = W.button(panel, "Toggle miners", 0, 0, width, 30, W.aqua, "", "Select")
-	W.title(toggle, "Server miners", 9, 0, 140, 30, 17, W.ink, true)
-	self.caption = W.text(toggle, "", 147, 0, 83, 30, 15, W.ink)
+	local toggle = W.clearButton(panel, "Toggle miners", 0, 0, width, 44, "Select")
+	local heading = W.title(toggle, "Server miners", 9, 0, 170, 44, 18, W.white)
+	heading.TextXAlignment = Enum.TextXAlignment.Right
+	W.outlineText(heading, 2)
+	self.caption = W.text(toggle, "", 183, 0, 47, 44, 15, W.aqua)
+	W.outlineText(self.caption, 1.6)
 	self.caption.TextXAlignment = Enum.TextXAlignment.Right
 	toggle.Activated:Connect(function()
 		self:toggle()
 	end)
-	local headers = W.frame(panel, "Columns", 4, 31, width - 8, 16, W.panel)
+	local headers = W.frame(panel, "Columns", 4, 45, width - 8, 16, W.panel)
 	W.text(headers, "MINER", 4, 0, 109, 16, 11, W.muted, true)
 	W.text(headers, "LEVEL", 122, 0, 41, 16, 11, W.aqua)
 	W.text(headers, "GOLD", 164, 0, 62, 16, 11, W.gold)
 	self.headers = headers
 	local list = Instance.new("ScrollingFrame")
 	list.Name, list.BackgroundTransparency, list.BorderSizePixel = "Miners", 1, 0
-	list.Position, list.ScrollBarThickness = UDim2.fromOffset(4, 49), 3
+	list.Position, list.ScrollBarThickness = UDim2.fromOffset(4, 63), 3
 	list.ScrollBarImageColor3, list.ScrollingDirection, list.Parent = W.line, Enum.ScrollingDirection.Y, panel
 	self.list = list
 
@@ -98,17 +100,15 @@ function Roster:toggle()
 end
 
 function Roster:layout(scale, top, compact, availableHeight)
-	local roomForRows = math.floor((availableHeight / scale - 51) / rowHeight)
+	local roomForRows = math.floor((availableHeight / scale - 65) / rowHeight)
 	compact = compact or roomForRows < 1
 	local maxRows = if compact then 3 else math.min(4, roomForRows)
-	local expanded = self.override
-	if expanded == nil then
-		expanded = not compact
-	end
+	local expanded = self.override == true
 	self.expanded = expanded
 	self.scale.Scale = scale
 	local rows = math.min(self.count, maxRows)
-	local height = if expanded then 51 + rows * rowHeight else 30
+	local height = if expanded then 65 + rows * rowHeight else 44
+	self.panel.BackgroundTransparency = if expanded then 0.18 else 1
 	self.panel.Size = UDim2.fromOffset(width, height)
 	self.list.Size = UDim2.fromOffset(width - 7, rows * rowHeight)
 	self.list.Visible, self.headers.Visible = expanded, expanded

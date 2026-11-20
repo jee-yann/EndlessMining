@@ -11,8 +11,10 @@ local widgets = require(player:WaitForChild("PlayerScripts"):WaitForChild("Clien
 local location = playerGui:WaitForChild("MiningHUD"):WaitForChild("SafeArea"):WaitForChild("Location")
 local surface = location:WaitForChild("Surface")
 local badge = widgets.frame(location, "Ore vision status", 50, 52, 160, 23, widgets.ink, 8)
+badge.BackgroundTransparency = 1
 badge.Visible = false
 local label = widgets.title(badge, "", 0, 0, 160, 23, 13, widgets.aqua)
+widgets.outlineText(label, 1.5)
 local function placeBadge()
 	badge.AnchorPoint = Vector2.new(1, 0)
 	badge.Position = UDim2.new(1, 0, 1, if surface.Visible then 52 else 4)

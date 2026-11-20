@@ -1,5 +1,7 @@
 local Shared = game:GetService("ReplicatedStorage").Shared
 local Ores = require(Shared.Ores)
+local GuiService = game:GetService("GuiService")
+local LevelRing = require(script.Parent.LevelRing)
 local StarterGui = game:GetService("StarterGui")
 local Upgrades, Expeditions = require(Shared.Upgrades), require(Shared.Expeditions)
 local W, Icons, Menu = require(script.Parent.Widgets), require(script.Parent.Icons), require(script.Parent.HarborMenu)
@@ -16,11 +18,19 @@ local function card(parent, name, x, y, w, h, top, bottom)
 	shine.BackgroundTransparency = 0.68
 	return f
 end
+local function clearFrame(parent, name, x, y, width, height)
+	local frame = W.frame(parent, name, x, y, width, height, W.ink)
+	frame.BackgroundTransparency = 1
+	return frame
+end
 function Hud.new(player, net, mobile)
 	local self = setmetatable({ player = player, net = net, mobile = mobile }, Hud)
 	local gui = Instance.new("ScreenGui")
 	gui.Name, gui.ResetOnSpawn, gui.ScreenInsets, gui.ZIndexBehavior =
 		"MiningHUD", false, Enum.ScreenInsets.CoreUISafeInsets, Enum.ZIndexBehavior.Sibling
+	-- The menus stay inside the core safe area. Individual HUD items also use the free top strip and outer corners.
+	gui.SafeAreaCompatibility = Enum.SafeAreaCompatibility.None
+	gui.ClipToDeviceSafeArea = false
 	gui.Parent = player:WaitForChild("PlayerGui")
 	gui.DisplayOrder = 2
 	local backdrop = Instance.new("ScreenGui")
@@ -33,38 +43,33 @@ function Hud.new(player, net, mobile)
 	root.Size, root.BackgroundTransparency = UDim2.fromScale(1, 1), 1
 	self.root = root
 	StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.PlayerList, false)
-	local wallet = W.frame(root, "Wallet", 0, 0, 154, 65, W.ink, 10)
-	wallet.BackgroundTransparency = 0.18
+	local wallet = clearFrame(root, "Wallet", 0, 0, 202, 85)
 	self.wallet = wallet
-	Icons.draw(wallet, "Coins", 3, 2, 28)
-	self.gold = W.title(wallet, "0", 34, 0, 114, 29, 24, W.gold, true)
+	Icons.draw(wallet, "Coins", 0, -1, 43)
+	self.gold = W.title(wallet, "0", 45, -1, 157, 45, 39, W.gold, true)
 	self.gold.TextScaled = true
 	local goldSize = Instance.new("UITextSizeConstraint")
-	goldSize.MinTextSize, goldSize.MaxTextSize, goldSize.Parent = 13, 24, self.gold
-	W.outlineText(self.gold)
-	local xpStrip = W.frame(wallet, "Level progress", 5, 27, 144, 20, W.ink)
-	xpStrip.BackgroundTransparency = 1
-	self.levelLabel = W.title(xpStrip, "", 0, 0, 49, 15, 13, W.aqua, true)
-	self.xpLabel = W.text(xpStrip, "", 49, 0, 95, 15, 12, W.white)
-	self.xpLabel.TextXAlignment = Enum.TextXAlignment.Right
-	local xpTrack = W.frame(xpStrip, "XP track", 0, 16, 144, 3, W.card, 2)
-	self.xpFill = W.frame(xpTrack, "XP fill", 0, 0, 0, 3, W.aqua, 2)
-	W.gradient(self.xpFill, W.green, W.aqua, 0)
-	self.status = W.text(wallet, "", 2, 65, 154, 16, 11, W.white, true)
-	W.outlineText(self.status)
-	local haul = card(root, "Haul", 0, 0, 215, 79, Color3.fromRGB(57, 117, 126), W.panel)
+	goldSize.MinTextSize, goldSize.MaxTextSize, goldSize.Parent = 17, 39, self.gold
+	W.outlineText(self.gold, 3)
+	self.levelRing = LevelRing.new(wallet, function()
+		self:openPage("Skills")
+	end)
+	self.status = W.text(wallet, "", 0, 85, 210, 17, 13, W.gold, true)
+	W.outlineText(self.status, 1.5)
+	local haul = clearFrame(root, "Haul", 0, 0, 215, 79)
 	self.haul, self.rows = haul, {}
 	W.title(haul, "Your haul", 10, 4, 99, 24, 20, W.white, true)
 	self.pack = W.text(haul, "", 107, 5, 98, 21, 15, W.white)
 	local track = W.frame(haul, "Capacity", 10, 30, 195, 5, W.ink, 3)
 	self.fill = W.frame(track, "Ore", 0, 0, 0, 5, W.green, 3)
-	self.empty = W.text(haul, "Empty pack", 10, 38, 195, 20, 14, W.muted, true)
 	self.haulValue = W.text(haul, "", 10, 58, 195, 18, 13, W.gold, true)
 	for _, ore in Ores.list do
 		local row = W.frame(haul, ore.name, 10, 38, 195, 20, W.panel)
 		row.BackgroundTransparency = 1
-		W.text(row, ore.name, 0, 0, 75, 20, 15, ore.color:Lerp(W.white, 0.48), true)
-		W.text(row, "", 76, 0, 77, 20, 12, W.gold, true).Name = "UnitValue"
+		local sample = W.frame(row, "Ore sample", 2, 5, 10, 10, ore.color, 2)
+		sample.Rotation = 15
+		W.stroke(sample, W.ink, 1.5)
+		W.text(row, ore.name, 21, 0, 120, 20, 16, W.white, true)
 		local quantity = W.text(row, "", 150, 0, 45, 20, 15, W.white)
 		quantity.Name, quantity.TextXAlignment = "Quantity", Enum.TextXAlignment.Right
 		self.rows[ore.name] = row
@@ -76,17 +81,11 @@ function Hud.new(player, net, mobile)
 	details.Activated:Connect(function()
 		self:openPage("Pack")
 	end)
-	local taskCard = card(root, "Current job", 0, 0, 215, 86, Color3.fromRGB(157, 65, 190), Color3.fromRGB(77, 49, 149))
-	W.anchor(taskCard, 1, 0, UDim2.new(1, -12, 0, 9))
-	Icons.draw(taskCard, "Jobs", 8, 7, 27)
-	W.text(taskCard, "SHIFT JOB", 42, 5, 96, 22, 13, W.gold, true)
-	local bounty = W.frame(taskCard, "Payout", 136, 7, 70, 21, W.gold, 9)
-	self.reward = W.title(bounty, "", 0, 0, 70, 21, 13, W.ink)
-	self.job = W.title(taskCard, "", 12, 29, 193, 25, 20, W.white, true)
-	self.jobCount = W.text(taskCard, "", 12, 55, 190, 19, 14, W.muted, true)
-	local jobTrack = W.frame(taskCard, "Job progress", 12, 76, 190, 5, W.ink, 3)
-	self.jobFill = W.frame(jobTrack, "Mined", 0, 0, 0, 5, W.gold, 3)
-	self.ribbon = card(taskCard, "Discovery", 0, 88, 215, 52, W.ocean, W.grape)
+	local taskCard = clearFrame(root, "Current job", 0, 0, 215, 51)
+	Icons.draw(taskCard, "Jobs", 2, 5, 34)
+	self.job = W.title(taskCard, "", 39, 2, 175, 24, 18, W.white, true)
+	self.jobCount = W.text(taskCard, "", 39, 26, 175, 20, 14, W.gold, true)
+	self.ribbon = clearFrame(taskCard, "Discovery", 0, 54, 215, 52)
 	self.ribbon.Visible = false
 	self.ribbonType = W.text(self.ribbon, "", 12, 4, 192, 17, 12, W.aqua, true)
 	self.ribbonName = W.title(self.ribbon, "", 12, 22, 192, 25, 20, W.white, true)
@@ -97,55 +96,63 @@ function Hud.new(player, net, mobile)
 	jobTap.Activated:Connect(function()
 		self:openPage("Jobs")
 	end)
-	local loc = W.frame(root, "Location", 0, 0, 186, 40, W.ink, 10)
-	loc.BackgroundTransparency = 0.22
-	self.layer = W.title(loc, "CITRINE COVE", 5, 1, 119, 21, 14, W.gold, true)
-	self.layer.Name = "Region"
-	self.layer.TextScaled = true
+	local loc = clearFrame(root, "Location", 0, 0, 244, 55)
+	self.layer = W.title(loc, "CITRINE COVE", 0, 0, 244, 33, 27, W.gold)
+	self.layer.Name, self.layer.TextScaled = "Region", true
 	local regionFont = Instance.new("UITextSizeConstraint")
-	regionFont.MinTextSize, regionFont.MaxTextSize, regionFont.Parent = 10, 14, self.layer
-	self.depth = W.text(loc, "Surface", 124, 2, 57, 19, 12, W.white)
+	regionFont.MinTextSize, regionFont.MaxTextSize, regionFont.Parent = 14, 28, self.layer
+	W.outlineText(self.layer, 2.6)
+	self.depth = W.text(loc, "Surface", 0, 32, 78, 19, 14, W.white)
 	self.depth.Name = "Depth"
-	self.depth.TextXAlignment = Enum.TextXAlignment.Right
-	self.coordinates = W.text(loc, "", 5, 20, 176, 18, 12, W.muted)
+	self.coordinates = W.text(loc, "", 78, 32, 166, 19, 13, W.white)
 	self.coordinates.Name = "Coordinates"
-	self.surface = W.button(loc, "Surface", 0, 0, 94, 44, W.gold, "↑ Surface", "Select")
-	W.anchor(self.surface, 1, 0, UDim2.new(1, 0, 1, 4))
+	self.depth.TextXAlignment, self.coordinates.TextXAlignment = Enum.TextXAlignment.Right, Enum.TextXAlignment.Left
+	for _, label in { self.depth, self.coordinates } do
+		local limit = Instance.new("UITextSizeConstraint")
+		limit.MinTextSize, limit.MaxTextSize, limit.Parent = 9, label.TextSize, label
+		label.TextScaled = true
+	end
+	W.outlineText(self.depth, 1.6)
+	W.outlineText(self.coordinates, 1.5)
+	self.surface = W.clearButton(loc, "Surface", 0, 0, 112, 44, "Select")
+	W.anchor(self.surface, 0.5, 0, UDim2.new(0.5, 0, 1, 0))
+	W.outlineText(W.title(self.surface, "↑ Surface", 0, 0, 112, 38, 17, W.gold), 2)
 	self.surface.Activated:Connect(function()
 		net.Action:FireServer("Surface")
 	end)
-	local gear = W.frame(wallet, "Equipment", 3, 47, 148, 18, W.ink)
-	gear.BackgroundTransparency = 1
+	local gear = clearFrame(wallet, "Equipment", 0, 39, 150, 46)
 	self.gearChips = {}
 	for i, key in { "Power", "Speed", "Capacity" } do
-		local chip = W.frame(gear, key, (i - 1) * 50, 0, 49, 18, W.ink)
-		chip.BackgroundTransparency = 1
-		self.gearChips[key] = W.text(chip, "", 0, 0, 49, 18, 12, Upgrades.items[key].color:Lerp(W.white, 0.36))
+		local chip = W.clearButton(gear, key, (i - 1) * 50, 0, 49, 46, "Select")
+		local tint = Upgrades.items[key].color
+		Icons.draw(chip, key, 0, 9, 28, tint)
+		local value = W.title(chip, "1", 28, 5, 21, 34, 21, W.white, true)
+		W.outlineText(value, 2)
+		self.gearChips[key] = value
+		chip.Activated:Connect(function()
+			local level = player:GetAttribute(key) or 1
+			self:notice(
+				(if key == "Capacity" then "Pack" else key) .. " · Lv " .. level,
+				Upgrades.describe(key, level),
+				tint
+			)
+		end)
 	end
-	local dockWidth = 389
-	local dock = W.frame(root, "Action dock", 0, 0, dockWidth, 64, W.ink)
-	dock.BackgroundTransparency = 1
-	self.nav = {}
-	local cues = { Settings = "Open", Jobs = "Job", Book = "Open" }
+	local dockWidth = 476
+	local dock = clearFrame(root, "Action dock", 0, 0, dockWidth, 82)
 	local navX = 0
-	for i, key in { "Inventory", "Skills", "Achievements", "Book", "Settings" } do
+	for _, key in { "Inventory", "Skills", "Achievements", "Book", "Settings" } do
 		local tint = Menu.pages[key].color
-		local width = if key == "Achievements" then 93 else 69
-		local b = W.button(dock, key, navX, 0, width, 61, tint, "", cues[key])
-		navX += width + 5
-		local badge = W.frame(b, "Medallion", (width - 39) / 2, -6, 39, 39, tint:Lerp(W.white, 0.62), 13)
-		W.stroke(badge, W.ink, 2)
-		local icon = Icons.draw(badge, if key == "Inventory" then "Pack" else key, 3, 3, 33, tint)
-		icon.Rotation = if i % 2 == 0 then 4 else -4
-		self.nav[key] = W.title(b, if key == "Book" then "Index" else key, 1, 33, width - 2, 25, 18, W.white)
-		if key == "Inventory" or key == "Achievements" then
-			self.nav[key].TextSize = 14
-		end
-		W.outlineText(self.nav[key])
+		local width = if key == "Achievements" then 116 else 84
+		local b = W.clearButton(dock, key, navX, 0, width, 82, "Open")
+		navX += width + 6
+		Icons.draw(b, if key == "Inventory" then "Pack" else key, (width - 58) / 2, 0, 58, tint)
+		local caption = W.title(b, if key == "Book" then "Index" else key, 0, 55, width, 25, 17, W.white)
+		W.outlineText(caption, 2.2)
 		if key == "Skills" then
-			self.jobBadge = W.frame(b, "Reward ready", 53, -5, 20, 20, W.pink, 10)
+			self.jobBadge = W.frame(b, "Reward ready", width - 22, 2, 18, 18, W.pink, 9)
 			W.stroke(self.jobBadge, W.ink, 2)
-			W.title(self.jobBadge, "!", 0, 0, 20, 20, 15, W.ink)
+			W.title(self.jobBadge, "!", 0, 0, 18, 18, 14, W.ink)
 		end
 		b.Activated:Connect(function()
 			self:openPage(key)
@@ -154,27 +161,35 @@ function Hud.new(player, net, mobile)
 	local shortcuts = W.frame(root, "Edge shortcuts", 0, 0, 76, 100, W.ink)
 	shortcuts.BackgroundTransparency = 1
 	local function shortcut(key, tint, caption)
-		local button = W.button(shortcuts, key, 0, 0, 76, 47, W.panel, "", "Select")
-		Icons.draw(button, key, 2, 9, 27, tint)
-		W.title(button, caption, 29, if key == "Menu" then 11 else 3, 46, 24, 14, tint, true)
+		local button = W.clearButton(shortcuts, key, 0, 0, 84, 48, "Select")
+		Icons.draw(button, key, 0, 6, 36, tint)
+		W.outlineText(W.title(button, caption, 36, if key == "Menu" then 11 else 3, 48, 24, 16, tint, true), 1.8)
 		button.Activated:Connect(function()
 			self:openPage(key)
 		end)
 		return button
 	end
 	local packButton = shortcut("Pack", W.gold, "Pack")
-	self.edgeCount = W.text(packButton, "", 27, 25, 46, 17, 11, W.white, true)
+	self.edgeCount = W.text(packButton, "", 36, 25, 48, 17, 13, W.white, true)
+	W.outlineText(self.edgeCount, 1.4)
 	self.edgeCount.TextScaled = true
 	local countSize = Instance.new("UITextSizeConstraint")
 	countSize.MinTextSize, countSize.MaxTextSize, countSize.Parent = 9, 12, self.edgeCount
 	local menuButton = shortcut("Menu", W.aqua, "Menu")
 	self.edgeAlert = W.frame(menuButton, "Available reward", 65, 3, 8, 8, W.pink, 4)
-	self.mine = W.button(root, "Mine", 0, 0, 62, 54, W.aqua, "", "Mine")
-	Icons.draw(self.mine, "Power", 17, 1, 28, W.gold)
-	W.title(self.mine, "Hold mine", 0, 29, 62, 20, 12, W.ink)
-	local speech = card(root, "Feedback", 0, 0, 320, 47)
+	self.mine = W.clearButton(root, "Mine", 0, 0, 68, 58, "Mine")
+	Icons.draw(self.mine, "Power", 14, 0, 40, W.gold)
+	W.outlineText(W.title(self.mine, "Hold mine", 0, 36, 68, 20, 14, W.white), 1.8)
+	local speech = clearFrame(root, "Feedback", 0, 0, 320, 47)
 	self.message = W.title(speech, "", 5, 1, 310, 25, 18, W.white)
 	self.detail = W.text(speech, "", 5, 25, 310, 18, 13, W.muted)
+	for _, panel in { haul, taskCard, speech } do
+		for _, label in panel:GetDescendants() do
+			if label:IsA("TextLabel") then
+				W.outlineText(label, if label.TextSize >= 18 then 2 else 1.4)
+			end
+		end
+	end
 	self.speech = speech
 	for _, label in { self.message, self.detail } do
 		local size = Instance.new("UITextSizeConstraint")
@@ -229,44 +244,74 @@ function Hud.new(player, net, mobile)
 		if width < 90 or height < 90 then
 			return
 		end
-		local edge = self.mobile or width < 1020 or height < 565
+		local edge = self.mobile or width < 850 or height < 470
 		self.edgeMode = edge
 		local playing = not self.overlay.Visible
 		local typing = chatInput and chatInput.IsFocused
-		local s = if edge then 1 else math.clamp(math.min(width / 1150, height / 750), 0.88, 1.16)
-		local margin = if edge then 6 else 12
+		local s = if edge then 1 else math.clamp(math.min(width / 1150, height / 750), 0.90, 1.32)
+		local margin = if edge then 4 else 10
 		self.menu:layout(width, height, self.mobile)
-		walletScale.Scale, taskScale.Scale, haulScale.Scale, dockScale.Scale = s, s, s, s
+		walletScale.Scale, taskScale.Scale, haulScale.Scale, speechScale.Scale = s, s, s, s
 		locScale.Scale = s
-		local locWidth = if edge then math.clamp(width - 154 - margin * 3, 106, 186) else 186
-		loc.Size = UDim2.fromOffset(locWidth, 40)
-		self.layer.Size = UDim2.fromOffset(locWidth - 67, 21)
-		self.depth.Position = UDim2.fromOffset(locWidth - 62, 2)
-		self.coordinates.Size = UDim2.fromOffset(locWidth - 10, 18)
+		local navScale = math.clamp(math.min(width / 1120, height / 655), 0.98, 1.65)
+		dockScale.Scale = navScale
+		local full = GuiService:GetInsetArea(Enum.ScreenInsets.None)
+		local core = GuiService:GetInsetArea(Enum.ScreenInsets.CoreUISafeInsets)
+		local device = GuiService:GetInsetArea(Enum.ScreenInsets.DeviceSafeInsets)
+		local bar = GuiService:GetInsetArea(Enum.ScreenInsets.TopbarSafeInsets)
+		-- These rectangles all use the core-safe origin, including negative top/left offsets.
+		local outerLeft = math.min(margin, full.Min.X + 12)
+		local outerRight = math.max(width - margin, width + full.Max.X - core.Max.X - 12)
+		local freeLeft = math.max(0, bar.Min.X) + 5
+		local freeRight = if bar.Max.X >= core.Max.X - 1 then outerRight else width + bar.Max.X - core.Max.X - 5
+		local top = math.max(full.Min.Y + 5, device.Min.Y + 2)
+		local pairWidth = 172
+		local topActions = edge and width >= height and freeRight - freeLeft >= pairWidth + 189
+		local titleRight = freeRight - (if topActions then pairWidth + 8 else 0)
+		local inTopbar = titleRight - freeLeft >= 148
+		local locWidth = if inTopbar then math.min(252, (titleRight - freeLeft) / s) else math.min(205, width * 0.58)
+		local titleHalf = locWidth * s / 2
+		local titleX = if inTopbar
+			then math.max(freeLeft + titleHalf, math.min(width / 2, titleRight - titleHalf))
+			else width - locWidth * s / 2 - margin
+		loc.Size = UDim2.fromOffset(locWidth, 53)
+		self.layer.Size = UDim2.fromOffset(locWidth, 33)
+		self.depth.Size = UDim2.new(0.40, -4, 0, 18)
+		self.coordinates.Position, self.coordinates.Size = UDim2.new(0.40, 4, 0, 32), UDim2.new(0.60, -4, 0, 18)
+		W.anchor(loc, 0.5, 0, UDim2.fromOffset(titleX, if inTopbar then top else 1))
+		local narrow = width < 515
+		W.anchor(self.surface, if narrow then 1 else 0.5, 0, UDim2.new(if narrow then 1 else 0.5, 0, 1, 0))
 		local rosterHeight, browsing = self.roster:layout(s, margin, edge, height - 18 - self.haul.Size.Y.Offset * s)
 		self.roster.panel.Visible = playing and (not edge or browsing)
-		shortcuts.Visible = playing and edge and not typing and not (browsing and width < 435)
+		shortcuts.Visible = playing and edge and not typing and not (browsing and narrow)
 		dock.Visible = playing and not edge
 		taskCard.Visible = playing and not edge and not browsing
 		haul.Visible = playing and not edge and not browsing
-		wallet.Visible = playing and not (edge and (typing or (browsing and width < 435)))
+		wallet.Visible = playing and not (edge and (typing or (browsing and narrow)))
 		loc.Visible = playing and not (edge and browsing)
 		if edge then
-			W.anchor(wallet, 0, 0, UDim2.fromOffset(margin, margin))
-			W.anchor(loc, 1, 0, UDim2.new(1, -margin, 0, margin))
-			-- On short landscape screens the two taps share one row above movement.
-			local short = height < 310
-			local top = margin + wallet.Size.Y.Offset + (if self.status.Text == "" then 6 else 19)
-			shortcuts.Position = UDim2.fromOffset(margin, top)
-			shortcuts.Size = UDim2.fromOffset(if short then 158 else 76, if short then 47 else 100)
-			menuButton.Position = if short then UDim2.fromOffset(82, 0) else UDim2.fromOffset(0, 53)
+			local walletTop = if narrow and not inTopbar then 55 else 0
+			W.anchor(wallet, 0, 0, UDim2.fromOffset(outerLeft, walletTop))
+			-- Keep touchable gear inside the guaranteed safe width alongside a landscape cutout.
+			gear.Position = UDim2.fromOffset(math.max(0, device.Min.X - outerLeft), 39)
+			self.levelRing.button.Position = UDim2.fromOffset(154 + gear.Position.X.Offset, 39)
+			if topActions then
+				shortcuts.Position = UDim2.fromOffset(freeRight - pairWidth, top)
+			else
+				shortcuts.Position =
+					UDim2.fromOffset(margin, walletTop + 87 + (if self.status.Text == "" then 0 else 18))
+			end
+			local row = topActions or height < 310
+			shortcuts.Size = UDim2.fromOffset(if row then pairWidth else 84, if row then 48 else 100)
+			menuButton.Position = if row then UDim2.fromOffset(88, 0) else UDim2.fromOffset(0, 52)
 		else
-			W.anchor(wallet, 0, 1, UDim2.new(0, margin, 1, -margin - 90 * s))
-			W.anchor(dock, 0, 1, UDim2.new(0, margin, 1, -margin))
-			W.anchor(loc, 0.5, 0, UDim2.new(0.5, 0, 0, margin))
-			local rightY = margin + rosterHeight + 7
-			W.anchor(taskCard, 1, 0, UDim2.new(1, -10, 0, rightY))
-			W.anchor(haul, 1, 0, UDim2.new(1, -10, 0, rightY + 92 * s))
+			gear.Position = UDim2.fromOffset(0, 39)
+			self.levelRing.button.Position = UDim2.fromOffset(154, 39)
+			W.anchor(wallet, 0, 1, UDim2.new(0, margin, 1, -margin - (if self.status.Text == "" then 0 else 19 * s)))
+			W.anchor(dock, 0.5, 1, UDim2.new(0.5, 0, 1, -margin))
+			local rightY = margin + rosterHeight + 4
+			W.anchor(taskCard, 1, 0, UDim2.new(1, -margin, 0, rightY))
+			W.anchor(haul, 1, 0, UDim2.new(1, -margin, 0, rightY + 55 * s))
 		end
 		local touchGui = gui.Parent:FindFirstChild("TouchGui")
 		local jump = touchGui and touchGui:FindFirstChild("JumpButton", true)
@@ -288,14 +333,13 @@ function Hud.new(player, net, mobile)
 		local speechWidth = if edge then math.clamp(width - 175, 144, 248) else 320
 		speechScale.Scale = s
 		speech.Size = UDim2.fromOffset(speechWidth, if edge then 41 else 47)
-		speech["Enamel highlight"].Size = UDim2.fromOffset(speechWidth - 22, 2)
 		self.message.Size = UDim2.fromOffset(speechWidth - 10, if edge then 21 else 25)
 		self.detail.Position = UDim2.fromOffset(5, if edge then 21 else 25)
 		self.detail.Size = UDim2.fromOffset(speechWidth - 10, 18)
 		meter.Size = UDim2.new(1, -20, 0, 7)
 		local footer = if self.mobile and width < height then 136 else margin
-		local centerX = if edge then width / 2 else math.max(width / 2, margin + (dockWidth + speechWidth / 2 + 10) * s)
-		W.anchor(speech, 0.5, 1, UDim2.fromOffset(centerX, height - footer))
+		local speechBottom = if edge then footer else margin + 82 * navScale + 8
+		W.anchor(speech, 0.5, 1, UDim2.new(0.5, 0, 1, -speechBottom))
 	end
 	local function watchJump(button)
 		if button.Name == "JumpButton" and button:IsA("GuiObject") then
@@ -316,6 +360,8 @@ function Hud.new(player, net, mobile)
 		chatInput:GetPropertyChangedSignal("IsFocused"):Connect(self.layout)
 	end
 	self.status:GetPropertyChangedSignal("Text"):Connect(self.layout)
+	GuiService:GetPropertyChangedSignal("TopbarInset"):Connect(self.layout)
+	root:GetPropertyChangedSignal("AbsolutePosition"):Connect(self.layout)
 	root:GetPropertyChangedSignal("AbsoluteSize"):Connect(self.layout)
 	self.layout()
 	player.AttributeChanged:Connect(function()
@@ -363,47 +409,26 @@ function Hud:refresh()
 	for i, entry in held do
 		local ore = entry.ore
 		local row = self.rows[ore.name]
-		row.UnitValue.Text = W.number(ore.value * (if p:GetAttribute("DoubleGold") then 2 else 1)) .. " G each"
 		row.Quantity.Text = "×" .. entry.amount
 		row.Position, row.Visible = UDim2.fromOffset(10, 38 + (i - 1) * 20), true
 	end
 	local visible = #held
-	self.empty.Visible = visible == 0
-	local footerY = 39 + math.max(1, visible) * 20
+	self.haulValue.Visible = visible > 0
+	local footerY = 39 + visible * 20
 	self.haulValue.Position = UDim2.fromOffset(10, footerY)
 	self.haulValue.Text = "Sell value   "
 		.. W.number((p:GetAttribute("BagValue") or 0) * (if p:GetAttribute("DoubleGold") then 2 else 1))
 		.. " G"
-	if self.haul.Size.Y.Offset ~= footerY + 22 then
-		self.haul.Size = UDim2.fromOffset(215, footerY + 22)
+	local haulHeight = footerY + (if visible > 0 then 22 else 0)
+	if self.haul.Size.Y.Offset ~= haulHeight then
+		self.haul.Size = UDim2.fromOffset(215, haulHeight)
 		self.layout()
 	end
 	local status = p:GetAttribute("SaveStatus")
-	self.status.Text = if status == "Saving enabled" then "" else status or "Opening pack…"
+	self.status.Text = if status == "Saving enabled" or status == "Practice session" then "" else status or ""
 	local mined = p:GetAttribute("Mined") or 0
 	local xp = p:GetAttribute("MiningXP") or 0
-	local minerLevel = Expeditions.level(xp)
-	local _, rank = Expeditions.rank(minerLevel)
-	if self.lastXP ~= xp then
-		local start = Expeditions.levelXP(minerLevel)
-		local needed = Expeditions.levelXP(minerLevel + 1) - start
-		local amount = xp - start
-		self.levelLabel.Text = "Lv " .. minerLevel
-		self.xpLabel.Text = W.number(amount) .. " / " .. W.number(needed) .. " XP"
-		local size = UDim2.fromScale(amount / needed, 1)
-		if self.xpTween then
-			self.xpTween:Cancel()
-		end
-		if self.lastXP ~= nil and p:GetAttribute("MenuMotion") ~= false then
-			if minerLevel ~= self.lastMinerLevel then
-				self.xpFill.Size = UDim2.fromScale(0, 1)
-			end
-			self.xpTween = W.tween(self.xpFill, 0.25, { Size = size })
-		else
-			self.xpFill.Size = size
-		end
-		self.lastXP, self.lastMinerLevel = xp, minerLevel
-	end
+	self.levelRing:update(xp, p:GetAttribute("EnteredMineSite") == true)
 	local job
 	for i, candidate in Expeditions.jobs do
 		if not Expeditions.jobClaimed(p:GetAttribute("ClaimedJobs") or 0, i) then
@@ -411,18 +436,16 @@ function Hud:refresh()
 			break
 		end
 	end
-	self.jobFill.Size = UDim2.fromScale(if job then math.clamp(mined / job.goal, 0, 1) else 1, 1)
-	self.job.Text = if job then job.title else rank.name
-	self.reward.Text = if job then "+" .. W.number(job.reward) .. " G" else "All done"
+	self.job.Text = if job then job.title else "Shift jobs"
 	self.jobCount.Text = if job and mined >= job.goal
-		then "Claim reward  ›"
-		elseif job then string.format("%d / %d blocks mined", mined, job.goal)
-		else W.number(mined) .. " blocks mined"
-	self.jobCount.TextColor3 = if job and mined >= job.goal then W.green else W.muted
+		then "Claim " .. W.number(job.reward) .. " G  ›"
+		elseif job then string.format("%d / %d  ·  %s G", mined, job.goal, W.number(job.reward))
+		else "All jobs collected"
+	self.jobCount.TextColor3 = if job and mined >= job.goal then W.green else W.gold
 	self.jobBadge.Visible = (p:GetAttribute("SkillPoints") or 0) > 0
 	self.edgeAlert.Visible = self.jobBadge.Visible or (job ~= nil and mined >= job.goal)
 	for _, key in Upgrades.order do
-		self.gearChips[key].Text = (if key == "Capacity" then "Pack" else key) .. " " .. level(key)
+		self.gearChips[key].Text = tostring(level(key))
 	end
 	self.menu:refresh()
 end
@@ -447,7 +470,7 @@ function Hud:milestone(kind, name, color)
 	self.ribbonSerial = serial
 	self.ribbonType.Text, self.ribbonType.TextColor3, self.ribbonName.Text = kind, color:Lerp(W.white, 0.36), name
 	self.ribbon.Visible = true
-	local y = 94 + self.haul.Size.Y.Offset
+	local y = 60 + self.haul.Size.Y.Offset
 	self.ribbon.Position = UDim2.fromOffset(18, y)
 	W.tween(self.ribbon, 0.2, { Position = UDim2.fromOffset(0, y) })
 	task.delay(3.4, function()

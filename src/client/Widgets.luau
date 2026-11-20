@@ -54,8 +54,21 @@ function W.enamel(obj, top, bottom)
 	obj.BackgroundColor3 = Color3.new(1, 1, 1)
 	return W.gradient(obj, top, bottom, 34)
 end
-function W.outlineText(label)
-	label.TextStrokeColor3, label.TextStrokeTransparency = W.ink, 0.15
+function W.outlineText(label, thickness)
+	if thickness then
+		local stroke = Instance.new("UIStroke")
+		stroke.ApplyStrokeMode, stroke.Color, stroke.Thickness = Enum.ApplyStrokeMode.Contextual, W.ink, thickness
+		stroke.Parent = label
+	else
+		label.TextStrokeColor3, label.TextStrokeTransparency = W.ink, 0.15
+	end
+end
+function W.clearButton(parent, name, x, y, w, h, cue)
+	local b = Instance.new("TextButton")
+	b.Name, b.Text, b.BackgroundTransparency = name, "", 1
+	b.Position, b.Size, b.Parent = off(x, y), off(w, h), parent
+	Audio.bind(b, cue)
+	return b
 end
 function W.button(parent, name, x, y, w, h, tint, label, cue)
 	local b = Instance.new("TextButton")

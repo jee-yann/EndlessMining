@@ -146,7 +146,13 @@ local function test()
 	assert(not game.StarterGui:GetCoreGuiEnabled(Enum.CoreGuiType.PlayerList))
 	local me = roster.Miners:WaitForChild(tostring(p.UserId), 3)
 	assert(me and me.Level.Text == "1" and me.Gold.Text == "0" and me.Title.Text == "Noob Miner")
-	assert(gui.SafeArea.Wallet["Level progress"]["XP track"]["XP fill"])
+	local wallet = gui.SafeArea.Wallet
+	local ring = wallet["Level progress"]
+	assert(ring:IsA("GuiButton") and ring:FindFirstChild("XP segment"), "interactive XP ring")
+	assert(wallet.BackgroundTransparency == 1 and gui.SafeArea.Location.BackgroundTransparency == 1)
+	for _, key in { "Power", "Speed", "Capacity" } do
+		assert(wallet.Equipment[key]:FindFirstChild(key .. " icon"), "equipment icon " .. key)
+	end
 	assert(gui.SafeArea["Action dock"]:FindFirstChild("Achievements"))
 	local safe = gui.SafeArea
 	local originalSize = safe.Size
@@ -161,7 +167,9 @@ local function test()
 		local menuButton = safe["Edge shortcuts"].Menu
 		assert(pack.AbsoluteSize.Y >= 44 and menuButton.AbsoluteSize.Y >= 44, "edge tap targets")
 		assert(
-			safe.Wallet.AbsolutePosition.X + safe.Wallet.AbsoluteSize.X <= safe.Location.AbsolutePosition.X,
+			safe.Wallet.AbsolutePosition.X + safe.Wallet.AbsoluteSize.X <= safe.Location.AbsolutePosition.X
+				or safe.Location.AbsolutePosition.Y + safe.Location.AbsoluteSize.Y
+					<= safe.Wallet.AbsolutePosition.Y + 1,
 			"corner stats overlap"
 		)
 	end
@@ -310,6 +318,16 @@ local function test()
 		waitFor(function()
 			return not overlay.Visible
 		end, 2, "animated close")
+		clickAt(ring.AbsolutePosition + ring.AbsoluteSize * 0.5 + game:GetService("GuiService"):GetGuiInset())
+		waitFor(function()
+			return overlay.Visible
+				and menu.Listings:FindFirstChild("Skill map")
+				and menu.Marquee.Summary.Text:find("0 / 20 XP", 1, true)
+		end, 3, "tap the level ring for exact XP")
+		r:FireServer("closePage")
+		waitFor(function()
+			return not overlay.Visible
+		end, 3, "leave skill tree")
 		local hand = p.Character:FindFirstChild("RightHand") or p.Character:FindFirstChild("Right Arm")
 		-- Inspect six surfaces, including an isolated block that can be viewed from every side.
 		local painter = require(p.PlayerScripts.Client.Effects).new()

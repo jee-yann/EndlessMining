@@ -50,6 +50,10 @@ function Menu.new(root, player, net, close)
 	W.stroke(self.iconWell, W.ink, 2)
 	self.heading = W.title(header, "", 74, 4, 322, 37, 30, W.ink, true)
 	self.sub = W.text(header, "", 76, 39, 329, 23, 15, W.ink, true)
+	self.sub.Name = "Summary"
+	self.sub.TextScaled = true
+	local summaryFont = Instance.new("UITextSizeConstraint")
+	summaryFont.MinTextSize, summaryFont.MaxTextSize, summaryFont.Parent = 10, 15, self.sub
 	local closeButton = W.button(header, "Close", 404, 9, 55, 55, W.white, "×", "Close")
 	self.closeButton = closeButton
 	closeButton.TextSize = 25
@@ -365,9 +369,14 @@ function Menu:refresh()
 			level + 1
 		)
 	elseif self.page == "Skills" then
+		local xp = p:GetAttribute("MiningXP") or 0
+		local level = Expeditions.level(xp)
+		local start = Expeditions.levelXP(level)
 		self.sub.Text = string.format(
-			"Level %d    ·    %d skill points",
-			p:GetAttribute("Level") or 1,
+			"Lv %d  ·  %d / %d XP  ·  %d points",
+			level,
+			xp - start,
+			Expeditions.levelXP(level + 1) - start,
 			p:GetAttribute("SkillPoints") or 0
 		)
 	elseif self.page == "Pets" then
@@ -391,7 +400,7 @@ function Menu:refresh()
 	elseif self.page == "Jobs" then
 		self.sub.Text = (p:GetAttribute("Jobs") or 0) .. " / " .. #Expeditions.jobs .. " jobs collected"
 	elseif self.page == "Settings" then
-		self.sub.Text = "Sound and motion"
+		self.sub.Text = p:GetAttribute("SaveStatus") or "Sound and motion"
 	elseif self.page == "Book" then
 		local found = 0
 		for _, ore in Ores.list do
