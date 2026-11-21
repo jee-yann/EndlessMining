@@ -92,6 +92,13 @@ local function test()
 			local mix = song.SoundGroup.Volume
 			song.SoundGroup.Volume = 0
 			rep:SetAttribute("MuteTestMusic", false)
+			-- During a respawn the Scriptable camera can retain the retired Humanoid.
+			local retired = Instance.new("Model")
+			local subject = Instance.new("Humanoid")
+			retired.Parent, subject.Parent = workspace, retired
+			camera.CameraSubject = subject
+			retired.Parent = nil
+			assert(camera.CameraSubject == subject, "retired camera subject fixture")
 			local input = game.UserInputService:CreateVirtualInput()
 			input:SendKey(true, Enum.KeyCode.Return)
 			task.wait(0.08)
@@ -99,6 +106,8 @@ local function test()
 			waitFor(function()
 				return not opening.Parent
 			end, 2, "skip immediately")
+			assert(camera.CameraSubject == p.Character.Humanoid, "skip restored the playable avatar as camera subject")
+			retired:Destroy()
 			waitFor(function()
 				return song.IsPlaying and song.Volume > 0.06
 			end, 3, "music fades up after skip")

@@ -35,6 +35,17 @@ local natural = { Distant = true, Highland = true, Bluff = true, Bedrock = true,
 local permanent =
 	{ Water = true, Soil = true, Distant = true, Highland = true, Bluff = true, Bedrock = true, Gallery = true }
 local ash = rgb("9A817B")
+local ancientWater = { Lagoon = rgb("31586F"), ["Shallow water"] = rgb("527585"), ["Water glint"] = rgb("86A0A7") }
+
+local function addWater(self, kind, part)
+	local band = self.water[kind]
+	if not band then
+		band = { old = ancientWater[kind], new = part.Color, parts = {} }
+		self.water[kind] = band
+	end
+	table.insert(band.parts, part)
+end
+
 local function inscription(part)
 	local surface = Instance.new("SurfaceGui")
 	surface.Name, surface.Face = "Lettering", Enum.NormalId.Back
@@ -70,6 +81,10 @@ local function buildFormation(self, formation, spent)
 	local front, signFace
 	for _, row in formation.pieces do
 		local part, style = makePiece(m, self.base, row)
+		local water = Atlas.water[row[1]]
+		if mode == "Water" and water then
+			addWater(self, water, part)
+		end
 		local at, half = V(row[2], row[3], row[4]), V(row[5], row[6], row[7]) * 0.5
 		lower, upper = lower:Min(at - half), upper:Max(at + half)
 		if mode == "Gallery" and formation.name == "Authored dig floor" then
@@ -158,6 +173,7 @@ function History.new(stage, gateBase)
 		root = P.model(shelf, "Citrine through time"),
 		tracks = {},
 		pigments = {},
+		water = {},
 	}, History)
 	self.loader = coroutine.create(function()
 		local function spent(amount)
@@ -178,6 +194,7 @@ function History.new(stage, gateBase)
 			P.box(self.root, "Water beneath the rising headland", V(0, -4.37, -113.25), V(192.2, 1, 224.4), "39C5DD")
 		strait.CFrame = self.base * strait.CFrame
 		strait.CastShadow = false
+		addWater(self, "Lagoon", strait)
 		self.throat = P.model(shelf, "Shadow inside the working gallery")
 		P.box(self.throat, "Portal footwall", V(0, -0.52, -4.2), V(60, 0.60, 7.8), "92765F", nil, Enum.Material.Slate)
 		P.box(
@@ -344,6 +361,19 @@ function History:draw(t, motion, clock)
 		self.last = t
 		for _, track in self.tracks do
 			poseTrack(track, t, self.root, self.shelf)
+		end
+		-- The camera leaves the impact ocean at dawn. Its mineral-blue water
+		-- clears as sunlight returns and the first plants take root on the banks.
+		local clear = ease(t, 2.25, 4.95)
+		if self.clear ~= clear then
+			self.clear = clear
+			for _, band in self.water do
+				local color = band.old:Lerp(band.new, clear)
+				for _, part in band.parts do
+					part.Color = color
+					part.Reflectance = 0.09 * (1 - clear)
+				end
+			end
 		end
 		local pigmentStep = math.clamp(math.floor(t * 15), 0, 117)
 		if self.pigmentStep ~= pigmentStep then

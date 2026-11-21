@@ -58,6 +58,7 @@ class Atlas:
         self.finishes = {}
         self.rotations = {}
         self.groups = {}
+        self.water = {}
 
     def parts(self, path):
         return solids(children(self.map, path))
@@ -75,6 +76,8 @@ class Atlas:
                       int(props.findtext("token[@name='TopSurface']", "0")),
                       int(props.findtext("token[@name='BottomSurface']", "0")), transparency)
             style_id = self.finishes.setdefault(finish, len(self.finishes) + 1)
+            if name(part) in ("Lagoon", "Shallow water", "Water glint"):
+                self.water[style_id] = name(part)
             rotation = tuple(round(float(prop(part, "CFrame").findtext(f"R{a}{b}")), 6)
                              for a in range(3) for b in range(3))
             position = (round(v - origin + shift, 4) for v, origin, shift in zip(vector(part), GATE_FLOOR, offset))
@@ -91,6 +94,8 @@ class Atlas:
                  "-- Each piece stores its finish, center, dimensions and optional orientation index.", "return {",
                  "\tfinishes = {"]
         lines.extend("\t\t" + lua_row(style) + "," for style in self.finishes)
+        lines.extend(["\t},", "\twater = {"])
+        lines.extend(f"\t\t[{style}] = {json.dumps(kind)}," for style, kind in self.water.items())
         lines.extend(["\t},", "\torientations = {"])
         lines.extend("\t\t" + lua_row(rotation) + "," for rotation in self.rotations)
         lines.extend(["\t},", "\tformations = {"])

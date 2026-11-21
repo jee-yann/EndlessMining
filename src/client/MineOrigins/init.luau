@@ -256,6 +256,16 @@ function Opening.play(player, net, hud)
 		if player.Character == char and (not finished or remoteReplay) then
 			camera.CFrame, camera.Focus = oldView, oldFocus
 		end
+		-- A respawn during a Scriptable shot can leave the default camera tracking
+		-- the removed Humanoid, even after the new character is ready to play.
+		local subject = camera.CameraSubject
+		if oldType == Enum.CameraType.Custom and (not subject or not subject:IsDescendantOf(workspace)) then
+			local current = player.Character
+			local humanoid = current and current:FindFirstChildOfClass("Humanoid")
+			if humanoid then
+				camera.CameraSubject = humanoid
+			end
+		end
 		camera.FieldOfView, camera.CameraType = oldFov, oldType
 	end
 	if controls then
