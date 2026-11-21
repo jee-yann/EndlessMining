@@ -13,7 +13,10 @@
       "$ignoreUnknownInstances": true,
       "Shared": {
         "$ignoreUnknownInstances": true,
-        "$path": "src/shared"
+        "$path": "src/shared",
+        "TideCoast": {
+          "$path": "map/TideCoast.rbxm"
+        }
       }
     },
     "ServerScriptService": {
@@ -53,7 +56,13 @@
         "FallenPartsDestroyHeight": -50000
       },
       "CitrineCove": {
-        "$path": "map/CitrineCove.rbxmx"
+        "$path": "map/CitrineCove.rbxmx",
+        "TideCoast": {
+          "$path": "map/TideCoast.rbxm"
+        },
+        "Offshore water": {
+          "$path": "map/OffshoreWater.rbxm"
+        }
       },
       "Camera": {
         "$className": "Camera",

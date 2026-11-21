@@ -1,13 +1,14 @@
-"""Bake the playable cove's scenery and animation groups into the opening.
+"""Bake the island's actual geometry into exposures for the private history set.
 
-Run this file with Python after editing the island. The atlas carries geometry and
-finishes only. Client play never copies or animates instances from the live island.
+Run from any directory after changing map/CitrineCove.rbxmx. Object transforms stay
+in portal coordinates. The construction order is authored by trade, height and
+position so each exposure can be mounted whole on a low frame rate client.
 """
 
 import json
+import math
 from pathlib import Path
 import xml.etree.ElementTree as ET
-
 
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE = ROOT / "map/CitrineCove.rbxmx"
@@ -15,6 +16,7 @@ DEST = ROOT / "src/client/MineOrigins/HistoryAtlas.luau"
 GATE_FLOOR = (0, 24.205, 5.25)
 BASE_PARTS = {"Part", "WedgePart", "SpawnLocation"}
 IDENTITY = (1, 0, 0, 0, 1, 0, 0, 0, 1)
+FPS = 8
 
 
 def prop(item, key):
@@ -30,196 +32,310 @@ def vector(item, key="CFrame"):
     return tuple(float(field.findtext(axis)) for axis in "XYZ")
 
 
-def children(node, path):
-    for key in path.split("/"):
-        node = next(child for child in node.findall("Item") if name(child) == key)
-    return node
-
-
-def solids(model):
-    return [item for item in model.iter("Item") if item.get("class") in BASE_PARTS]
-
-
-def named(items, *names):
-    return [part for part in items if name(part) in names]
-
-
 def number(value):
-    return "0" if abs(value) < .000004 else f"{value:.6f}".rstrip("0").rstrip(".")
+    return "0" if abs(value) < 0.000004 else f"{value:.6f}".rstrip("0").rstrip(".")
 
 
-def lua_row(values):
+def row(values):
     return "{" + ", ".join(json.dumps(v) if isinstance(v, str) else number(v) for v in values) + "}"
 
 
-class Atlas:
-    def __init__(self):
-        self.map = ET.parse(SOURCE).getroot().find("Item")
-        self.finishes = {}
-        self.rotations = {}
-        self.groups = {}
-        self.water = {}
-
-    def parts(self, path):
-        return solids(children(self.map, path))
-
-    def add(self, label, motion, start, duration, parts, offset=(0, 0, 0)):
-        pieces = []
-        for part in parts:
-            props = part.find("Properties")
-            transparency = float(props.findtext("float[@name='Transparency']", "0"))
-            if transparency >= .95:
-                continue
-            color = int(prop(part, "Color3uint8").text) & 0xffffff
-            shape = 3 if part.get("class") == "WedgePart" else int(props.findtext("token[@name='shape']", "1"))
-            finish = (shape, f"{color:06X}", int(props.findtext("token[@name='Material']", "272")),
-                      int(props.findtext("token[@name='TopSurface']", "0")),
-                      int(props.findtext("token[@name='BottomSurface']", "0")), transparency)
-            style_id = self.finishes.setdefault(finish, len(self.finishes) + 1)
-            if name(part) in ("Lagoon", "Shallow water", "Water glint"):
-                self.water[style_id] = name(part)
-            rotation = tuple(round(float(prop(part, "CFrame").findtext(f"R{a}{b}")), 6)
-                             for a in range(3) for b in range(3))
-            position = (round(v - origin + shift, 4) for v, origin, shift in zip(vector(part), GATE_FLOOR, offset))
-            size = (round(v, 4) for v in vector(part, "size"))
-            piece = (style_id, *position, *size)
-            if rotation != IDENTITY:
-                piece += (self.rotations.setdefault(rotation, len(self.rotations) + 1),)
-            pieces.append(piece)
-        if pieces:
-            self.groups.setdefault((label, motion, start, duration), []).extend(pieces)
-
-    def write(self):
-        lines = ["-- Cinematic scenery sampled from map/CitrineCove.rbxmx, in studs relative to the portal paving.",
-                 "-- Each piece stores its finish, center, dimensions and optional orientation index.", "return {",
-                 "\tfinishes = {"]
-        lines.extend("\t\t" + lua_row(style) + "," for style in self.finishes)
-        lines.extend(["\t},", "\twater = {"])
-        lines.extend(f"\t\t[{style}] = {json.dumps(kind)}," for style, kind in self.water.items())
-        lines.extend(["\t},", "\torientations = {"])
-        lines.extend("\t\t" + lua_row(rotation) + "," for rotation in self.rotations)
-        lines.extend(["\t},", "\tformations = {"])
-        for (label, motion, start, duration), pieces in self.groups.items():
-            lines.append(f"\t\t{{ name = {json.dumps(label)}, motion = {json.dumps(motion)}, "
-                         f"start = {number(start)}, duration = {number(duration)}, pieces = {{")
-            lines.extend("\t\t\t" + lua_row(piece) + "," for piece in pieces)
-            lines.append("\t\t} },")
-        lines.extend(["\t},", "}"])
-        DEST.write_bytes(("\n".join(lines) + "\n").encode("utf8"))
+def fraction(value, span=1):
+    return max(0, min(1, value / span))
 
 
-def terrain(a):
-    shore = a.parts("Island and lagoon")
-    a.add("Strait and tide pools", "Water", 0, 0, named(shore, "Lagoon", "Shallow water", "Water glint", "Tide rock"))
-    a.add("Two banks", "Soil", 0, 0, [p for p in shore if "island" in name(p) or "Distant" in name(p)])
-    a.add("Outer meadow", "Soil", 0, 0, named(a.parts("Citrine Highlands/Outer meadows"), "Headland turf", "Tidal shallows"))
-
-    ridge = a.parts("Citrine Highlands/Cableway ridge")
-    a.add("Northern skyline", "Distant", 1, 4, named(ridge, "Mountain flank", "Summit facet", "Far slope"))
-    a.add("Cableway mesas", "Highland", 1.5, 5, named(ridge, "Mesa face", "Meadow cap", "Basalt bedding"))
-    tree = []
-    for part in ridge:
-        if name(part) == "Fir trunk":
-            if tree:
-                a.add(f"Ridge fir {len(a.groups)}", "MesaTree", 5.5 + abs(vector(tree[0])[0]) % 8 / 6, 1.55, tree)
-            tree = [part]
-        elif name(part) == "Fir boughs":
-            tree.append(part)
-    if tree:
-        a.add(f"Ridge fir {len(a.groups)}", "MesaTree", 6.3, 1.4, tree)
-
-    rim = named(a.parts("Citrine Highlands/Rock rim"), "Coastal escarpment", "Slate crown")
-    a.add("Coastal cliffs", "Highland", 1, 5, [p for p in rim if vector(p)[2] < 45])
-    bluffs = a.parts("Honey bluffs")
-    a.add("Honey bluffs west", "Bluff", 2.9, 3.5, [p for p in bluffs if vector(p)[0] < 0])
-    a.add("Honey bluffs east", "Bluff", 2.3, 3.5, [p for p in bluffs if vector(p)[0] >= 0])
-    gallery = a.parts("Working gallery")
-    a.add("Gallery bedrock", "Bedrock", 2.4, 4.5, named(gallery, "Bank foundation", "Bank turf", "Bluff foundation",
-          "Bluff turf", "Sloping bluff foundation", "Ridge footing", "Rear bluff foundation", "Hut side wall",
-          "Hut back wall", "Rear gallery ceiling", "Stone canopy", "Entrance return", "Sill foundation"))
-    a.add("Authored dig floor", "Gallery", 2.4, 4.5, a.parts("EditFace"))
-    a.add("Gallery strata and fittings", "Gallery", 2.4, 4.5, named(gallery, "Exposed bedding", "Mica lens", "Deep fault",
-          "Center lantern hanger", "Center lantern housing", "Center lantern", "Lantern hook", "Survey lamp", "Gallery lintel"))
-    a.add("Gallery threshold", "Pave", 13.35, .8, named(gallery, "Entrance sill", "Gallery lintel", "Survey lamp",
-          "Center lantern", "Center lantern hanger", "Center lantern housing"))
-
-    grove = children(a.map, "Coastal grove").findall("Item")
-    for j, tree in enumerate(grove):
-        tree_parts = solids(tree)
-        x, y, _ = vector(tree_parts[0])
-        growth = "MesaTree" if abs(x) > 100 else "BluffTree" if y > 35 else "Tree"
-        a.add(f"Sea grape {j+1}", growth, 4.15 + (j*7 % 11)*.23, 1.35 + .2*(j%3), tree_parts)
-    # Root early growth in the future plaza and clear the crossing when the survey arrives.
-    banks = [(-14, 14), (19, 19), (-25, 26), (11, 56), (-17, 63), (31, 48), (-40, 13)]
-    for j, (x, z) in enumerate(banks):
-        tree = solids(grove[j])
-        trunk_x, trunk_y, trunk_z = vector(tree[0])
-        foot = trunk_y - vector(tree[0], "size")[1] / 2
-        a.add(f"Pioneer grove {j+1}", "Pioneer", 4.3 + j*.29, 1.9, tree, (x-trunk_x, 24-foot, z-trunk_z))
-    a.add("Waterfall", "Falls", 4.15, 1.9, a.parts("Spring falls"))
+def planting(x, z):
+    return 3.85 + 1.95 * fraction((z + 100) / 238 + math.sin(x * 0.041) * 0.22)
 
 
-def crossing(a):
-    bridge = a.parts("Sand path and bridge")
-    a.add("Footpath", "Pave", 10.1, 1.7, named(bridge, "Landing path"))
-    a.add("Survey junction", "Pave", 12.2, 1.6, named(bridge, "Mine path", "Market square", "Portal paving"))
-    deck = named(bridge, "Bridge bearer", "Bridge plank", "Bridge decking", "Bridge post", "Handrail", "Post cap")
-    for i, part in enumerate(sorted(deck, key=lambda item: -vector(item)[2])):
-        key = name(part)
-        distance = 43 - vector(part)[2]
-        if key == "Bridge plank":
-            motion, start, duration = "Board", 11.80 + distance*.085, .37
-        elif key == "Bridge bearer":
-            motion, start, duration = "Raise", 11.03, .62
-        elif key == "Bridge decking":
-            motion, start, duration = "Pave", 12.97, .66
-        elif key in ("Bridge post", "Post cap"):
-            motion, start, duration = "Raise", 11.28 + distance*.088 + (.3 if key == "Post cap" else 0), .43
+def shoal(x, z):
+    return 2.0 + 1.75 * fraction((z + 127) / 288 + 0.17 * math.sin(x * 0.044))
+
+
+def patch(x, z):
+    # The docks are cut into the western valley first, then the front court,
+    # eastern lots and finally the northern rock wall.
+    return fraction(0.44 + x / 340 - z / 425)
+
+
+def timing(path, piece, x, y, z):
+    top, area, *_ = path + ["", ""]
+    low = piece.lower()
+    if top == "Island and lagoon":
+        if piece in ("Lagoon", "Shallow water", "Water glint"):
+            return None  # The lagoon runs all the way to the horizon in this view.
+        if piece.startswith("Distant"):
+            return "Offshore banks", 0
+        return (
+            ("Terraced shore fill", 7.25 + 0.98 * patch(x, z))
+            if z > 1
+            else ("Bank below the terraces", shoal(x, z))
+        )
+    if top == "Honey bluffs":
+        return "Weathered sandstone", 3.35 + 0.8 * patch(x, z) + y * 0.006
+    if top == "Coastal grove":
+        return "Coastal grove", (8.36 + 0.72 * patch(x, z) if z > 0 and y < 12 else planting(x, z))
+    if top == "Wildflowers":
+        return "Meadow in blossom", 5.50 + patch(x, z) * 0.8
+    if top == "Spring falls":
+        return "Spring above the shore", 4.28 + (0.35 if "Falling" in piece or "foam" in piece else 0)
+    if top == "EditFace":
+        return "Rock beneath the dig", 3.43
+    if top == "Working gallery":
+        if "lamp" in low or "lantern" in low:
+            return "Gallery lamps", 14.78 + (z + 72) / 250
+        if "lintel" in low or piece == "Entrance sill":
+            return "Gallery floor and headers", 12.89
+        return "Quarry rock", 3.35 + 0.65 * patch(x, z)
+    if top == "Citrine Mine":
+        if piece in (
+            "Cave jamb",
+            "Cave shoulder",
+            "Capstone",
+            "Amber keystone bed",
+            "Crystal facet",
+            "Crystal point",
+        ):
+            return "Citrine outcrop", 3.82 + y * 0.008
+        if piece in ("Portal footing", "Cut basalt pier", "Arch voussoir"):
+            return "Dressed arch stones", 12.88 + y * 0.044 + (0.06 if x > 0 else 0)
+        if piece in ("Mine sign", "Painted edge"):
+            return "Mine sign", 14.45
+        return "Entrance fittings", 14.76 + y * 0.02
+    if top == "Sand path and bridge":
+        if piece == "Landing":  # The camera set has no second spawn.
+            return None
+        if piece == "Bridge bearer":
+            return "Footbridge bearers", 9.10
+        if piece == "Bridge plank":
+            return "Footbridge deck boards", 9.35 + fraction((39 - z) / 14) * 0.8
+        if piece == "Bridge decking":
+            return "Footbridge deck", 10.18
+        if piece == "Bridge post":
+            return "Footbridge posts", 9.10 + fraction((39 - z) / 14) * 0.45
+        if piece in ("Handrail", "Post cap"):
+            return "Footbridge handrails", 10.2 + fraction((39 - z) / 14) * 0.35
+        if piece == "Landing path":
+            return "Path from the landing", 8.56 + fraction((101 - z) / 64) * 0.54
+        return "Way into the mine", 10.35 + fraction((30 - z) / 36) * 0.78
+    if top == "Shore market" or (top == "Harbor Plaza" and area in ("Jobs", "Store", "Supplies", "Book")):
+        # The same order repeats from bay to bay. Adjacent workshops overlap,
+        # producing a row of roofs being tiled from west to east.
+        bay = {"Supplies": 0, "Sell": 0.15, "Upgrades": 0.45, "Book": 0.67, "Jobs": 0.68, "Store": 0.80}.get(
+            area, 0
+        )
+        center = {"Supplies": -46, "Sell": -20, "Upgrades": 20, "Book": 46, "Jobs": -20, "Store": 20}.get(
+            area, x
+        )
+        if any(word in low for word in ("deck", "floor", "service mat", "plinth", "pad inlay")):
+            t = 9.65
+        elif any(
+            word in low
+            for word in ("upright", "post", "canopy post", "wall", "edging", "frame", "counter board", "foot")
+        ):
+            t = 10.12 + min(0.30, y * 0.027)
+        elif any(word in low for word in ("canvas", "canopy", "scallop", "hem")):
+            t = 10.82 + fraction((x - center + 8) / 16) * 0.69
+            if "hem" in low or "valance" in low or "scallop" in low:
+                t += 0.13
+        elif any(word in low for word in ("counter", "shelf", "back", "cork")):
+            t = 10.59 + y * 0.021
         else:
-            motion, start, duration = "Board", 12.05 + distance*.087, .52
-        a.add(f"{key} {i+1}", motion, start, duration, [part])
+            t = 11.76 + fraction(y / 17) * 0.38
+        return area + " workshop", t + bay
+    if top == "Harbor Plaza":
+        if area == "Arrival court":
+            if "Compass" in piece:
+                return "Landing compass", 13.66 + y * 0.018
+            return "Graded plaza paving", 10.15 + fraction((110 - z) / 78) * 1.55 + (
+                0.23 if piece == "Lane stripe" else 0
+            )
+        if area == "Beacon Point":
+            if "island" in low:
+                return "Beacon headland", 3.5
+            return "Harbor beacon", 13.0 + fraction(y / 28) * 2.28
+        if area == "Loading dock":
+            if "piling" in low:
+                return "Dock pilings", 8.4 + (z + 12) / 240
+            if "deck" in low:
+                return "Dock planking", 9.12 + (x + 75) / 30
+            return "Loading crane", 12.25 + fraction(y / 17) * 1.15
+        if area == "Miners Court":
+            if "foundation" in low or "paving" in low:
+                return "Court foundations", 11 + fraction(x + 33, 66) * 0.78
+            return "Miners Court", 12.2 + fraction(y / 23) * 1.65 + fraction(x + 33, 66) * 0.42
+    if top == "Citrine Highlands":
+        if area == "Outer meadows":
+            if piece in ("Headland turf", "Tidal shallows"):
+                return (
+                    ("Terraced shore fill", 7.25 + 0.98 * patch(x, z))
+                    if z > -8
+                    else ("Bay shore", shoal(x, z))
+                )
+            if piece == "Bridge pile":
+                return "Boardwalk piles", 8.55 + 0.62 * patch(x, z)
+            if piece in ("Footboard", "Timber deck"):
+                return "Boardwalk", 9.16 + fraction(z + 62, 220) * 1.80
+            return "Boardwalk rails", 11.1 + 0.46 * patch(x, z)
+        if area in ("Rock rim", "Cableway ridge"):
+            if piece in ("Quartz shaft", "Quartz crown", "Quartz glint"):
+                return None  # Floating decorative skyline off the playable ridge.
+            if piece in ("Mountain flank", "Summit facet", "Far slope"):
+                return "Offshore mountains", 0
+            if area == "Rock rim" and z > -14:
+                # The low quay walls are built from the first spoil removed
+                # from the hills. They run across the former natural beach.
+                rock = 7.61 + 1.84 * fraction(0.44 + x / 318 - z / 430)
+                if "Fir" in piece:
+                    return "Pines behind the quay", rock + 1.16
+                return "Sea wall above the new terraces", rock + (
+                    0.53 if piece in ("Slate crown", "Turf on the rim") else 0
+                )
+            if piece in ("Fir trunk", "Fir boughs"):
+                return "Pines on the rim", planting(x, z) + 0.28
+            return "Rocky island rim", 3.1 + 1.40 * patch(x, z)
+        if area == "Turquoise cascade":
+            if piece in ("Mesa face", "Meadow cap"):
+                return "Cascade banks", 3.95
+            return "Upper falls", 4.45 + fraction(-z / 46) * 0.38
+        if area == "Compass gardens":
+            if piece in ("Fir trunk", "Fir boughs", "Meadow flower", "Leaf tuft", "Grass bed"):
+                return "Planted beds", 12.68 + patch(x, z)
+            return "Benches and gardens", 13.45 + patch(x, z) + (0.46 if "lamp" in low else 0)
+        if area == "Ore siding":
+            if piece == "Sleeper":
+                return "Track sleepers", 12.45 + fraction((82 - z) / 82) * 1.26
+            if piece == "Rail":
+                return "Rail into the siding", 14.15
+            return "Ore wagons", 14.25 + fraction((80 - z) / 80) * 0.52 + fraction(y / 7) * 0.2
+        if area == "Cableway trail":
+            if any(w in low for w in ("slope", "wild stone", "ridgeline turf")):
+                return "Upper ridge", 3.98 + 0.5 * patch(x, z)
+            if "pine" in low:
+                return "Ridge pines", planting(x, z) + 0.18
+            if "footing" in low:
+                return "Tower footings", 12.60 + fraction(x + 130, 260) * 0.55
+            return "Ridge trail", 12.07 + fraction(x + 130, 260) * 1.45
+        if area == "Ridge tramway":
+            # The original rails include both tower trestles and overhead cables.
+            return "Cableway trestles", 13.22 + fraction(y / 53) * 1.31 + fraction(x + 105, 210) * 0.38
+        if area == "Moving cabins":
+            return "Cableway buckets", 15.12 + fraction(x + 72, 145) * 0.32
+        if area in ("Exchange lights", "Workshop lights"):
+            return "Market lanterns", 14.86 + fraction(x + 28, 56) * 0.45
+    return "Waterfront fittings", 13.2 + fraction(y / 33) * 0.85
 
-    arch = a.parts("Citrine Mine")
-    a.add("Arch shoulders", "Bluff", 2.95, 3.6, named(arch, "Cave jamb", "Cave shoulder", "Capstone",
-          "Amber keystone bed", "Crystal facet", "Crystal point"))
-    masonry = sorted(named(arch, "Cut basalt pier", "Arch voussoir"), key=lambda part: (vector(part)[1], vector(part)[0]))
-    for j, part in enumerate(masonry):
-        a.add(f"{name(part)} {j}", "Mason", 13.38 + j*.18, .68, [part])
-    a.add("Sconces", "Lights", 16.8, .43, named(arch, "Sconce base", "Amber sconce", "Guide inlay", "Threshold stud",
-          "Brass reveal", "Reflector", "Guide post", "Guide rail", "Portal footing"))
-    a.add("Mine sign", "Sign", 14.90, 1.69, named(arch, "Mine sign", "Painted edge"))
 
+def bake():
+    island = ET.parse(SOURCE).getroot().find("Item")
+    finishes, rotations, tracks = {}, {}, {}
 
-def settlement(a):
-    for j, stall in enumerate(("Sell", "Upgrades", "Supplies", "Book", "Store", "Jobs")):
-        items = a.parts(("Shore market/" if j < 2 else "Harbor Plaza/") + stall)
-        if j >= 2:
-            a.add(stall+" stall", "Furniture", 15.55+j*.22, .92,
-                  [p for p in items if "label" not in name(p).lower() and name(p) not in ("Name tag", "Printed rule")])
-            continue
-        a.add(stall+" floor", "Pave", 13.3+j*.22, .66, named(items, "Deck", "Service mat"))
-        a.add(stall+" posts", "Raise", 13.85+j*.3, .77, named(items, "Canopy post"))
-        separate = ("Deck", "Service mat", "Canopy post", "Canvas stripe", "Scalloped valance", "Name tag")
-        a.add(stall+" counter", "Furniture", 14.50+j*.30, .72, [p for p in items if name(p) not in separate])
-        canvas = named(items, "Canvas stripe", "Scalloped valance")
-        for k, x in enumerate(sorted({vector(p)[0] for p in canvas})):
-            a.add(f"{stall} awning {k+1}", "Awning", 15.24+j*.33+k*.083, .38, [p for p in canvas if vector(p)[0] == x])
+    def visit(item, path):
+        cls = item.get("class")
+        label = name(item)
+        if cls not in BASE_PARTS:
+            if cls in ("Model", "Folder"):
+                for child in item.findall("Item"):
+                    visit(child, path + [label])
+            return
+        props = item.find("Properties")
+        opacity = float(props.findtext("float[@name='Transparency']", "0"))
+        if opacity >= 0.95:
+            return
+        at = tuple(round(v - o, 4) for v, o in zip(vector(item), GATE_FLOOR))
+        stage = timing(path, label, *at)
+        if not stage:
+            return
+        trade, age = stage
+        shape = 3 if cls == "WedgePart" else int(props.findtext("token[@name='shape']", "1"))
+        color = int(prop(item, "Color3uint8").text) & 0xFFFFFF
+        finish = (
+            shape,
+            f"{color:06X}",
+            int(props.findtext("token[@name='Material']", "272")),
+            int(props.findtext("token[@name='TopSurface']", "0")),
+            int(props.findtext("token[@name='BottomSurface']", "0")),
+            opacity,
+        )
+        index = finishes.setdefault(finish, len(finishes) + 1)
+        orientation = tuple(
+            round(float(prop(item, "CFrame").findtext(f"R{a}{b}")), 6) for a in range(3) for b in range(3)
+        )
+        rot = rotations.setdefault(orientation, len(rotations) + 1) if orientation != IDENTITY else 0
+        size = tuple(round(v, 4) for v in vector(item, "size"))
 
-    for k, lights in enumerate(("Exchange lights", "Workshop lights")):
-        a.add(lights, "Lights", 16.85+k*.28, .65, a.parts("Citrine Highlands/" + lights))
-    a.add("Arrival court", "Pave", 14.8, 2.25, a.parts("Harbor Plaza/Arrival court"))
-    gardens = a.parts("Citrine Highlands/Compass gardens")
-    a.add("Benches and feet", "Furniture", 15.5, .79, [p for p in gardens if name(p).startswith("Bench")])
-    a.add("Garden lamps", "Lights", 16.89, .75, named(gardens, "Lamp foot", "Enamel post", "Lantern collar", "Lantern glass", "Lantern hood"))
-    a.add("Cableway", "Tram", 14.2, 2.25, a.parts("Citrine Highlands/Ridge tramway"))
-    a.add("Cableway buckets", "Cabins", 16.1, 1, a.parts("Citrine Highlands/Moving cabins"))
-    wagon = [p for p in a.parts("Citrine Highlands/Ore siding") if name(p) not in ("Sleeper", "Rail") and 20 < vector(p)[2] < 31]
-    a.add("Stone wagon", "Wagon", 12.55, 5.8, wagon, (93.8, 0, -9))
+        def emit(pos, dimensions, style, time):
+            info = (style, *[round(v, 4) for v in pos], *[round(v, 4) for v in dimensions])
+            if rot or label == "Mine sign":
+                info += (rot,)
+            if label == "Mine sign":
+                info += (1,)
+            tracks.setdefault((int(time * FPS + 0.5), trade), []).append(info)
+
+        def point(local):
+            return tuple(at[k] + sum(orientation[3 * k + j] * local[j] for j in range(3)) for k in range(3))
+
+        paving = label in (
+            "Mine path",
+            "Market square",
+            "Painted promenade",
+            "Central concourse",
+            "Court foundation",
+            "Court paving",
+            "Landing path",
+            "Basalt rim",
+        )
+        if (paving or trade == "Terraced shore fill") and shape == 1 and max(size[0], size[2]) > 18:
+            nx, nz = math.ceil(size[0] / 15), math.ceil(size[2] / 15)
+            w, d = size[0] / nx, size[2] / nz
+            for i in range(nx):
+                for j in range(nz):
+                    p = point(((i + 0.5) * w - size[0] / 2, 0, (j + 0.5) * d - size[2] / 2))
+                    lag = (
+                        1.29 * patch(p[0], p[2])
+                        if not paving
+                        else 0.45 * fraction(1 - j / nz) + 0.19 * i / nx
+                    )
+                    time = 7.15 + lag if trade == "Terraced shore fill" else age + lag
+                    emit(p, (w, size[1], d), index, time)
+            return
+        if trade == "Terraced shore fill" and shape == 3 and max(size[1:]) > 21:
+            # Cross-sections through the original right triangular prism.
+            # Each strip comprises the old vertical foot and its sloping edge.
+            # Both share the source rotation, so the finished outline is exact.
+            count = math.ceil(max(size[1:]) / 16)
+            h, d = size[1] / count, size[2] / count
+            fill = (1, *finish[1:])
+            block = finishes.setdefault(fill, len(finishes) + 1)
+            for j in range(count):
+                zc = -size[2] / 2 + (j + 0.5) * d
+                if j:
+                    p = point((0, -size[1] / 2 + j * h / 2, zc))
+                    emit(p, (size[0], j * h, d), block, 7.15 + 1.29 * patch(p[0], p[2]))
+                p = point((0, -size[1] / 2 + (j + 0.5) * h, zc))
+                emit(p, (size[0], h, d), index, 7.15 + 1.29 * patch(p[0], p[2]))
+            return
+        emit(at, size, index, age)
+
+    for child in island.findall("Item"):
+        visit(child, [])
+    lines = [
+        "-- Geometry and shot exposures baked from the playable map by art/origins/bake_history.py.",
+        "return {",
+        "\tfinishes = {",
+    ]
+    lines.extend("\t\t" + row(style) + "," for style in finishes)
+    lines.extend(["\t},", "\torientations = {"])
+    lines.extend("\t\t" + row(rot) + "," for rot in rotations)
+    lines.extend(["\t},", "\texposures = {"])
+    for (frame, trade), pieces in sorted(tracks.items()):
+        lines.append(f"\t\t{{ {frame}, {json.dumps(trade)}, {{")
+        lines.extend("\t\t\t" + row(piece) + "," for piece in pieces)
+        lines.append("\t\t} },")
+    lines.extend(["\t},", "}"])
+    DEST.write_bytes(("\n".join(lines) + "\n").encode("utf8"))
+    print(f"{sum(map(len, tracks.values()))} island pieces in {len(tracks)} construction exposures")
 
 
 if __name__ == "__main__":
-    atlas = Atlas()
-    terrain(atlas)
-    crossing(atlas)
-    settlement(atlas)
-    atlas.write()
+    bake()

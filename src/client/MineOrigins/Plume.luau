@@ -1,83 +1,84 @@
-local paint = require(script.Parent.EjectaPaint)
+local Assets = game:GetService("AssetService")
+local Encoding = game:GetService("EncodingService")
+
 local Plume = {}
+local attempted, atlas = false, nil
+local tile = Vector2.new(256, 256)
 
-local function palette(hex)
-	local colors = {}
-	for i = 0, 15 do
-		local u = i / 15 * (#hex - 1)
-		local j = math.min(#hex - 1, math.floor(u) + 1)
-		colors[i] = Color3.fromHex(hex[j]):Lerp(Color3.fromHex(hex[j + 1]), math.min(1, u - (j - 1)))
-	end
-	return colors
-end
-
-local colors = {
-	melt = palette({ "553B4D", "A24947", "EC7051", "FFAD5E", "FFE5A1", "FFF1BF" }),
-	ash = palette({ "524452", "695D68", "8E7A7E", "AD9690", "CDB3A0", "E1C7AB" }),
-}
-local templates = {}
-
--- Build each painted cloud once. Splitting a scanline at the midpoint keeps
--- both color and density below Roblox's per-sequence keypoint limit.
-local function template(kind)
-	if templates[kind] then
-		return templates[kind]
-	end
-	local gui = Instance.new("BillboardGui")
-	gui.Name, gui.AlwaysOnTop, gui.LightInfluence = "Painted " .. kind, false, 0
-	gui.Brightness = if kind == "melt" then 1.45 else 0.96
-	local canvas = Instance.new("CanvasGroup")
-	canvas.Name, canvas.BackgroundTransparency, canvas.BorderSizePixel = "Density", 1, 0
-	canvas.Size, canvas.Parent = UDim2.fromScale(1, 1), gui
-	local rows = paint[kind]
-	for y, row in rows do
-		for segment = 0, 1 do
-			local opacity, shade = {}, {}
-			local ink = false
-			for i = 0, 16 do
-				local j = 1 + 2 * (segment * 16 + i)
-				local alpha = tonumber(row:sub(j, j), 16) / 15
-				local light = tonumber(row:sub(j + 1, j + 1), 16)
-				ink = ink or alpha > 0
-				table.insert(opacity, NumberSequenceKeypoint.new(i / 16, 1 - alpha))
-				table.insert(shade, ColorSequenceKeypoint.new(i / 16, colors[kind][light]))
+local function getAtlas()
+	if not attempted then
+		attempted = true
+		local image
+		local bound = pcall(function()
+			image = Assets:CreateEditableImage({ Size = Vector2.new(512, 256) })
+			if image then
+				local pixels = Encoding:DecompressBuffer(
+					Encoding:Base64Decode(buffer.fromstring(script.Parent.EjectaRaster.Value)),
+					Enum.CompressionAlgorithm.Zstd
+				)
+				image:WritePixelsBuffer(Vector2.zero, Vector2.new(512, 256), pixels)
+				atlas = Content.fromObject(image)
 			end
-			if ink then
-				local band = Instance.new("Frame")
-				band.Name, band.BackgroundColor3, band.BorderSizePixel = "Scan", Color3.new(1, 1, 1), 0
-				band.Position = UDim2.fromScale(0.5 * segment, (y - 1) / #rows)
-				band.Size = UDim2.fromScale(0.5, 1 / #rows)
-				local grad = Instance.new("UIGradient")
-				grad.Color, grad.Transparency = ColorSequence.new(shade), NumberSequence.new(opacity)
-				grad.Parent, band.Parent = band, canvas
-			end
+		end)
+		if not bound and image then
+			image:Destroy()
 		end
 	end
-	templates[kind] = gui
-	return gui
+	return atlas
+end
+
+local function brushCanvas(gui, kind)
+	local frame = Instance.new("Frame")
+	frame.Name, frame.Size, frame.BackgroundTransparency = "Fitted density", UDim2.fromScale(1, 1), 1
+	frame.Parent = gui
+	local brushes = {}
+	for i, stroke in require(script.Parent.EjectaBrushes)[kind] do
+		local dab = Instance.new("ImageLabel")
+		dab.Name, dab.AnchorPoint, dab.BackgroundTransparency = "Volcanic pigment", Vector2.one * 0.5, 1
+		dab.Position, dab.Size = UDim2.fromScale(stroke[1], stroke[2]), UDim2.fromScale(stroke[3], stroke[4])
+		dab.Rotation, dab.ZIndex = stroke[5], i
+		dab.Image, dab.ImageColor3 =
+			"rbxasset://textures/particles/explosion01_implosion_main.dds", Color3.fromHex(stroke[7])
+		dab.ImageTransparency, dab.Parent = 1 - stroke[6], frame
+		brushes[i] = { label = dab, alpha = stroke[6] }
+	end
+	return { canvas = frame, brushes = brushes }
 end
 
 function Plume.mount(anchor, kind)
-	local gui = template(kind):Clone()
-	gui.Enabled = false
-	gui.Parent = anchor
-	local canvas = gui.Density
-	return gui, { canvas = canvas, bands = canvas:GetChildren(), level = -1 }
+	local gui = Instance.new("BillboardGui")
+	gui.Name, gui.AlwaysOnTop, gui.LightInfluence = "Ejecta density", false, 0.12
+	gui.Brightness = if kind == "melt" then 1.4 else 0.94
+	gui.Enabled, gui.Parent = false, anchor
+	local texture = getAtlas()
+	if not texture then
+		return gui, brushCanvas(gui, kind)
+	end
+	local image = Instance.new("ImageLabel")
+	image.Name, image.Size, image.BackgroundTransparency = "Filtered volcanic vapor", UDim2.fromScale(1, 1), 1
+	image.ImageContent = texture
+	image.ImageRectOffset = if kind == "melt" then Vector2.zero else Vector2.new(256, 0)
+	image.ImageRectSize, image.Parent = tile, gui
+	return gui, { canvas = image, image = image }
 end
 
--- Billboard rendering on some clients does not composite CanvasGroup opacity.
--- Modulate its gradient bands directly and remove the card at zero coverage.
-function Plume.show(gui, ink, rotation, opacity)
-	local level = math.clamp(math.floor(opacity * 18 + 0.5), 0, 18)
-	gui.Enabled = level > 0
-	if level > 0 then
-		ink.canvas.Rotation = rotation
+function Plume.show(gui, render, rotation, opacity)
+	gui.Enabled = opacity > 0.008
+	if not gui.Enabled then
+		return
 	end
-	if level ~= ink.level then
-		ink.level = level
-		if level > 0 then
-			for _, band in ink.bands do
-				band.BackgroundTransparency = 1 - level / 18
+	render.canvas.Rotation = rotation
+	if render.image then
+		render.image.ImageTransparency = 1 - math.clamp(opacity, 0, 1)
+	else
+		-- Some clients skip CanvasGroup compositing inside a world billboard.
+		-- Scale optical density per brush for correct overlapping transparency.
+		local level = math.clamp(math.round(opacity * 48), 0, 48)
+		if level ~= render.last then
+			render.last = level
+			local density = level / 48
+			for _, dab in render.brushes do
+				dab.label.ImageTransparency = 1 - dab.alpha * density
 			end
 		end
 	end

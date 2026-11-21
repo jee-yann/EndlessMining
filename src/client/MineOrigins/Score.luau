@@ -28,10 +28,14 @@ local bank = {
 	wave = sample("Pressure front", "impact_explosion_03.mp3", 0.265, 1.43, 0.64, 0.028, 0.65),
 	ash = sample("Ash over shore", "impact_water.mp3", 0.34, 1.36, 0.61, 0.21, 0.48),
 	scatter = sample("Loose stones", "action_footsteps_plastic.mp3", 0.036, 0.121, 1.65, 0.003, 0.042),
+	strata = sample("Shearing beds", "action_get_up.mp3", 0.10, 0.41, 1.70, 0.022, 0.20),
+	core = sample("Descending core", "volume_slider.ogg", 0.042, 0.74, 0.92, 0.016, 0.31),
+	deep = instrument("Subsurface pressure", "action_jump_land.mp3", 0.079, 0.090, 1 / 0.011, 2.4, 0.13, 0.64),
 	surf = sample("Tide through crater", "action_swim.mp3", 0.25, 3.87, 2.2, 0.62, 0.75),
 	rain = sample("Rain in the canopy", "impact_water.mp3", 0.42, 1.17, 0.52, 0.60, 0.59),
 	bird = sample("Shore bird", "volume_slider.ogg", 0.045, 0.10, 0.18, 0.036, 0.054),
 	wood = sample("Decking mallet", "action_footsteps_plastic.mp3", 0.032, 0.132, 2.45, 0.006, 0.032),
+	rail = sample("Siding spike", "volume_slider.ogg", 0.018, 0.105, 0.44, 0.004, 0.055),
 	rope = sample("Rope through pulley", "action_jump.mp3", 0.06, 0.21, 1.15, 0.035, 0.07),
 	cart = sample("Ore cart bearings", "action_get_up.mp3", 0.115, 0.310, 1.43, 0.19, 0.30),
 	lamp = sample("Lantern wick", "action_jump.mp3", 0.085, 0.159, 0.86, 0.005, 0.055),
@@ -60,6 +64,9 @@ bank.reed.eq, bank.pluck.eq, bank.bass.eq = { -2, 2, -5 }, { 1, 0, -3 }, { 2, 0,
 bank.airString.chorus, bank.bow.chorus = true, true
 bank.glass.room, bank.airString.room, bank.reed.room = { 1.75, -13 }, { 1.3, -16 }, { 0.85, -18 }
 bank.hot.eq, bank.rumble.eq, bank.wave.eq = { -10, -2, 0 }, { 4, -10, -24 }, { 4, -3, -13 }
+bank.strata.eq, bank.core.eq, bank.deep.eq = { 3, -4, -15 }, { 0, -3, -8 }, { 4, -3, -18 }
+bank.strata.room, bank.core.room, bank.deep.room = { 0.60, -18 }, { 1.42, -11 }, { 1.7, -14 }
+bank.deep.music = false
 bank.bird.room, bank.wood.room, bank.lamp.room = { 0.48, -20 }, { 0.32, -21 }, { 0.55, -18 }
 bank.reply.eq, bank.chamber.eq = { 3, -2, -12 }, { 3, -1, -16 }
 bank.reply.room, bank.chamber.room, bank.shard.room = { 1.2, -12 }, { 2.1, -10 }, { 1.9, -9 }
@@ -89,93 +96,136 @@ function Score.compose(beats)
 	for _, n in { { 0.42, 74, 0.56 }, { 1.46, 69, 0.54 }, { 2.42, 76, 0.47 } } do
 		note("glass", n[1], n[2], 1.12, n[3])
 	end
-	chord(3.31, 2.21, { 46, 53, 64 }, 0.58)
-	chord(5.46, 2.03, { 45, 57, 61 }, 0.79)
+	local hit = beats.impact
+	chord(3.16, 1.93, { 46, 53, 64 }, 0.58)
+	chord(hit - 1.56, 1.49, { 45, 57, 61 }, 0.79)
 	for _, n in
 		{
-			{ 2.84, 38, 0.51 },
-			{ 3.86, 38, 0.52 },
-			{ 4.71, 41, 0.57 },
-			{ 5.43, 40, 0.60 },
-			{ 6.04, 38, 0.65 },
-			{ 6.54, 37, 0.69 },
-			{ 6.94, 37, 0.76 },
-			{ 7.24, 37, 0.70 },
+			{ 3.66, 38, 0.51 },
+			{ 2.82, 38, 0.52 },
+			{ 2.07, 41, 0.57 },
+			{ 1.43, 40, 0.60 },
+			{ 0.93, 38, 0.65 },
+			{ 0.53, 37, 0.69 },
+			{ 0.21, 37, 0.76 },
 		}
 	do
-		note("bass", n[1], n[2], 0.27, n[3])
+		note("bass", hit - n[1], n[2], 0.23, n[3])
 	end
-	cue("wind", 0.0, 7.70, 0.68, 0.48, 1.43)
-	cue("rumble", 3.15, 4.57, 0.37, 0.82, 0.63)
-	cue("hot", 4.34, 3.35, 0.75, 0.94, 1.51)
-	local hit = beats.impact
+	cue("wind", 0.0, hit - 0.10, 0.68, 0.48, 1.43)
+	cue("rumble", hit - 4.02, 3.97, 0.37, 0.82, 0.63)
+	cue("hot", hit - 3.05, 2.98, 0.75, 0.94, 1.51)
 	cue("hit", hit, 0.29, 0.73)
 	cue("snap", hit + 0.028, 0.18, 1.43, 0.80)
 	cue("wave", hit + 0.14, 2.05, 0.54, 1, 0.47)
 	cue("ash", hit + 0.50, 1.68, 0.68, 0.78, 0.90)
 	note("bow", hit + 0.19, 38, 1.45, 0.73)
 	for _, p in
-		{ { 0.48, 0.96, 0.76 }, { 0.63, 1.53, 0.58 }, { 0.91, 1.12, 0.69 }, { 1.18, 0.91, 0.47 }, { 1.45, 1.31, 0.36 }, {
-			1.84,
-			0.74,
-			0.29,
-		} }
+		{
+			{ 0.48, 0.96, 0.76 },
+			{ 0.63, 1.53, 0.58 },
+			{ 0.91, 1.12, 0.69 },
+			{ 1.18, 0.91, 0.47 },
+			{ 1.45, 1.31, 0.36 },
+			{
+				1.84,
+				0.74,
+				0.29,
+			},
+		}
 	do
 		cue("scatter", hit + p[1], 0.16, p[2], p[3])
 	end
-	cue("shard", hit + 2.13, 0.87, 0.94, 0.70)
-	note("glass", hit + 2.24, 76, 0.92, 0.42)
-
-	-- Water, canopy and then the work camp share a six-beat pulse. New parts
-	-- enter as physical things appear in the same view, from the first plank to the last lantern.
-	chord(11.65, 3.26, { 50, 57, 66 }, 0.61)
-	chord(14.77, 2.32, { 43, 59, 66 }, 0.68)
-	chord(16.96, 2.36, { 47, 57, 62 }, 0.74)
-	chord(19.19, 2.31, { 43, 59, 64 }, 0.78)
-	chord(21.38, 2.36, { 50, 57, 66 }, 0.83)
-	chord(23.63, 2.38, { 45, 57, 64 }, 0.72)
-	local bars = {
-		{ 13.17, { 62, 69, 76, 74, 69, 66 } },
-		{ 15.40, { 62, 67, 74, 78, 74, 71 } },
-		{ 17.63, { 59, 66, 69, 74, 73, 69 } },
-		{ 19.86, { 55, 62, 67, 71, 74, 76 } },
-		{ 22.09, { 57, 62, 66, 69, 74, 78 } },
-		{ 24.32, { 57, 64, 69, 73 } },
-	}
-	for i, bar in bars do
-		for j, pitch in bar[2] do
-			local accent = if j == 1 or j == 4 then 0.86 else 0.62
-			note("pluck", bar[1] + (j - 1) * 0.372, pitch, 0.59, accent * math.min(1, 0.46 + i * 0.12))
-		end
-	end
-	for _, n in
-		{ { 14.08, 74 }, { 15.29, 69 }, { 16.84, 76 }, { 19.42, 71 }, { 21.39, 74 }, { 23.63, 78 }, { 25.31, 76 } }
-	do
-		note("glass", n[1], n[2], 0.81, 0.42)
-	end
-	cue("surf", 11.76, 7.0, 0.62, 0.81, 0.92)
-	cue("rain", 15.70, 2.53, 1.36, 0.66, 0.99)
-	for _, p in { { 18.42, 2.92, 3.50 }, { 18.66, 3.65, 3.06 }, { 19, 2.78, 3.10 } } do
-		cue("bird", p[1], 0.15, p[2], 0.69, p[3])
-	end
-	cue("rope", 19.64, 0.32, 0.58, 1)
-	for _, p in
+	-- The bright core stays audible through chalk, shale and basalt. Each stratum
+	-- folds the same falling interval lower until only a slow, filtered tail remains.
+	cue("core", hit + 1.08, 0.74, 1.46, 0.71, 1.20)
+	for _, bed in
 		{
-			{ 20.60, 0.70, 0.83 },
-			{ 20.98, 0.93, 0.59 },
-			{ 21.34, 0.80, 0.94 },
-			{ 21.70, 1.12, 0.67 },
-			{ 22.12, 0.74, 1 },
-			{ 22.86, 0.84, 0.71 },
-			{ 23.21, 1.10, 0.62 },
-			{ 24.10, 0.74, 0.64 },
+			{ 1.89, 1.17, 0.78, 56 },
+			{ 2.60, 0.88, 0.72, 50 },
+			{ 3.60, 0.56, 0.65, 45 },
 		}
 	do
-		cue("wood", p[1], 0.18, p[2], p[3])
+		cue("strata", hit + bed[1], 0.43, bed[2], bed[3], bed[2] * 0.71)
+		note("deep", hit + bed[1] + 0.025, bed[4], 0.76, 0.52)
 	end
-	cue("rope", 22.62, 0.37, 0.49, 0.91)
-	cue("cart", 24.15, 0.98, 0.85, 0.79, 1.23)
-	cue("lamp", 25.40, 0.12, 1.29, 0.70)
+	cue("core", hit + 4.31, 1.03, 0.57, 0.76, 0.43)
+	note("deep", hit + 4.32, 38, 1.08, 0.82)
+	cue("strata", hit + 4.72, 0.53, 0.50, 0.48, 0.37)
+
+	-- The build plays in sixes. Its hammer accents follow the jetty, bridge,
+	-- siding and last rail pin. A whole bar clears for the survey at the end.
+	local history = beats.history
+	for _, bar in
+		{
+			{ 0.0, 2.62, { 50, 57, 66 }, 0.54 },
+			{ 2.60, 2.43, { 43, 59, 66 }, 0.58 },
+			{ 5.0, 2.43, { 47, 57, 62 }, 0.65 },
+			{ 7.4, 2.43, { 43, 59, 64 }, 0.73 },
+			{ 9.8, 2.43, { 50, 57, 66 }, 0.80 },
+			{ 12.2, 2.43, { 45, 57, 64 }, 0.72 },
+			{ 14.6, 2.02, { 50, 57, 64 }, 0.53 },
+		}
+	do
+		chord(history + bar[1], bar[2], bar[3], bar[4])
+	end
+	local phrases = {
+		{ 62, 69, 76, 74, 69, 66 },
+		{ 62, 67, 74, 78, 74, 71 },
+		{ 59, 66, 69, 74, 73, 69 },
+		{ 55, 62, 67, 71, 74, 76 },
+		{ 57, 62, 66, 69, 74, 78 },
+		{ 57, 64, 69, 73 },
+	}
+	for bar, pitches in phrases do
+		for j, pitch in pitches do
+			local accent = if j == 1 or j == 4 then 0.86 else 0.62
+			note(
+				"pluck",
+				history + 2.6 + (bar - 1) * 2.4 + (j - 1) * 0.40,
+				pitch,
+				0.54,
+				accent * math.min(1, 0.38 + bar * 0.13)
+			)
+		end
+	end
+	for _, n in { { 2.19, 74 }, { 3.85, 69 }, { 5.60, 76 }, { 7.20, 71 }, { 9.10, 74 }, { 12.0, 78 }, { 15.49, 76 } } do
+		note("glass", history + n[1], n[2], 0.75, 0.39)
+	end
+	cue("surf", history + 0.21, 7.1, 0.62, 0.75, 0.92)
+	cue("rain", history + 2.20, 2.95, 1.36, 0.55, 0.93)
+	for _, p in { { 4.53, 2.92, 3.50 }, { 4.81, 3.65, 3.06 }, { 5.13, 2.78, 3.10 } } do
+		cue("bird", history + p[1], 0.15, p[2], 0.64, p[3])
+	end
+	cue("rope", history + 6.05, 0.33, 0.63, 0.87)
+	for _, mallet in
+		{
+			{ 6.35, 0.81 },
+			{ 6.59, 0.92 },
+			{ 6.86, 1.12 },
+			{ 9.10, 0.64 },
+			{ 9.35, 0.76 },
+			{ 9.73, 0.91 },
+			{ 10.15, 0.82 },
+			{ 11.08, 1.24 },
+			{ 11.55, 1.10 },
+			{ 11.93, 1.22 },
+			{ 13.02, 0.73 },
+			{ 13.37, 0.85 },
+			{ 13.62, 1.05 },
+		}
+	do
+		cue("wood", history + mallet[1], 0.16, mallet[2], 0.77)
+	end
+	cue("scatter", history + 7.74, 0.17, 0.59, 0.81)
+	cue("strata", history + 8.55, 0.65, 0.72, 0.46, 0.53)
+	cue("snap", history + 12, 0.26, 0.76, 0.54)
+	cue("scatter", history + 12.35, 0.19, 0.89, 0.65)
+	cue("scatter", history + 12.83, 0.2, 0.56, 0.72)
+	cue("rope", history + 12.99, 0.38, 0.49, 0.91)
+	cue("rail", history + 14.15, 0.10, 2.15, 0.53)
+	cue("cart", history + 14.21, 0.77, 0.68, 0.61, 1.2)
+	cue("lamp", history + 15.40, 0.12, 1.29, 0.66)
 	-- After the wick lights, leave the taps and the pauses between them exposed.
 	for i, t in beats.outbound do
 		cue("tap", t, 0.17, if i == 3 then 0.85 else 0.96, if i == 3 then 1.08 else 0.95)
@@ -192,10 +242,10 @@ function Score.compose(beats)
 	cue("chamber", beats.answer + 0.014, 1.43, 1.22, 0.97, 0.81)
 	cue("shard", beats.answer + 0.024, 1.14, 1.31, 0.93)
 	note("airString", beats.answer + 0.06, 63, 1.85, 0.44)
-	chord(40.50, 3.82, { 50, 57, 64 }, 0.47)
-	note("glass", 41.18, 74, 0.93, 0.32)
-	note("reed", 42.34, 69, 1.92, 0.58)
-	cue("wind", 40.27, 4.18, 0.55, 0.25, 0.68)
+	chord(beats.arrival - 0.15, 3.82, { 50, 57, 64 }, 0.47)
+	note("glass", beats.arrival + 0.53, 74, 0.93, 0.32)
+	note("reed", beats.arrival + 1.69, 69, 1.92, 0.58)
+	cue("wind", beats.arrival - 0.38, 4.18, 0.55, 0.25, 0.68)
 
 	-- Short wordless inflections follow the first breath of each caption.
 	-- Independent pitch glides for the body and upper formant distinguish the cast.

@@ -22,7 +22,7 @@ function Tide.new(parent, gate, landing)
 			)
 			segment.Material, segment.CastShadow = Enum.Material.Neon, false
 		end
-		marks[i] = { model = model, at = gate * CF(x, -3.77, 30.4 + (i - 1) * 4.1), time = 41.24 + i * 0.15 }
+		marks[i] = { model = model, at = gate * CF(x, -3.77, 30.4 + (i - 1) * 4.1), time = 45.54 + i * 0.15 }
 	end
 	local point = P.box(parent, "Resonance on the landing brass", landing, Vector3.one, "D6BAE8")
 	point.Transparency, point.CastShadow = 1, false
@@ -47,7 +47,7 @@ function Tide:draw(t)
 			mark.model.Parent = nil
 		end
 	end
-	local age = t - 43.04
+	local age = t - 47.34
 	self.light.Brightness = if age > 0 then 2.2 * P.ease(age, 0, 0.18) * (1 - P.ease(age, 0.23, 1.13)) else 0
 end
 

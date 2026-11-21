@@ -30,11 +30,42 @@ local function check(motion, replay)
 		fov = 67,
 	})
 	assert(film:draw(0, false) == 1)
+	local core = film.strike.meteor:FindFirstChild("Starfall core")
+	assert(core and core:IsA("Model"))
+	film:draw(Beats.impact - 0.01, false)
+	local contact = core:GetPivot().Position
+	film:draw(Beats.impact + 0.01, false)
+	assert(core:IsDescendantOf(film.strike.crater) and (contact - core:GetPivot().Position).Magnitude < 7)
+	local lastY = contact.Y
+	for _, t in { Beats.section, 8.39, 9.10, 10.10, 10.84 } do
+		film:draw(t, false)
+		local y = core:GetPivot().Position.Y
+		assert(y < lastY, "core must descend through the layers")
+		lastY = y
+	end
+	assert(film.base.Position.Y - lastY > 175 and film.strike.section.root.Parent == film.strike.root)
+	film:draw(Beats.surface, false)
+	assert(not core.Parent and not film.history.root:FindFirstChild("Starfall core", true), "closed impact site")
 	film:draw(Beats.history - 0.001, false)
 	local crater = camera.CFrame
 	assert(film:draw(Beats.history, false) == 0)
 	assert((crater.Position - camera.CFrame.Position).Magnitude < 0.15, "cut drifted off the crater")
 	assert(film.history.root.Parent == stage)
+	local sky = film.sky
+	local changes, previous = 0, -1
+	local sawSun, sawMoon = false, false
+	for n = 0, 126 do
+		local age = n / 8
+		film:draw(Beats.history + age, false)
+		local count = #film.history.root:GetChildren()
+		if count ~= previous then changes += 1 end
+		previous = count
+		sawSun = sawSun or sky.sun.Transparency < .1
+		sawMoon = sawMoon or sky.face.ImageTransparency < .1
+		film:draw(Beats.history + age + .049, false)
+		assert(#film.history.root:GetChildren() == count, "construction changed between exposures")
+	end
+	assert(changes >= 50 and sawSun and (not motion or sawMoon), "hold-and-build montage with orbital light")
 	film:draw(Beats.present - 0.001, false)
 	local historicalView = camera.CFrame
 	film:draw(Beats.present, false)
@@ -42,9 +73,9 @@ local function check(motion, replay)
 	assert((historicalView.Position - camera.CFrame.Position).Magnitude < 0.15, "jump at settlement match")
 	film:draw(Beats.present + 0.5, true)
 	assert(film.localPresent, "entrance changed halfway through a shot")
-	film:draw(27.4, true)
+	film:draw(31.71, true)
 	assert(not film.localPresent and not film.history, "ready entrance missed the next cut")
-	for _, t in { 29.1, 31.4, 33, 35, Beats.pick, Beats.answer, 40.1, Beats.arrival, 43.4 } do
+	for _, t in { 33.4, 35.7, 37.4, 39.3, Beats.pick, Beats.answer, 44.4, Beats.arrival, 47.7 } do
 		assert(film:draw(t, true) == 0)
 	end
 	if replay then

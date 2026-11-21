@@ -203,10 +203,9 @@ function Opening.play(player, net, hud)
 				revealAvatar()
 				revealAvatar = nil
 			end
-			lens.Enabled = (t >= 10.05 and t < Beats.history)
-				or (t >= 27.36 and t < 29.04)
-				or (t >= 30.83 and t < 32.96)
-				or (t >= 37.56 and t < 40.02)
+			lens.Enabled = (t >= 31.66 and t < 33.34)
+                or (t >= 35.13 and t < 37.26)
+                or (t >= 41.86 and t < 44.32)
 			if lens.Enabled then
 				lens.FocusDistance = (camera.Focus.Position - camera.CFrame.Position).Magnitude
 				lens.InFocusRadius, lens.FarIntensity, lens.NearIntensity = 2.2, 0.34, 0.08
@@ -219,6 +218,8 @@ function Opening.play(player, net, hud)
 			card.Text, card.TextTransparency = if titleOpacity > 0 then title else "", 1 - titleOpacity
 			card.TextStrokeTransparency = 1 - 0.65 * titleOpacity
 			local period, strength = Film.era(t)
+			dateline.Position = if t >= Beats.history and t < Beats.present
+				then UDim2.fromScale(0.05, 0.845) else UDim2.fromScale(0.05, 0.105)
 			dateline.Text, dateline.TextTransparency = period, 1 - strength
 			dateline.TextStrokeTransparency = 1 - 0.70 * strength
 			scrim.BackgroundTransparency = 1 - 0.87 * opacity

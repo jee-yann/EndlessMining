@@ -130,9 +130,9 @@ function Survey:draw(t, base)
 		swing += math.sin(age * 8.6) * math.exp(-age * 2.4) * 0.32
 	end
 	self.plumb:PivotTo(base * CF(self.hook) * A(0.12 * swing, 0, swing))
-	local u = (t - 40.3) / 2.4
+	local u = (t - 44.6) / 2.4
 	for i, p in self.fault do
-		local age = t - (40.30 + 2.4 * (i - 1) / #self.fault)
+		local age = t - (44.6 + 2.4 * (i - 1) / #self.fault)
 		p.Transparency = if age < 0 then 1 else 0.12 + 0.88 * P.ease(age, 0.18, 1.05)
 	end
 	self.front.Transparency = if u >= 0 and u <= 1 then 0.09 else 1

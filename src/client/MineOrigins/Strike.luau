@@ -1,12 +1,16 @@
 local P = require(script.Parent.Props)
 local Plume = require(script.Parent.Plume)
+local Burial = require(script.Parent.Burial)
+local Descent = require(script.Parent.Descent)
+local Jets = require(script.Parent.EjectaJets)
+local Crater = require(script.Parent.Crater)
 local Strike = {}
 Strike.__index = Strike
 
 local V, CF, A = Vector3.new, CFrame.new, CFrame.Angles
 local rgb, ease, tau = Color3.fromHex, P.ease, math.pi * 2
 local stone, neon = Enum.Material.Slate, Enum.Material.Neon
-local flightTime = require(script.Parent.Beats).flightImpact
+local flightTime = require(script.Parent.Beats).impact
 local impact = V(0, 1.5, 0)
 local approach = V(-218, 186.5, -122)
 Strike.impactTime = flightTime
@@ -17,12 +21,6 @@ function Strike.position(t)
 	local u = math.min(t / flightTime, 1)
 	local distance = 0.27 * u + 0.73 * math.max(0, u) ^ 2.2
 	return impact + approach * (1 - distance) + V(9, 14, 6) * math.sin(distance * math.pi)
-end
-
-local function pair(parent, name, a, b, width, color, material)
-	local rod = P.rod(parent, name, a, b, width, rgb(color))
-	rod.Material = material
-	return rod
 end
 
 local function between(p, base, a, b, width, height)
@@ -44,13 +42,6 @@ end
 
 local function ellipse(parent, name, color, mat)
 	return ball(parent, name, Vector3.zero, Vector3.one, color, mat)
-end
-
-local function stratum(parent, name, hue, size, at)
-	local p = P.cylinder(parent, name, at, 1, 1, hue, stone)
-	-- Cylinder length runs along local X, now vertical.
-	p.Size = V(size.Y, size.X, size.Z)
-	return p
 end
 
 local function marker(parent, name, at)
@@ -146,13 +137,13 @@ local function buildCoast(root, rng)
 		whitecap.CastShadow = false
 	end
 	local shade = { "776866", "796A69", "786968", "756566" }
-	local n, inner, mid, rim, foot = 24, {}, {}, {}, {}
+	local n, inner, mid, rim, foot = 32, {}, {}, {}, {}
 	for i = 1, n do
 		local a = tau * i / n
 		local x, z = math.cos(a), math.sin(a)
 		local jag = rng:NextNumber(0.86, 1.08)
-		inner[i] = V(x * 8.1, 0, z * 7.7)
-		mid[i] = V(x * 26, 0.54 + math.sin(a * 3) * 0.74, z * 23)
+		inner[i] = V(x * 34, 1.15 + 0.67 * math.sin(3 * a), z * 29)
+		mid[i] = V(x * 49, 1.64 + math.sin(a * 3) * 1.61, z * 41)
 		rim[i] = V(x * 74 * jag, 1.1 + 2.7 * math.sin(a * 2) - math.max(z, 0) * 2.1, z * 56 * jag)
 		foot[i] = V(rim[i].X * 1.08, -10, rim[i].Z * 1.09)
 	end
@@ -192,7 +183,7 @@ local function buildCoast(root, rng)
 	end
 	for i = 1, 20 do
 		local a = rng:NextNumber(0, tau)
-		local r = rng:NextNumber(13, 43)
+		local r = rng:NextNumber(36, 57)
 		local s = rng:NextNumber(0.32, 1.65)
 		local p =
 			ball(shore, "Lava boulder", V(math.cos(a) * r, 0.3, math.sin(a) * r), V(1.8, 1, 1.3) * s, "77636A", stone)
@@ -201,7 +192,7 @@ local function buildCoast(root, rng)
 	-- The lowest clouds frame the real descent corridor. A gap around the
 	-- centerline keeps the meteor visible to the camera traveling alongside it.
 	for i = 1, 17 do
-		local time = rng:NextNumber(1.6, 8.9)
+		local time = rng:NextNumber(0.9, 5.9)
 		local side = if i % 2 == 1 then -1 else 1
 		local center = Strike.position(time)
 			+ V(side * rng:NextNumber(28, 63), -rng:NextNumber(9, 31), rng:NextNumber(-54, -24))
@@ -232,14 +223,46 @@ local function sculpt(parent, asset, name, scale)
 	return model
 end
 
+local sliverOffset = CF(0.62, 0.52, 2.66) * A(-0.19, 0.21, -0.78)
+local function meteorPose(t)
+	return CF(Strike.position(t)) * A(0.36 + t * 0.46, 0.72 + t * 0.71, t * 0.40)
+end
+
+local separation = meteorPose(flightTime) * sliverOffset
+function Strike.corePosition(t)
+	if t <= flightTime then
+		return (meteorPose(t) * sliverOffset).Position
+	end
+	return Burial.point(t)
+		+ (separation.Position - Burial.point(flightTime)) * (1 - ease(t, flightTime, flightTime + 0.47))
+end
+
+function Strike.frame(t, motion)
+	return Descent.frame(t, motion, Strike.position)
+end
+Strike.surfaceFrame = Descent.surface
+
 local function buildMeteor(root)
 	local body = sculpt(root, "Fluted iron", "Starfall meteor")
-	-- This breach rotates in and out of sight. Its warm edge and tilted amethyst
-	-- facet reappear in the fallen stone and in the player's freshly opened sample.
-	local sliver = P.crystal(body, Vector3.zero, 1.12)
-	sliver:PivotTo(CF(0.38, 0.42, 2.58) * A(-0.19, 0.21, -0.78))
-	P.light(body.PrimaryPart, "FFAB76", 37, 2.45)
-	return body
+	local core = P.crystal(body, Vector3.zero, 1.57)
+	core.Name = "Starfall core"
+	-- A violet cleft rings the same asymmetric crystal before and after breakup.
+	for i, p in core:GetChildren() do
+		if p.Name == "Facet" then
+			p.Color = p.Color:Lerp(rgb("9859DF"), 0.30)
+			if i % 8 == 1 or i % 8 == 2 then
+				p.Material = neon
+				p.Color = rgb("BC8AEA")
+			end
+		end
+	end
+	for i, off in { V(-0.57, -0.64, 0.05), V(0.50, -0.8, -0.11) } do
+		local rind = sculpt(core, "Spall", "Fused meteoritic iron", 0.43 + 0.05 * i)
+		rind:PivotTo(CF(off) * A(0.44 * i, -i, 0.28))
+	end
+	core:PivotTo(sliverOffset)
+	P.light(body.PrimaryPart, "FFAB76", 42, 2.75)
+	return body, core
 end
 
 local function knot(parent, position, tangent)
@@ -397,71 +420,41 @@ local function drawWake(self, t, base)
 end
 
 local function craterBed(self, rng)
-	local root = self.root
-	self.cap = stratum(root, "Unbroken bedrock", "7A6669", V(16.3, 0.95, 15.5), V(0, -0.47, 0))
-	local crater = P.model(root, "Buried Starfall")
-	self.crater = crater
-	stratum(crater, "Bowl floor", "463A4A", V(16.7, 0.54, 16), V(0, -2.54, 0))
-	-- Sew the tilted crater wall to the existing 24-vertex shore opening.
-	local previous
-	for i = 0, 24 do
-		local a = tau * i / 24
-		local x, z = math.cos(a), math.sin(a)
-		local lip = V(8.1 * x, -0.03, 7.7 * z)
-		local ledge = V(x * 4.3, -1.51 + 0.38 * math.sin(a * 3.2), z * 4.1)
-		local foot = V(x * 2.22, -2.27, z * 1.84)
-		if previous then
-			P.face(crater, previous[1], lip, ledge, rgb("80625F"))
-			P.face(crater, previous[1], ledge, previous[2], rgb("77585C"))
-			P.face(crater, previous[2], ledge, foot, rgb("5C4857"))
-			P.face(crater, previous[2], foot, previous[3], rgb("675362"))
-		end
-		previous = { lip, ledge, foot }
-	end
-	for i = 1, 7 do
-		local a = i * 2.399
-		local chip = sculpt(
-			crater,
-			if i % 3 == 0 then "Slag blade" else "Spall",
-			"Overturned shale",
-			0.68 + 0.56 * rng:NextNumber()
-		)
-		chip:PivotTo(CF(7.5 * math.cos(a), -0.05, 7.0 * math.sin(a)) * A(0.38 * math.sin(a), -a, 0.19))
-	end
-	self.shard = P.crystal(crater, Vector3.zero, 1.40)
-	for _, facet in self.shard:GetChildren() do
-		if facet.Name == "Facet" then
-			facet.Color = facet.Color:Lerp(rgb("A269CB"), 0.44)
-		end
-	end
-	self.core = marker(crater, "Seam glow", Vector3.zero)
-	self.light = P.light(self.core, "BFA0FF", 17, 1.7)
-	-- The cleft cradles the crystal above the bottom of the bowl. Its back
-	-- wall keeps the pointed base grounded in the close shot.
-	for i, pos in { V(-0.89, -1.33, -0.35), V(0.81, -1.26, -0.56), V(0.1, -1.29, -1.0) } do
-		local socket = sculpt(crater, "Spall", "Fractured socket", 1.12)
-		socket:PivotTo(CF(pos) * A(0.29 * i, -i * 0.72, 0.38))
-	end
-	self.scree = {}
-	for i, asset in { "Spall", "Slag blade", "Spall", "Slag blade" } do
-		local rock = sculpt(crater, asset, "Loose flank", 0.69 + 0.12 * i)
-		local a = (i - 1) * tau / 4 + 0.43
-		local d = V(math.cos(a), 0, math.sin(a))
-		self.scree[i] = { rock = rock, dir = d, yaw = -a }
-	end
-	self.cracks = {}
-	for i = 1, 6 do
+	self.crater = P.model(self.root, "Buried Starfall")
+	self.bed = Crater.new(self.root)
+	self.rimRocks = {}
+	for i = 1, 17 do
 		local angle = i * 2.399
-		local prev = V(0.05, -1.97, 0.03)
-		for j = 1, 5 do
-			local r = (i % 2 == 0 and 6.8 or 9.6) * j / 5
-			local theta = angle + 0.13 * math.sin(j * 2.3 + i)
-			local p = V(math.cos(theta) * r, math.min(0.13, -2.17 + r * 0.29), math.sin(theta) * r)
-			local seg = pair(crater, "Shock melt", prev, p, 0.19 * (1 - j * 0.12), "E8A98C", neon)
-			table.insert(self.cracks, { p = seg, distance = r })
-			prev = p
-		end
+		local rock = sculpt(
+			self.bed.root,
+			if i % 3 == 0 then "Slag blade" else "Spall",
+			"Torn crater lip",
+			rng:NextNumber(0.82, 1.7)
+		)
+		local p = Crater.ground(0.80, angle) + V(0, 2.05, 0)
+		table.insert(self.rimRocks, { rock = rock, point = p, angle = angle, delay = 0.24 + 0.024 * (i % 5) })
 	end
+	local trace = marker(self.crater, "Core and pressure glow", Vector3.zero)
+	self.core = trace
+	self.light = P.light(trace, "BF94FF", 18, 1)
+	self.tailEnds = {}
+	for j = 1, 3 do
+		local a, b = knot(trace, Vector3.zero, Vector3.yAxis), knot(trace, Vector3.yAxis * 0.2, Vector3.yAxis)
+		local ribbon = beam(
+			trace,
+			a,
+			b,
+			if j == 1 then 0.70 else 0.27,
+			0.03,
+			gradient("F9DFFF", "B379F0", "79679C"),
+			NumberSequence.new(if j == 1 then 0.23 else 0.18, 0.95)
+		)
+		ribbon.LightEmission, ribbon.LightInfluence = 0.87, 0
+		table.insert(self.tailEnds, { a = a, b = b, beam = ribbon })
+	end
+	self.fill = marker(self.crater, "Reflected light in the section", Vector3.zero)
+	self.fillLight = P.light(self.fill, "EBD3C6", 74, 1.47)
+	self.section = Burial.new(self.shelf)
 end
 
 local function buildImpact(self, rng)
@@ -469,36 +462,18 @@ local function buildImpact(self, rng)
 	local crown = P.model(self.root, "Impact crown")
 	self.crown = crown
 	self.fault = sculpt(crown, "Contact fault", "Impact contact", 1)
-	self.impactLight = P.light(self.fault.PrimaryPart, "FFD799", 72, 7.5)
+	self.flash = marker(crown, "Contact heat", Vector3.zero)
+	self.corona, self.coronaImage = sprite(self.flash, "Air lit by the contact", "explosion01_implosion_main.dds", 1.7)
+	self.coronaImage.ImageColor3 = rgb("FFD492")
+	self.impactLight = P.light(self.flash, "FFD799", 98, 8.5)
 
-	-- Long vaporized curtains follow the direction of motion. The lee side
-	-- gets taller, darker fingers; the cross-range sheets stay low and wide.
-	self.curtains = {}
-	for i, item in
-		{
-			{ "Low curtain", -0.58, 2.68, 0.01 },
-			{ "Tall curtain", 0.37, 2.50, 0.055 },
-			{ "Split curtain", 1.36, 2.6, 0.12 },
-			{ "Tall curtain", 2.64, 1.87, 0.16 },
-			{ "Low curtain", 3.60, 2.18, 0.21 },
-			{ "Split curtain", 4.77, 2.35, 0.10 },
-		}
-	do
-		local m = sculpt(crown, item[1], "Overturned ejecta sheet", item[3] * 0.36)
-		local surfaces = {}
-		for _, p in m:GetChildren() do
-			if p ~= m.PrimaryPart then
-				table.insert(surfaces, p)
-			end
-		end
-		self.curtains[i] = { m = m, faces = surfaces, az = item[2], scale = item[3] * 0.36, delay = item[4], fade = -1 }
-	end
+	self.jets = Jets.new(crown)
 
 	local origin = marker(crown, "Traveling pressure fronts", Vector3.zero)
 	self.fronts = {}
 	for p = 1, 2 do
 		local joints, edges = {}, {}
-		local n = 18
+		local n = 28
 		for i = 1, n do
 			local a = tau * (i - 1) / n
 			local dir = V(math.cos(a), 0, math.sin(a))
@@ -562,13 +537,13 @@ local function buildImpact(self, rng)
 	self.bloom = {}
 	for i, profile in
 		{
-			{ "melt", 0, 0, 0.0, 4.6, 15.2, 0.08 },
-			{ "melt", 0.6, 0.5, 0.047, 7.9, 13.5, 0.45 },
-			{ "melt", 2.1, -0.8, 0.09, 11.5, 12.8, 0.31 },
-			{ "melt", -1.7, -0.3, 0.13, 7.5, 11.6, -0.31 },
-			{ "ash", -2.3, -0.1, 0.20, 9.5, 14, -0.72 },
-			{ "ash", 1.0, -1.4, 0.25, 13.8, 15, 0.44 },
-			{ "ash", 2.2, 0.9, 0.34, 10.5, 11.8, 0.78 },
+			{ "melt", 0, 0, 0, 2.3, 13.8, 0.25 },
+			{ "melt", 3.4, -0.5, 0.035, 5.7, 17.1, 0.72 },
+			{ "melt", 6.5, -2.6, 0.10, 9.7, 13.6, 0.75 },
+			{ "melt", -3.1, 1.4, 0.09, 4.2, 9.8, -0.51 },
+			{ "ash", -4.2, -1.4, 0.09, 7.6, 12.1, -0.84 },
+			{ "ash", 2.5, -2.9, 0.17, 15.0, 16.9, 0.57 },
+			{ "ash", 7.1, -0.9, 0.29, 18.8, 13.3, 0.85 },
 		}
 	do
 		local mark = marker(crown, "Boiling ejecta", Vector3.zero)
@@ -577,12 +552,12 @@ local function buildImpact(self, rng)
 	end
 	self.ejecta = {}
 	for i = 1, 19 do
-		local s = rng:NextNumber(0.28, 0.91)
+		local s = rng:NextNumber(0.40, 1.39)
 		local a = i * 2.399
 		local v = V(
-			math.cos(a) * rng:NextNumber(7, 24) + 4.2,
-			rng:NextNumber(12, 28),
-			math.sin(a) * rng:NextNumber(6, 18) + 3
+			math.cos(a) * rng:NextNumber(12, 39) + 6.2,
+			rng:NextNumber(16, 38),
+			math.sin(a) * rng:NextNumber(11, 29) + 4
 		)
 		local rock = sculpt(crown, if i % 3 == 0 then "Slag blade" else "Spall", "Spalled rock", s)
 		local tail, tip = ribbon(
@@ -603,8 +578,8 @@ function Strike.new(shelf)
 	local root = P.model(shelf, "Primordial cove")
 	local self = setmetatable({ root = root, shelf = shelf }, Strike)
 	local rng = Random.new(58237)
-	buildCoast(root, rng)
-	self.meteor = buildMeteor(root)
+	self.shore = buildCoast(root, rng)
+	self.meteor, self.shard = buildMeteor(root)
 	buildWake(self)
 	buildImpact(self, rng)
 	return self
@@ -613,7 +588,7 @@ end
 local function pressure(self, age, motion)
 	for i, f in self.fronts do
 		local s = math.max(0, age - (if i == 1 then 0.065 else 0.25))
-		local r = 2.8 + (if i == 1 then 65 else 31) * s
+		local r = 2.8 + (if i == 1 then 88 else 47) * s
 		local opacity = (if i == 1 then 0.73 else 0.42) * ease(s, 0, 0.095) * (1 - ease(s, 0.49, 1.48))
 		if not motion then
 			opacity *= 0.57
@@ -642,31 +617,15 @@ end
 
 local function drawBlast(self, t, base, motion)
 	local age = t - flightTime
-	self.fault:PivotTo(base * CF(1, -0.26 - 0.8 * ease(age, 0.10, 0.42), 0.7) * A(0, -0.64, 0))
+	self.fault:PivotTo(base * CF(1, 0.26 - 0.8 * ease(age, 0.10, 0.42), 0.7) * A(0, -0.64, 0))
 	place(self.fault, if age < 0.25 then self.crown else self.shelf)
-	self.impactLight.Brightness = (if motion then 8 else 3.2) * (1 - ease(age, 0.015, 0.24))
-	for i, c in self.curtains do
-		local s = age - c.delay
-		local u = ease(s, 0, 0.64)
-		local fall = ease(s, 0.55, 1.65)
-		local opacity = 0.70 * ease(s, -0.005, 0.12) * (1 - ease(s, 0.40, 1.08))
-		place(c.m, if opacity > 0.015 then self.crown else self.shelf)
-		if opacity > 0.015 then
-			-- Lift a torn sheet, let its lip bend outwards, then collapse it onto the rim.
-			local yaw = c.az + 0.10 * math.sin(u * math.pi + i)
-			local pose = A(0, yaw, 0)
-				* CF(0, -c.scale * 1.7 * (1 - u) - 0.65 * fall, 1 + u * 2.2 + fall * 5)
-				* A(-0.25 * (1 - u) + fall * 1.13, 0, 0.07 * math.sin(i))
-			c.m:PivotTo(base * pose)
-			local fade = math.floor((1 - opacity) * 18 + 0.5) / 18
-			if c.fade ~= fade then
-				c.fade = fade
-				for _, p in c.faces do
-					p.Transparency = fade
-				end
-			end
-		end
-	end
+	local flash = ease(age, 0, 0.20)
+	self.corona.Enabled = age < 0.24
+	self.corona.Size = UDim2.fromScale(10 + 42 * flash, 7 + 22 * flash)
+	self.flash.CFrame = base * CF(1.4, 1.05, 0.9) * A(0, -0.44, 0.06)
+	self.coronaImage.ImageTransparency = 0.12 + 0.88 * ease(age, 0.035, 0.23)
+	self.impactLight.Brightness = (if motion then 8 else 3.1) * (1 - ease(age, 0.035, 0.32))
+	self.jets:draw(age)
 	pressure(self, age, motion)
 	for i, dust in self.dust do
 		local s = math.max(0, age - dust.delay)
@@ -724,43 +683,85 @@ local function drawBlast(self, t, base, motion)
 	end
 end
 
-local function drawBurial(self, t, base)
-	local settle = ease(t, 12.65, 13.74)
-	local y = 0.12 - settle * 4.68
-	local center = V(0.16 + 0.22 * settle, y, 0.09)
-	self.shard:PivotTo(base * CF(center) * A(0.09 + 0.42 * settle, -0.58 + 0.73 * settle, -0.22 - 0.22 * settle))
-	self.core.Position = base:PointToWorldSpace(center)
-	self.light.Brightness = 0.34 + 1.00 * ease(t, 10.72, 12.05) * (1 - 0.91 * settle)
-	for i, seam in self.cracks do
-		local warm = ease(t, flightTime + 0.012 * seam.distance, flightTime + 0.06 + 0.02 * seam.distance)
-		local cold = ease(t, 10.45 + seam.distance * 0.04, 12.28)
-		seam.p.Transparency = 1 - warm * (1 - 0.94 * cold)
+local function penetration(self, t, base, section)
+	local p = Strike.corePosition(t)
+	local plunge = ease(t, 6.5, 7.25)
+	local spin = separation.Rotation:Lerp(A(0.14, -0.24, 2.88) * A(0, 0.66 * math.sin(t * 1.7), 0), plunge)
+	-- The visible shard is the inset from the meteor. It is never replaced by
+	-- a second prop standing on the lip after contact.
+	local scale = 1 + 0.48 * ease(t, 7.22, 7.91)
+	if self.shardScale ~= scale then
+		self.shard:ScaleTo(scale)
+		self.shardScale = scale
 	end
-	for i, chunk in self.scree do
-		local u = ease(t, 12.79 + i * 0.065, 13.64 + i * 0.03)
-		local d = 2.4 + 0.13 * i - (1.82 + i * 0.035) * u
-		local pos = chunk.dir * d + V(0, -1.65 + 0.35 * math.sin(u * math.pi) - 0.1 * u, 0)
-		chunk.rock:PivotTo(base * CF(pos) * A(-0.26 - 0.44 * u, chunk.yaw + 0.27 * u, 0.31 - 0.39 * u))
+	self.shard:PivotTo(base * CF(p) * spin)
+	self.core.Position = base:PointToWorldSpace(p)
+	self.light.Brightness = (0.91 + 0.18 * math.sin(t * 9)) * (1 - ease(t, 11.23, 11.93))
+	for j, item in self.tailEnds do
+		local live = t > 6.525 and t < 11.0
+		item.beam.Enabled = live
+		if live then
+			local old = Strike.corePosition(math.max(6.5, t - (0.12 + j * 0.042))) - p
+			local width = if j == 1 then 0 else (j - 2.5) * 1.2
+			item.a.Position = V(width * 0.39, 0.32, 0)
+			item.b.Position = old + V(width, 0, 0.05)
+			item.a.Axis = if old.Magnitude > 0.02 then old.Unit else Vector3.yAxis
+			item.b.Axis = item.a.Axis
+		end
+	end
+	self.fillLight.Enabled = section
+	if section then
+		self.fill.Position = base:PointToWorldSpace(p + V(-12, 11, 18))
+		self.fillLight.Color = rgb("F3C8A0"):Lerp(rgb("BDCCE1"), ease(t, 8.7, 10.5))
+		self.section:draw(t, base)
 	end
 end
 
 function Strike:draw(t, base, motion)
 	local flying = t < flightTime
-	place(self.meteor, if flying then self.root else self.shelf)
-	place(self.wake, if flying then self.root else self.shelf)
-	place(self.cap, if flying then self.root else self.shelf)
+	local section = t >= 7.58
+	place(self.shore, if section then self.shelf else self.root)
+	self.section:prepare(if section then math.huge else 1)
+	if section and not self.mountedSection then
+		self.section.root:PivotTo(base)
+		self.mountedSection = true
+	end
+	place(self.section.root, if section then self.root else self.shelf)
+	place(self.bed.root, if section then self.shelf else self.root)
+	if not section then
+		self.bed:draw(t - flightTime, base)
+		for _, v in self.rimRocks do
+			local rise = ease(t - flightTime, v.delay, v.delay + 0.43)
+			if rise ~= v.last then
+				v.last = rise
+				place(v.rock, if rise > 0 then self.bed.root else self.shelf)
+				if rise > 0 then
+					v.rock:PivotTo(
+						base
+							* CF(v.point + V(0, -3.4 * (1 - rise), 0))
+							* A(0.16 * math.sin(v.angle), -v.angle, 0.32 + 1.1 * (1 - rise))
+					)
+				end
+			end
+		end
+	end
 	place(self.crater, if flying then self.shelf else self.root)
-	local exploding = not flying and t < flightTime + 2.83
+	local exploding = not flying and t < 8.67
 	place(self.crown, if exploding then self.root else self.shelf)
+	place(self.wake, if flying then self.root else self.shelf)
 	if flying then
-		local at = Strike.position(t)
-		self.meteor:PivotTo(base * CF(at) * A(0.36 + t * 0.41, 0.72 + t * 0.68, t * 0.45))
+		place(self.meteor, self.root)
+		place(self.shard, self.meteor)
+		self.meteor:PivotTo(base * meteorPose(t))
+		self.shard:PivotTo(base * meteorPose(t) * sliverOffset)
 		drawWake(self, t, base)
 	else
+		place(self.shard, self.crater)
+		place(self.meteor, self.shelf)
 		if exploding then
 			drawBlast(self, t, base, motion)
 		end
-		drawBurial(self, t, base)
+		penetration(self, t, base, section)
 	end
 end
 

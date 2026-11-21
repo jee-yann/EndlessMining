@@ -6,7 +6,7 @@ Crew.__index = Crew
 local V, CF, A, rgb, ease = Vector3.new, CFrame.new, CFrame.Angles, Color3.fromHex, P.ease
 local hot, violet, teal = rgb("FFF0AA"), rgb("C885FF"), rgb("52F5D8")
 local neon = Enum.Material.Neon
-local stoneAt, jewelAt = V(0.05, 0.96, 4.65), V(0.05, 1.53, 4.65)
+local stoneAt = V(0.05, 0.96, 4.65)
 local breaksAt, answersAt = Beats.pick, Beats.answer
 
 -- Small head and shoulder accents land on the two voiced syllables of each line.
@@ -71,8 +71,7 @@ local function nodule(parent)
 	local halves = {}
 	for i, s in { -1, 1 } do
 		local half = P.model(root, "Fracture half")
-		-- Broken ends share a rough cut down the middle. The outer stone
-		-- bulges over the warm inclusion until the pick pulls the shell apart.
+		-- The two banks share the same fracture face until the player strikes.
 		local ring, shoulder = {}, {}
 		for j = 1, 9 do
 			local a = (j - 1) * 2 * math.pi / 9
@@ -100,9 +99,25 @@ local function nodule(parent)
 		end
 		halves[i] = half
 	end
-	local heart = P.crystal(root, Vector3.zero, 0.63)
-	heart.Name = "Starfall inclusion"
-	local light = P.light(heart:FindFirstChildWhichIsA("BasePart"), "AD82EC", 5.7, 0)
+	-- A pressure wave crosses the bedding from the gallery. Its light briefly
+	-- picks out hairline veins in the exposed rock, then travels beyond the pick.
+	local bed = P.model(root, "Listening seam")
+	local outline = { V(-0.70, 0.04, -0.74), V(-0.12, 0.02, -1.02), V(0.57, 0.04, -0.75),
+		V(0.68, 0.04, 0.41), V(0.08, 0.03, 0.91), V(-0.59, 0.04, 0.62) }
+	for j, a in outline do
+		P.face(bed, a, outline[j % #outline + 1], V(0, 0.17, 0), rgb(if j % 2 == 0 then "514A50" else "47434A"))
+	end
+	local channel = {
+		V(0.08, 0.07, -0.93), V(-0.16, 0.12, -0.55), V(-0.07, 0.17, -0.25),
+		V(0.13, 0.19, 0.03), V(0.03, 0.15, 0.37), V(0.18, 0.10, 0.71),
+	}
+	local veins = {}
+	for j = 2, #channel do
+		veins[#veins + 1] = P.rod(bed, "Fracture trace", channel[j - 1], channel[j], 0.058, rgb("5B4D63"))
+	end
+	veins[#veins + 1] = P.rod(bed, "Branch", channel[4], V(0.44, 0.12, 0.22), 0.039, rgb("5B4D63"))
+	veins[#veins + 1] = P.rod(bed, "Branch", channel[3], V(-0.43, 0.12, -0.12), 0.047, rgb("5B4D63"))
+	local light = P.light(veins[3], "B78BFA", 6, 0)
 	local crumbs = {}
 	for i = 1, 10 do
 		local shard = P.sphere(
@@ -118,9 +133,9 @@ local function nodule(parent)
 	local wave = P.model(parent, "Returned signal")
 	local arcs = {}
 	for i = 1, 24 do
-		arcs[i] = P.box(wave, "Echo arc", Vector3.zero, V(0.12, 0.08, 0.2), "E9B4FF", nil, neon)
+		arcs[i] = P.box(wave, "Ripple in the grit", Vector3.zero, V(0.10, 0.045, 0.18), "BEA493", nil, Enum.Material.Sand)
 	end
-	return root, halves, heart, light, crumbs, arcs
+	return halves, bed, veins, light, crumbs, arcs
 end
 
 function Crew.new(shelf, character)
@@ -130,14 +145,7 @@ function Crew.new(shelf, character)
 	self.player = Rig.new(self.root, "Expedition miner", character, true)
 	self.receiver, self.trace, self.pips = receiver(self.root)
 	self.pick = pickaxe(self.root)
-	self.stone, self.halves, self.heart, self.light, self.crumbs, self.arcs = nodule(self.root)
-	self.facets = {}
-	for _, part in self.heart:GetChildren() do
-		if part:IsA("BasePart") and part.Name == "Facet" then
-			local litEdge = math.floor(#self.facets / 4) % 3 == 1
-			table.insert(self.facets, { part = part, color = part.Color, litEdge = litEdge })
-		end
-	end
+	self.halves, self.bed, self.veins, self.light, self.crumbs, self.arcs = nodule(self.root)
 	return self
 end
 
@@ -157,10 +165,10 @@ function Crew:scan(t, base, motion)
 		end
 	end
 	local speaking = speechAccent(t, "SURVEY LEAD")
-	local notice = ease(t, 29.1, 30.67)
-	local point = ease(t, 32.8, 34.08)
-	local duck = ease(t, 37.39, 37.69) * (1 - ease(t, 37.75, 38.75))
-	local relax = ease(t, 39.55, 41.75)
+	local notice = ease(t, 33.4, 34.97)
+	local point = ease(t, 37.1, 38.38)
+	local duck = ease(t, 41.69, 41.99) * (1 - ease(t, 42.05, 43.05))
+	local relax = ease(t, 43.85, 46.05)
 	local shake = if motion then pulse * math.sin(t * 22) else 0
 	local receiverAt = V(-3.16, 3.21, 6.77):Lerp(V(-3.12, 3.76, 6.91), notice) - V(0.12, 0.34, 0.11) * point
 	local device = base * CF(receiverAt) * A(-0.21 + 0.10 * notice, 0.075 + 0.11 * point, -0.07 + 0.045 * shake)
@@ -216,16 +224,16 @@ end
 
 function Crew:mine(t, base)
 	local speaking = speechAccent(t, "YOU")
-	local alert = ease(t, 29.35, 30.85)
-	local gather = ease(t, 34.35, 35.43)
-	local windup = ease(t, 35.39, 36.87)
-	local chop = ease(t, 36.91, breaksAt)
-	local recoil = ease(t, breaksAt, 37.87)
-	local listen = ease(t, 38.11, 38.91)
-	local reply = ease(t, 38.93, 39.29)
-	local run = ease(t, 40.1, 45)
-	local settle = ease(t, 39.61, 40.58)
-	local gait = math.sin((t - 40.3) * 10.5) * ease(t, 40.25, 41.05)
+	local alert = ease(t, 33.65, 35.15)
+	local gather = ease(t, 38.65, 39.73)
+	local windup = ease(t, 39.69, 41.17)
+	local chop = ease(t, 41.21, breaksAt)
+	local recoil = ease(t, breaksAt, 42.17)
+	local listen = ease(t, 42.41, 43.21)
+	local reply = ease(t, 43.23, 43.59)
+	local run = ease(t, 44.4, 49.3)
+	local settle = ease(t, 43.91, 44.88)
+	local gait = math.sin((t - 44.6) * 10.5) * ease(t, 44.55, 45.35)
 	local x = 2 - 0.68 * chop + 0.32 * recoil - 1.68 * run
 	local z = 6.25 - 0.44 * chop + 0.21 * recoil - 12.2 * run
 	local yaw = 0.83 * (1 - settle) + 0.08
@@ -269,31 +277,26 @@ function Crew:mine(t, base)
 end
 
 function Crew:fracture(t, base)
-	local open = ease(t, breaksAt, 38.09)
+	local open = ease(t, breaksAt, 42.39)
 	local age = math.max(0, t - breaksAt)
 	local answerAge = t - answersAt
 	local echo = if answerAge >= 0 then math.exp(-answerAge * 4.25) else 0
-	local hum = (0.5 + 0.5 * math.sin(t * 5)) * 0.18
 	for i, half in self.halves do
 		local side = if i == 1 then -1 else 1
 		local bounce = math.abs(math.sin(age * 11)) * math.exp(-age * 3.6)
-		local at = stoneAt + V(side * (1.17 + 0.14 * i) * open, 0.34 * bounce - 0.36 * open, (i - 0.9) * 0.34 * open)
-		half:PivotTo(base * CF(at) * A(0.22 * open, side * 0.37 * open, -side * 0.48 * open))
+		local at = stoneAt + V(side * (0.54 + 0.10 * i) * open, 0.22 * bounce - 0.16 * open, (i - 0.9) * 0.19 * open)
+		half:PivotTo(base * CF(at) * A(0.12 * open, side * 0.26 * open, -side * 0.31 * open))
 	end
-	local rise = ease(t, 37.48, 38.1)
-	local core = base
-		* CF(jewelAt + V(0, -0.49 + 0.49 * rise + 0.12 * echo, 0))
-		* A(0.10, 0.2 + rise * 0.73 + echo * 0.34, -0.22)
-	self.heart:PivotTo(core)
-	self.light.Brightness = open * (0.32 + hum + echo * 1.12)
-	if echo > 0.01 or self.answerVisible then
-		self.answerVisible = echo > 0.01
-		for _, face in self.facets do
-			face.part.Color = face.color:Lerp(if face.litEdge then rgb("9962DB") else rgb("B98CEA"), echo * 0.66)
-			face.part.Material = if face.litEdge and echo > 0.28 then neon else Enum.Material.SmoothPlastic
-		end
+	local footing = base * CF(stoneAt.X, 0.105, stoneAt.Z)
+	self.bed:PivotTo(footing)
+	self.light.Brightness = 2.1 * echo
+	for i, edge in self.veins do
+		local since = answerAge - (i - 1) * 0.035
+		local strength = if since >= 0 then math.exp(-3.5 * since) else 0
+		edge.Color = rgb("64566A"):Lerp(rgb("D1A1EF"), strength)
+		edge.Material = if strength > 0.11 then neon else Enum.Material.Slate
 	end
-	self.coreAim = core.Position
+	self.seamAim = footing * V(0.03, 0.26, -0.06)
 	for i, shard in self.crumbs do
 		local az = i * 2.399
 		local r = (0.52 + i * 0.12) * math.min(1, age * 1.45)
@@ -301,7 +304,7 @@ function Crew:fracture(t, base)
 		shard.CFrame = base
 			* CF(stoneAt + V(math.sin(az) * r, height - 0.75, math.cos(az) * r))
 			* A(az, age * 4, az + age)
-		shard.Transparency = if age > 0 then ease(t, 37.85, 38.53) else 1
+		shard.Transparency = if age > 0 then ease(t, 42.15, 42.83) else 1
 	end
 	local radius = 0.42 + math.max(0, answerAge) * 8
 	for i, p in self.arcs do
@@ -309,8 +312,8 @@ function Crew:fracture(t, base)
 			local a = (i - 1) * math.pi * 2 / #self.arcs
 			local at = V(stoneAt.X + math.cos(a) * radius, 0.065, stoneAt.Z + math.sin(a) * radius)
 			p.CFrame = base * CF(at) * A(0, -a, 0)
-			p.Size = V(0.13, 0.065, radius * 0.254)
-			p.Transparency = 0.06 + 0.94 * ease(t, answersAt + 0.20, answersAt + 0.85)
+			p.Size = V(0.058, 0.045, radius * (0.105 + 0.045 * math.sin(i * 2.7)))
+			p.Transparency = 0.53 + 0.47 * ease(t, answersAt + 0.12, answersAt + 0.66)
 		else
 			p.Transparency = 1
 		end

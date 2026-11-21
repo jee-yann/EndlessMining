@@ -129,6 +129,7 @@ local function test()
 			end)
 			local coast = stage:WaitForChild("Primordial cove", 3)
 			local meteor = coast:WaitForChild("Starfall meteor", 3)
+			local core = meteor:WaitForChild("Starfall core", 2)
 			assert(coast:FindFirstChild("Plasma wake") and #coast["Plasma wake"]:GetChildren() > 5)
 			local initial = meteor:GetPivot().Position
 			waitFor(function()
@@ -138,6 +139,10 @@ local function test()
 				return landed and coast:FindFirstChild("Impact crown") and meteor.Parent ~= coast
 			end, 12, "impact opens the crater")
 			assert(coast:FindFirstChild("Buried Starfall"))
+			waitFor(function()
+				return core:IsDescendantOf(coast["Buried Starfall"])
+					and core:GetPivot().Position.Y < n:GetAttribute("DigFloor").Y + 3200 - 172
+			end, 6, "the original meteor core reaches deep basalt")
 			waitFor(function()
 				return stage:FindFirstChild("Citrine through time") and not coast.Parent
 			end, 8, "impact site gives way to the cove under construction")
@@ -165,11 +170,10 @@ local function test()
 			waitFor(function()
 				return (pick:GetPivot().Position - rest.Position).Magnitude > 1
 			end, 6, "avatar lifts pick")
-			local jewel = crew["Signal stone"]["Starfall inclusion"]
-			local light = jewel:FindFirstChildWhichIsA("PointLight", true)
+			local light = crew["Signal stone"]["Listening seam"]:FindFirstChildWhichIsA("PointLight", true)
 			waitFor(function()
 				return light.Brightness > 0.8
-			end, 8, "the ore answers the player's hit")
+			end, 8, "the fault in the bedrock answers the player's hit")
 			waitFor(function()
 				return titles.Intertitle.Text == "IT KNOCKED BACK" and returned == 4
 			end, 8, "one deep answer leads back toward spawn")

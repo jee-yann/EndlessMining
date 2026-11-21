@@ -415,6 +415,19 @@ print("PASS two dirt layers, independent regional odds, repeatable fields and sa
 local surface = workspace.CitrineCove
 local world = World.new(Config.LandscapeSeed, surface)
 local mapCopy = surface:Clone()
+local coast = mapCopy.TideCoast
+local datum = mapCopy["Sand path and bridge"]["Portal paving"]
+assert((coast:GetPivot().Position - (datum.Position + Vector3.yAxis * datum.Size.Y / 2)).Magnitude < 0.02)
+assert(#coast:GetDescendants() == #Shared.TideCoast:GetDescendants())
+assert(mapCopy["Offshore water"].ModelStreamingMode == Enum.ModelStreamingMode.Persistent)
+for _, scenery in { coast, mapCopy["Offshore water"] } do
+	for _, part in scenery:GetDescendants() do
+		if part:IsA("BasePart") then
+			assert(part.Anchored and not part.CanCollide and not part.CanTouch and not part.CanQuery,
+				"offshore scenery interferes with mining or movement")
+		end
+	end
+end
 local site = require(Server.MineSite).bind(mapCopy, world)
 assert(mapCopy.PrimaryPart and mapCopy.EditFace)
 assert(site.spawn:IsA("SpawnLocation") and site.spawn.Neutral)
