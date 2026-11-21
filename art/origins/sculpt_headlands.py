@@ -103,6 +103,7 @@ def bake():
     ridge([(62,-2),(76,11),(91,27),(110,38),(126,62),(139,77),(151,70),
            (163,74),(180,54),(193,45),(212,47),(233,29),(249,17),(269,-2)], -198, 48, faces)
     source = MAP.read_bytes().decode()
+    newline = "\r\n" if "\r\n" in source else "\n"
     pattern = re.compile(r'^[ \t]*<Item class="WedgePart"[^>]*>\s*<Properties>\s*<string name="Name">(?:Mountain flank|Summit facet|Far slope)</string>.*?</Properties>\s*</Item>\r?\n', re.M | re.S)
     placed = False
     def replace(_):
@@ -110,7 +111,7 @@ def bake():
         if placed:
             return ""
         placed = True
-        return "\n".join(faces) + "\n"
+        return ("\n".join(faces) + "\n").replace("\n", newline)
     result, count = pattern.subn(replace, source)
     assert count and placed
     MAP.write_bytes(result.encode())
