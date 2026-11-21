@@ -128,8 +128,12 @@ local list = {
 		secret = true,
 	},
 }
-local byName, byMaterial = {}, {}
-for _, ore in list do
+local byName, byMaterial, visionMask = {}, {}, 0
+for index, ore in list do
+	if not ore.host then
+		ore.visionBit = bit32.lshift(1, index - 1)
+		visionMask = bit32.bor(visionMask, ore.visionBit)
+	end
 	byName[ore.name] = ore
 	byMaterial[ore.material] = ore
 end
@@ -177,4 +181,4 @@ local function carried(player)
 	end)
 	return entries
 end
-return { list = list, byName = byName, byMaterial = byMaterial, cutTime = cutTime, carried = carried }
+return { list = list, byName = byName, byMaterial = byMaterial, cutTime = cutTime, carried = carried, visionMask = visionMask }

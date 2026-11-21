@@ -710,6 +710,32 @@ local function test()
 			waitFor(function()
 				return visionBadge.Visible
 			end, 2, "X enables ore vision")
+			local pins = ownerVision["Ore waypoints"]
+			waitFor(function()
+				local star = pins:FindFirstChild("Starfall")
+				if not star or not star.Visible then return false end
+				for _, text in star:GetChildren() do
+					local distance = tonumber(text.Text:match("Starfall · (%d+) blocks") or "")
+					if distance then return distance >= 260 end
+				end
+				return false
+			end, 12, "a through-rock Starfall waypoint visible from the untouched starter floor")
+			assert(#pins:GetChildren() == 1 and not ownerVision:FindFirstChildWhichIsA("BoxHandleAdornment"))
+			local filters = gui.SafeArea["X-ray ore filters"]
+			clickButton(gui.SafeArea.Location["X-ray controls"].Filters)
+			waitFor(function() return filters.Visible end, 2, "ore filters open")
+			clickButton(filters.Starfall)
+			waitFor(function() return #pins:GetChildren() == 0 end, 2, "turning off the last ore clears waypoints")
+			clickButton(filters.Copper)
+			waitFor(function() return pins:FindFirstChild("Copper") ~= nil end, 5, "track copper alone")
+			assert(not pins:FindFirstChild("Starfall") and not ownerVision:FindFirstChild("Coal"))
+			input:SendKey(true, Enum.KeyCode.LeftShift)
+			pressX()
+			input:SendKey(false, Enum.KeyCode.LeftShift)
+			waitFor(function() return not filters.Visible and visionBadge.Visible end, 2, "Shift-X closes filters while tracking")
+			clickButton(gui.SafeArea.Location["X-ray controls"].Filters)
+			clickButton(filters.All)
+			clickButton(filters.Close)
 			waitFor(function() return ownerVision:FindFirstChildWhichIsA("BoxHandleAdornment") end, 3, "buried ore visible before the first cut")
 			local top = origin + Vector3.yAxis * config.FloorY
 			local playerCell = ((p.Character.HumanoidRootPart.Position - top) / config.Cell):Floor()
