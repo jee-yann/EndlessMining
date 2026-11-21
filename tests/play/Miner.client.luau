@@ -139,9 +139,8 @@ local function test()
 				return landed and coast:FindFirstChild("Impact crown") and meteor.Parent ~= coast
 			end, 12, "impact opens the crater")
 			waitFor(function()
-				local fault = coast:FindFirstChild("Buried Starfall")
-				local reflection = fault and fault:FindFirstChild("Deep reflection", true)
-				local light = reflection and reflection:FindFirstChildOfClass("PointLight")
+				local fault = coast:FindFirstChild("Sealed impact fault", true)
+				local light = fault and fault:FindFirstChildWhichIsA("PointLight", true)
 				return not core:IsDescendantOf(stage) and light and light.Brightness > 0.12
 			end, 6, "the hidden source lights the broken ground")
 			waitFor(function()
