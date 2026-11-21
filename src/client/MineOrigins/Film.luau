@@ -206,7 +206,7 @@ function Film:draw(t, liveReady)
 	if t < Beats.surface then
 		Lighting.ClockTime = 6.55 + 1.45 * ease(t, 0.7, Beats.impact)
 		local frameTime = t - (self.previousFlightFrame or t)
-		self.history:prepare(math.clamp(math.ceil(650 * frameTime), 12, 68))
+		self.history:prepare(math.clamp(math.ceil(650 * frameTime), 12, 68), t >= 10.10)
 		self.previousFlightFrame = t
 		self.strike:draw(t, self.base, self.motion)
 		self:frame(self.base, Strike.frame(t, self.motion))

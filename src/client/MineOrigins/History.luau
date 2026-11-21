@@ -70,9 +70,11 @@ function History.new(stage, base)
 		ends = {},
 		scene = {},
 		frame = -1,
+		surfaceCursor = 1,
 		readyThrough = -1,
 		skyline = {},
 		reclaimed = {},
+		weathering = 0,
 	}, History)
 	self.loader = coroutine.create(function()
 		local function spent(n)
@@ -95,7 +97,7 @@ function History.new(stage, base)
 				table.insert(self.ends[b], model)
 			end
 			self.containers[model] = container
-			if (self.frame < 0 and a == 0) or self.frame >= a and self.frame < b then
+			if self.frame >= a and self.frame < b then
 				model.Parent = container or self.root
 			end
 		end
@@ -188,7 +190,21 @@ function History.new(stage, base)
 	return self
 end
 
-function History:prepare(budget)
+function History:prepare(budget, underground)
+	-- Once the deep bed fills the screen, the unseen surface can join the
+	-- renderer a few parcels at a time. Submitting the whole island on the
+	-- first aerial photograph adds a frame stall even if every part exists.
+	if underground and self.frame < 0 then
+		local queue = self.starts[0] or {}
+		local allowance = 6 * budget
+		self.root.Parent = self.stage
+		while self.surfaceCursor <= #queue and allowance > 0 do
+			local group = queue[self.surfaceCursor]
+			allowance -= 1 + #group:GetDescendants()
+			group.Parent = self.root
+			self.surfaceCursor += 1
+		end
+	end
 	if not self.loader then
 		return
 	end
@@ -231,7 +247,10 @@ function History:draw(t)
 				m.Parent = self.shelf
 			end
 			for _, m in self.starts[i] or {} do
-				m.Parent = self.containers[m] or self.root
+				local destination = self.containers[m] or self.root
+				if m.Parent ~= destination then
+					m.Parent = destination
+				end
 			end
 		end
 	end

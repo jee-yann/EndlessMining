@@ -19,6 +19,7 @@ local function tide(shelf, register, spent)
 		if not bands[key] then
 			bands[key] = { old = rgb(ancient), new = rgb(modern), parts = {} }
 		end
+		part.Color = bands[key].old
 		table.insert(bands[key].parts, part)
 	end
 	-- At sea level the sight line reaches well beyond the entire camera move.
@@ -373,7 +374,7 @@ local function buildCliffs(shelf, register, spent)
 			end
 			table.insert(
 				coatings,
-				{ parts = top, start = paintAge, old = early, new = heath, meadow = r > 4 and r < 10 }
+				{ parts = top, start = paintAge, old = early, new = heath, meadow = r > 4 and r < 10, step = 0 }
 			)
 			-- Shattered layers run into the basin on its western face and out
 			-- through two worn shoulders. Their spacing follows the local slope.
@@ -603,7 +604,10 @@ function Island.build(shelf, register, spent)
 	seaStacks(shelf, register, spent)
 	local coatings, dock, plantings, patches, cuts = buildCliffs(shelf, register, spent)
 	waterInCrater(shelf, register, spent)
-	return { bands = bands, coatings = coatings, dock = dock, plantings = plantings, patches = patches, cuts = cuts }
+	return {
+		bands = bands, coatings = coatings, dock = dock, plantings = plantings,
+		patches = patches, cuts = cuts, clear = 0,
+	}
 end
 
 function Island.plant(land, shelf, register, spent)
