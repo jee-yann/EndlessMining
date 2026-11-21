@@ -1,4 +1,5 @@
 local P = require(script.Parent.Props)
+local Rig = require(script.Parent.RobloxRig)
 local Beats = require(script.Parent.Beats)
 local Survey = {}
 Survey.__index = Survey
@@ -42,6 +43,13 @@ function Survey.new(shelf)
 	self.ram = P.model(root, "Test hammer")
 	P.cylinder(self.ram, "Piston shaft", V(0, 0.99, 0), 0.2, 1.7, "9CABAA", metal)
 	P.cylinder(self.ram, "Hammer head", V(0, 0.20, 0), 0.52, 0.40, "596574", metal)
+	-- A miner cocks the drop hammer by hand. The catch releases the ram on
+	-- the downstroke; both the lever and the hands use this same hinge.
+	self.tech = Rig.new(root, "Sounding crew", nil, true)
+	self.handle = P.model(root, "Hammer lever")
+	P.rod(self.handle, "Chrome lever", Vector3.zero, V(-1.55, 0.12, 0), 0.12, rgb("ACC4C2")).Material = metal
+	P.rod(self.handle, "Gripped end", V(-1.15, 0.10, 0), V(-1.68, 0.13, 0), 0.22, rgb("344956"))
+	P.box(root, "Lever hinge", pad + V(-0.46, 2.57, 0.58), V(0.39, 0.32, 0.32), "D9AE64", nil, metal)
 	for i = 1, 3 do
 		local p = P.box(root, "Counter lamp", pad + V((i - 2) * 0.33, 3.18, 0.86), V(0.23, 0.32, 0.09), "37454B")
 		table.insert(self.lamps, p)
@@ -60,6 +68,19 @@ function Survey.new(shelf)
 	local lamp =
 		P.box(root, "LED panel", foot + V(0.11, 3.74, 0.15), V(0.66, 0.43, 0.13), "FFEACB", A(0, -0.64, 0), neon)
 	P.light(lamp, "FFF1D8", 19, 1.52)
+	-- An unpowered plumb line makes the subterranean vibration visible in daylight.
+	self.plumb = P.model(root, "Survey plumb line")
+	P.rod(self.plumb, "Cord", Vector3.zero, V(0, -1.72, 0), 0.028, rgb("D5CBB5"))
+	local tip, band = V(0, -2.25, 0), V(0, -1.78, 0)
+	for i = 1, 6 do
+		local a, b = i * math.pi / 3, (i + 1) * math.pi / 3
+		local va, vb = V(math.cos(a), 0, math.sin(a)) * 0.20, V(math.cos(b), 0, math.sin(b)) * 0.20
+		P.face(self.plumb, tip, band + va, band + vb, rgb(if i % 2 == 1 then "BC8746" else "E4B46B"))
+		P.face(self.plumb, band + V(0, 0.12, 0), band + vb, band + va, rgb("F3C982"))
+	end
+	local hook = foot + V(1.45, 3.70, 0.25)
+	P.rod(root, "Survey mast arm", foot + V(0, 3.58, 0), hook, 0.09, rgb("85847E"))
+	self.hook = hook
 	for i = 1, #faultPath - 1 do
 		local p = P.rod(root, "Answer in the rock", faultPath[i], faultPath[i + 1], 0.12, rgb("DFB4FF"))
 		p.Material, p.Transparency = neon, 1
@@ -86,9 +107,32 @@ function Survey:draw(t, base)
 		end
 	end
 	self.ram:PivotTo(base * CF(pad + V(0, 0.25 + lift * 1.47, 0)))
-	local u = (t - 31.55) / 2.4
+	local hinge = base * CF(pad + V(-0.46, 2.57, 0.58)) * A(0, 0, 0.33 - 0.86 * lift)
+	self.handle:PivotTo(hinge)
+	local listening = P.ease(t, Beats.outbound[3] + 0.12, Beats.outbound[3] + 0.85)
+	local techFloor = base * CF(pad + V(-2.65, -0.14, -0.68)) * A(0, -2.07, 0)
+	self.tech:pose(techFloor, {
+		bob = -0.16 + 0.19 * lift,
+		RootJoint = A(-0.06 - 0.16 * (1 - lift), -0.1 * listening, 0.06),
+		Neck = A(-0.24 + 0.21 * listening, -0.5 * listening, 0.035 * lift),
+		RightTarget = hinge:PointToWorldSpace(V(-1.54, 0.10, 0)),
+		LeftTarget = base:PointToWorldSpace(pad + V(-1.98, 2.55 + 0.42 * lift, -0.10)),
+	})
+	local swing = 0
+	for _, knock in Beats.returned do
+		local age = t - knock
+		if age >= 0 then
+			swing += math.sin(age * 12.0) * math.exp(-age * 3.0) * 0.16
+		end
+	end
+	local age = t - Beats.answer
+	if age >= 0 then
+		swing += math.sin(age * 8.6) * math.exp(-age * 2.4) * 0.32
+	end
+	self.plumb:PivotTo(base * CF(self.hook) * A(0.12 * swing, 0, swing))
+	local u = (t - 40.3) / 2.4
 	for i, p in self.fault do
-		local age = t - (31.55 + 2.4 * (i - 1) / #self.fault)
+		local age = t - (40.30 + 2.4 * (i - 1) / #self.fault)
 		p.Transparency = if age < 0 then 1 else 0.12 + 0.88 * P.ease(age, 0.18, 1.05)
 	end
 	self.front.Transparency = if u >= 0 and u <= 1 then 0.09 else 1
@@ -98,21 +142,4 @@ function Survey:draw(t, base)
 	end
 end
 
--- A small, lamp-lit survey bay keeps close shots readable if the harbor is still streaming.
-function Survey.standIn(parent, base)
-	local room = P.model(parent, "Survey bay")
-	P.box(room, "Rock floor", V(0, -0.58, 0), V(130, 1.1, 150), "685C62", nil, Enum.Material.Slate)
-	for _, z in { 2, -6, -14, -22 } do
-		for _, side in { -1, 1 } do
-			P.box(room, "Steel upright", V(7.45 * side, 4, z), V(0.66, 8.4, 0.76), "52636A", nil, metal)
-			P.box(room, "Tunnel side", V(8.3 * side, 4, z - 3.7), V(1.5, 9, 8), "555262", nil, Enum.Material.Slate)
-			local wallLight = P.box(room, "Work light", V(7.05 * side, 5.2, z), V(0.2, 0.85, 0.7), "FFD49B", nil, neon)
-			P.light(wallLight, "FFD49B", 15, 0.9)
-		end
-		P.box(room, "Lintel", V(0, 8.35, z), V(15.4, 0.63, 1.05), "53636A", nil, metal)
-	end
-	P.box(room, "Rear rock", V(0, 4, -28), V(18, 9, 2), "4F4757", nil, Enum.Material.Slate)
-	room:PivotTo(base)
-	return room
-end
 return Survey

@@ -9,6 +9,20 @@ local neon = Enum.Material.Neon
 local stoneAt, jewelAt = V(0.05, 0.96, 4.65), V(0.05, 1.53, 4.65)
 local breaksAt, answersAt = Beats.pick, Beats.answer
 
+-- Small head and shoulder accents land on the two voiced syllables of each line.
+local function speechAccent(t, speaker)
+	for _, line in Beats.dialogue do
+		local age = t - line[1] - 0.06
+		if speaker == line[3] and age >= 0 and age < 0.44 then
+			if age < 0.15 then
+				return math.sin(math.pi * age / 0.15)
+			end
+			return 0.66 * math.sin(math.pi * math.clamp((age - 0.205) / 0.21, 0, 1))
+		end
+	end
+	return 0
+end
+
 local function receiver(parent)
 	local root = P.model(parent, "Echo receiver")
 	P.box(root, "Rubber case", V(0, 0, 0), V(1.27, 0.92, 0.35), "24374B")
@@ -142,22 +156,24 @@ function Crew:scan(t, base, motion)
 			pulse = math.max(pulse, math.exp(-(t - beat) * 5.7))
 		end
 	end
-	local notice = ease(t, 20.35, 21.92)
-	local point = ease(t, 24.05, 25.33)
-	local duck = ease(t, 28.64, 28.94) * (1 - ease(t, 29, 30))
-	local relax = ease(t, 30.8, 33)
+	local speaking = speechAccent(t, "SURVEY LEAD")
+	local notice = ease(t, 29.1, 30.67)
+	local point = ease(t, 32.8, 34.08)
+	local duck = ease(t, 37.39, 37.69) * (1 - ease(t, 37.75, 38.75))
+	local relax = ease(t, 39.55, 41.75)
 	local shake = if motion then pulse * math.sin(t * 22) else 0
 	local receiverAt = V(-3.16, 3.21, 6.77):Lerp(V(-3.12, 3.76, 6.91), notice) - V(0.12, 0.34, 0.11) * point
 	local device = base * CF(receiverAt) * A(-0.21 + 0.10 * notice, 0.075 + 0.11 * point, -0.07 + 0.045 * shake)
 	self.receiver:PivotTo(device)
 	local left = (device * CF(-0.04, -0.40, -0.13)).Position
 	local gesture = V(-5.00, 2.40, 5.80):Lerp(V(-4.75, 4.05, 6.29), notice)
+	gesture += V(0, 0.12 * speaking, -0.06 * speaking)
 	gesture = gesture:Lerp(V(-3.24, 2.0, 6.65), point):Lerp(V(-4.66, 3.74, 6.65), duck)
 	self.operator:pose(base * CF(-3.90, 0, 5.40) * A(0, math.pi + 0.55 - 0.88 * point, 0), {
 		bob = 0.035 * math.sin(t * 2.4) - 0.27 * duck,
 		RootJoint = A(-0.06 + 0.18 * duck, -0.07 * point, 0.04 * shake),
 		Neck = A(
-			-0.36 * notice + 0.29 * point + 0.27 * duck,
+			-0.36 * notice + 0.29 * point + 0.27 * duck + 0.077 * speaking,
 			-0.28 + 0.71 * point - 0.35 * relax,
 			-0.11 * notice + 0.16 * point
 		),
@@ -199,16 +215,17 @@ local function pickFrame(grip, aim, facing)
 end
 
 function Crew:mine(t, base)
-	local alert = ease(t, 20.6, 22.1)
-	local gather = ease(t, 25.6, 26.68)
-	local windup = ease(t, 26.64, 28.12)
-	local chop = ease(t, 28.16, breaksAt)
-	local recoil = ease(t, breaksAt, 29.12)
-	local listen = ease(t, 29.36, 30.16)
-	local reply = ease(t, 30.18, 30.54)
-	local run = ease(t, 31.35, 36.25)
-	local settle = ease(t, 30.86, 31.83)
-	local gait = math.sin((t - 31.55) * 10.5) * ease(t, 31.50, 32.30)
+	local speaking = speechAccent(t, "YOU")
+	local alert = ease(t, 29.35, 30.85)
+	local gather = ease(t, 34.35, 35.43)
+	local windup = ease(t, 35.39, 36.87)
+	local chop = ease(t, 36.91, breaksAt)
+	local recoil = ease(t, breaksAt, 37.87)
+	local listen = ease(t, 38.11, 38.91)
+	local reply = ease(t, 38.93, 39.29)
+	local run = ease(t, 40.1, 45)
+	local settle = ease(t, 39.61, 40.58)
+	local gait = math.sin((t - 40.3) * 10.5) * ease(t, 40.25, 41.05)
 	local x = 2 - 0.68 * chop + 0.32 * recoil - 1.68 * run
 	local z = 6.25 - 0.44 * chop + 0.21 * recoil - 12.2 * run
 	local yaw = 0.83 * (1 - settle) + 0.08
@@ -229,7 +246,7 @@ function Crew:mine(t, base)
 		Root = A(lean * 0.6, turn * 0.55, 0),
 		Waist = A(lean * 0.4, turn * 0.45, 0),
 		Neck = A(
-			-0.23 * alert + 0.32 * windup - 0.40 * chop + 0.14 * reply + 0.18 * settle,
+			-0.23 * alert + 0.32 * windup - 0.40 * chop + 0.14 * reply + 0.18 * settle + 0.085 * speaking,
 			-0.3 * alert + 0.37 * gather,
 			0
 		),
@@ -252,7 +269,7 @@ function Crew:mine(t, base)
 end
 
 function Crew:fracture(t, base)
-	local open = ease(t, breaksAt, 29.34)
+	local open = ease(t, breaksAt, 38.09)
 	local age = math.max(0, t - breaksAt)
 	local answerAge = t - answersAt
 	local echo = if answerAge >= 0 then math.exp(-answerAge * 4.25) else 0
@@ -263,7 +280,7 @@ function Crew:fracture(t, base)
 		local at = stoneAt + V(side * (1.17 + 0.14 * i) * open, 0.34 * bounce - 0.36 * open, (i - 0.9) * 0.34 * open)
 		half:PivotTo(base * CF(at) * A(0.22 * open, side * 0.37 * open, -side * 0.48 * open))
 	end
-	local rise = ease(t, 28.73, 29.35)
+	local rise = ease(t, 37.48, 38.1)
 	local core = base
 		* CF(jewelAt + V(0, -0.49 + 0.49 * rise + 0.12 * echo, 0))
 		* A(0.10, 0.2 + rise * 0.73 + echo * 0.34, -0.22)
@@ -284,7 +301,7 @@ function Crew:fracture(t, base)
 		shard.CFrame = base
 			* CF(stoneAt + V(math.sin(az) * r, height - 0.75, math.cos(az) * r))
 			* A(az, age * 4, az + age)
-		shard.Transparency = if age > 0 then ease(t, 29.1, 29.78) else 1
+		shard.Transparency = if age > 0 then ease(t, 37.85, 38.53) else 1
 	end
 	local radius = 0.42 + math.max(0, answerAge) * 8
 	for i, p in self.arcs do

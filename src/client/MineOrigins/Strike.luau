@@ -1,11 +1,12 @@
 local P = require(script.Parent.Props)
+local Plume = require(script.Parent.Plume)
 local Strike = {}
 Strike.__index = Strike
 
 local V, CF, A = Vector3.new, CFrame.new, CFrame.Angles
 local rgb, ease, tau = Color3.fromHex, P.ease, math.pi * 2
 local stone, neon = Enum.Material.Slate, Enum.Material.Neon
-local flightTime = require(script.Parent.Beats).impact
+local flightTime = require(script.Parent.Beats).flightImpact
 local impact = V(0, 1.5, 0)
 local approach = V(-218, 186.5, -122)
 Strike.impactTime = flightTime
@@ -125,8 +126,14 @@ local function buildCoast(root, rng)
 	-- smaller landing island lie to its south (+Z), just as they do at spawn.
 	local shore = P.model(root, "Ancient mine headland")
 	buildHeadlands(shore)
-	local sea = P.box(shore, "Open ocean", V(0, -8.6, 0), V(1900, 1, 1900), "31586F")
-	sea.Reflectance = 0.09
+	-- Tile to the atmospheric horizon so the opening orbit cannot see the
+	-- outside corners of the ocean below the rock.
+	for east = -2, 2 do
+		for south = -2, 2 do
+			local sea = P.box(shore, "Open ocean", V(east * 1900, -8.6, south * 1900), V(1900, 1, 1900), "31586F")
+			sea.Reflectance = 0.09
+		end
+	end
 	for i = 1, 52 do
 		local x, z = rng:NextNumber(-220, 220), rng:NextNumber(-150, 260)
 		local whitecap = ball(
@@ -213,195 +220,132 @@ local function buildCoast(root, rng)
 	return shore
 end
 
+local sculptures = script.Parent.ImpactSculptures
+
+local function sculpt(parent, asset, name, scale)
+	local model = sculptures[asset]:Clone()
+	model.Name = name
+	if scale then
+		model:ScaleTo(scale)
+	end
+	model.Parent = parent
+	return model
+end
+
 local function buildMeteor(root)
-	local body = P.model(root, "Starfall meteor")
-	ball(body, "Incandescent mantle", Vector3.zero, V(5.18, 4.98, 5.10), "834D3F", stone)
-	-- Closed, overlapping plates surround a solid body. The raised lip and
-	-- pinched channels leave streaks of color between dark chunks of crust.
-	local rows, columns = 5, 9
-	local shell = {}
-	for j = 0, rows do
-		shell[j] = {}
-		local lat = -math.pi * 0.5 + j * math.pi / rows
-		for i = 1, columns do
-			local polar = tau * (i + (0.33 * (j % 2))) / columns
-			local d = V(math.cos(polar) * math.cos(lat), math.sin(lat), math.sin(polar) * math.cos(lat))
-			local radius = 3.03 + 0.26 * math.sin(i * 2.2 + j * 3.7) * math.cos(lat)
-			shell[j][i] = V(d.X * radius * 1.07, d.Y * radius * 0.96, d.Z * radius)
-		end
-	end
-	local hues = { "57434D", "493747", "76504B", "483F4B", "80564E", "674B4C" }
-	for j = 0, rows - 1 do
-		for i = 1, columns do
-			local k = i % columns + 1
-			local a, b, c, d = shell[j][i], shell[j][k], shell[j + 1][k], shell[j + 1][i]
-			local center = (a + b + c + d) / 4
-			local fracture = if (i + 3 * j) % 5 <= 2 then 0.017 else 0.088
-			a, b, c, d =
-				a:Lerp(center, fracture), b:Lerp(center, fracture), c:Lerp(center, fracture), d:Lerp(center, fracture)
-			local tone = rgb(hues[(i * 5 + j * 3) % #hues + 1])
-			if j > 0 then
-				P.face(body, a, b, d, tone)
-			end
-			if j < rows - 1 then
-				P.face(body, b, c, d, tone:Lerp(rgb("D38260"), 0.15))
-			end
-		end
-	end
-	for path = 1, 4 do
-		local longitude = tau * path / 4 + 0.29 * math.sin(path * 2.12)
-		local prior
-		for step = 0, 6 do
-			local lat = -0.92 + 0.33 * math.sin(path * 2.24) + step * (0.17 + 0.045 * (path % 3))
-			local lon = longitude + math.sin(step * 2.1 + path) * 0.26 + step * 0.055
-			local v = V(math.cos(lat) * math.cos(lon) * 3.11, math.sin(lat) * 2.9, math.cos(lat) * math.sin(lon) * 3.05)
-			if prior then
-				pair(
-					body,
-					"Molten fissure",
-					prior,
-					v,
-					if step % 2 == 0 then 0.075 else 0.13,
-					if path == 2 then "D4A1F9" elseif path == 1 then "FFD89F" else "FA9A65",
-					neon
-				)
-			end
-			prior = v
-		end
-	end
-	for i = 1, 19 do
-		local y = 1 - (i - 0.5) * 2 / 19
-		local a = i * 2.399
-		local r = math.sqrt(1 - y * y)
-		local normal = V(math.cos(a) * r, y, math.sin(a) * r)
-		local center = normal * (2.70 + 0.10 * math.sin(i * 2.7))
-		local w = 1.1 + 0.9 * (0.5 + 0.5 * math.sin(i * 3.6))
-		local clast =
-			ball(body, "Ablated basalt", center, V(w, w * (0.56 + 0.12 * (i % 3)), 0.68), hues[i % #hues + 1], stone)
-		clast.CFrame = CFrame.lookAt(center, center + normal) * A(0, 0, a)
-	end
-	for _, surface in body:GetChildren() do
-		if surface.Name == "Facet" then
-			surface.Material = stone
-		end
-	end
-	local key = marker(body, "Fire on the leading face", V(1.9, -1.8, 2.1))
-	P.light(key, "FFB57B", 9, 2.6)
-	local nucleus = body:FindFirstChild("Incandescent mantle")
-	P.light(nucleus, "FFB06C", 42, 3.1)
+	local body = sculpt(root, "Fluted iron", "Starfall meteor")
+	-- This breach rotates in and out of sight. Its warm edge and tilted amethyst
+	-- facet reappear in the fallen stone and in the player's freshly opened sample.
+	local sliver = P.crystal(body, Vector3.zero, 1.12)
+	sliver:PivotTo(CF(0.38, 0.42, 2.58) * A(-0.19, 0.21, -0.78))
+	P.light(body.PrimaryPart, "FFAB76", 37, 2.45)
 	return body
+end
+
+local function knot(parent, position, tangent)
+	local a = Instance.new("Attachment")
+	a.Position, a.Axis = position, tangent.Unit
+	a.Parent = parent
+	return a
+end
+
+local function beam(parent, from, to, width, tip, color, alpha)
+	local b = Instance.new("Beam")
+	b.FaceCamera, b.Segments = true, 10
+	b.Attachment0, b.Attachment1 = from, to
+	b.Width0, b.Width1, b.Color, b.Transparency = width, tip, color, alpha
+	b.Parent = parent
+	return b
+end
+
+local function gradient(a, b, c, breakpoint)
+	return ColorSequence.new({
+		ColorSequenceKeypoint.new(0, rgb(a)),
+		ColorSequenceKeypoint.new(breakpoint or 0.42, rgb(b)),
+		ColorSequenceKeypoint.new(1, rgb(c)),
+	})
 end
 
 local function buildWake(self)
 	local wake = P.model(self.root, "Plasma wake")
 	self.wake = wake
-	self.torch = P.model(wake, "Continuous plasma")
-	local sections = {
-		{ 1.7, 0.86, "FFD99B" },
-		{ 3.5, 1.23, "FFD18C" },
-		{ 5.5, 1.21, "FFB370" },
-		{ 7.7, 0.79, "ED9A70" },
-		{ 9.6, 0.51, "D38E7E" },
-		{ 11.8, 0.18, "CA8F91" },
-		{ 14, 0.055, "9B8198" },
-	}
-	local previous
-	for j, section in sections do
-		local z, r = section[1], section[2]
-		local ring = {}
-		for i = 1, 6 do
-			local theta = tau * i / 6 + j * 0.18
-			ring[i] = V(math.cos(theta) * r + 0.40 * math.sin(j * 0.72), math.sin(theta) * r + 0.035 * j * j, -z)
-		end
-		if previous then
-			local skin = P.model(self.torch, "Flame front")
-			for i = 1, 6 do
-				local k = i % 6 + 1
-				P.face(skin, previous[i], previous[k], ring[k], rgb(sections[j - 1][3]))
-				P.face(skin, previous[i], ring[k], ring[i], rgb(section[3]))
-			end
-			for _, p in skin:GetChildren() do
-				p.Material, p.Transparency, p.CastShadow = neon, math.min(0.97, 0.17 + (j - 2) * 0.16), false
-			end
-		end
-		previous = ring
-	end
-	-- A windward shock cap stays with the velocity vector while the pitted
-	-- stone rotates through it. Its broken incandescent lip reads in profile.
-	for i = 1, 22 do
-		if i % 9 < 5 then
-			local an = tau * i / 22
-			local bn = tau * (i + 1) / 22
-			local a = V(math.cos(an) * 2.45, math.sin(an) * 2.45, 1.92 + 0.1 * math.sin(an * 3))
-			local b = V(math.cos(bn) * 2.45, math.sin(bn) * 2.45, 1.92 + 0.1 * math.sin(bn * 3))
-			pair(self.torch, "Bow shock", a, b, 0.11, if i % 3 == 0 then "FFE4A6" else "FFA969", neon)
-		end
-	end
-	self.wakeAnchor = marker(wake, "Ionized air", Vector3.zero)
-	local plasma = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, rgb("FFF4D3")),
-		ColorSequenceKeypoint.new(0.32, rgb("FFB374")),
-		ColorSequenceKeypoint.new(0.69, rgb("EF98B7")),
-		ColorSequenceKeypoint.new(1, rgb("AC93CE")),
+	local anchor = marker(wake, "Ablation streamlines", Vector3.zero)
+	self.wakeAnchor = anchor
+	local flame = gradient("FFAD6F", "E58458", "A57891")
+	local fading = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0.15),
+		NumberSequenceKeypoint.new(0.4, 0.20),
+		NumberSequenceKeypoint.new(1, 1),
 	})
-	local haze, last = ribbon(
-		self.wakeAnchor,
-		V(0, 0, -1.1),
-		V(0, 0, -46),
-		7.2,
-		0.16,
-		plasma,
-		NumberSequence.new({
-			NumberSequenceKeypoint.new(0, 0.52),
-			NumberSequenceKeypoint.new(0.25, 0.36),
-			NumberSequenceKeypoint.new(0.68, 0.55),
-			NumberSequenceKeypoint.new(1, 1),
-		})
-	)
-	haze.LightEmission, haze.LightInfluence, haze.TextureSpeed = 0.94, 0, -0.23
-	self.wakeEnd = last
-	haze.Attachment0.Axis, haze.Attachment1.Axis = V(0.25, 0.12, -1).Unit, V(-0.1, 0.22, -1).Unit
-	haze.CurveSize0, haze.CurveSize1 = 9, 12
-	local curl, far = ribbon(
-		self.wakeAnchor,
-		V(-1, 0.55, -2),
-		V(1, 3, -34),
-		4.4,
-		1.1,
-		ColorSequence.new(rgb("FFBD80"), rgb("A492A3")),
-		NumberSequence.new(0.19, 0.86)
-	)
-	curl.LightEmission, curl.TextureSpeed = 0.73, 0.21
-	curl.Attachment0.Axis, curl.Attachment1.Axis = V(-0.43, 0.36, -1).Unit, V(0.43, -0.16, -1).Unit
-	curl.CurveSize0, curl.CurveSize1 = 8, 11
-	self.wispEnd = far
-	-- These textured billows follow the recent flight path. They are visible
-	-- on the very first frame and remain individually readable on the flyby.
-	self.billows = {}
-	for i = 1, 16 do
-		local anchor = marker(wake, "Streaming vapor", Vector3.zero)
-		local burning = i <= 10
-		local gui, img = sprite(
+	self.streams = {}
+	for i = 1, 9 do
+		-- Each spline leaves the flank of the body and tears off into the slipstream.
+		-- An opaque narrow streak travels inside its translucent, much broader envelope.
+		local a = tau * i / 9
+		local rim = V(math.cos(a), math.sin(a), 0)
+		local near = knot(anchor, rim * 2.3 + V(0, 0, 0.75), (rim * 0.62 - V(0, 0, 1)).Unit)
+		local tip = knot(anchor, V(0, 0, -20), -Vector3.zAxis)
+		local plume = beam(anchor, near, tip, 1.9 + i % 3 * 0.48, 0.18, flame, fading)
+		plume.Texture, plume.TextureMode = "rbxasset://textures/particles/smoke_main.dds", Enum.TextureMode.Stretch
+		plume.CurveSize0, plume.LightEmission, plume.LightInfluence = 6.8, 0.48, 0.08
+		local spine = beam(
 			anchor,
-			if burning then "Ablation flame" else "Exhaust smoke",
-			if burning then "explosion01_core_main.dds" else "smoke_main.dds",
-			if burning then 3.6 else 1.15
+			near,
+			tip,
+			0.10 + i % 3 * 0.075,
+			0.02,
+			gradient("FFF3C9", "F4BA76", "D88C9B", 0.56),
+			NumberSequence.new(0.34, 1)
 		)
-		img.ImageColor3 = if burning then rgb("FFF0D4") else rgb("9A8B96")
-		self.billows[i] = { anchor = anchor, gui = gui, img = img, fire = burning }
+		spine.CurveSize0, spine.LightEmission, spine.LightInfluence = plume.CurveSize0, 0.94, 0
+		self.streams[i] = { theta = a, tip = tip, outer = plume, inner = spine }
 	end
-	local vapor = Instance.new("ParticleEmitter")
-	vapor.Name, vapor.Texture, vapor.Rate = "Plasma vapor", "rbxasset://textures/particles/smoke_main.dds", 28
-	vapor.Color, vapor.LightEmission = plasma, 0.65
-	vapor.Speed, vapor.Drag = NumberRange.new(1, 3.5), 0.45
-	vapor.Lifetime, vapor.SpreadAngle = NumberRange.new(0.35, 0.92), Vector2.new(45, 45)
-	vapor.Size = NumberSequence.new(2.1, 5.8)
-	vapor.Transparency = NumberSequence.new(0.48, 1)
-	vapor.Parent = self.wakeAnchor
+	local haze, tip = ribbon(
+		anchor,
+		V(0, 0, -1),
+		V(0, 3, -48),
+		7.8,
+		0.8,
+		gradient("F9CAA4", "C3909C", "9789A1"),
+		NumberSequence.new(0.19, 1)
+	)
+	haze.LightEmission, haze.TextureSpeed, haze.CurveSize0, haze.CurveSize1 = 0.40, -0.18, 13, 7
+	haze.Attachment0.Axis, haze.Attachment1.Axis = V(0.14, 0.08, -1).Unit, V(-0.2, 0.1, -1).Unit
+	self.wakeEnd = tip
+
+	-- A thin band of compressed air bends around the windward cheek of the stone.
+	for i = 1, 7 do
+		local a, b = tau * (i - 1) / 7, tau * i / 7
+		local u, v = V(math.cos(a), math.sin(a), 0), V(math.cos(b), math.sin(b), 0)
+		local start = knot(anchor, u * 2.72 + V(0, 0, 1.05), V(-u.Y, u.X, 0.12).Unit)
+		local finish = knot(anchor, v * 2.72 + V(0, 0, 1.05), V(-v.Y, v.X, -0.08).Unit)
+		local bow = beam(
+			anchor,
+			start,
+			finish,
+			0.10,
+			0.045,
+			gradient("FFC785", "FFBA76", "F0919B"),
+			NumberSequence.new(0.08, 0.40)
+		)
+		bow.CurveSize0, bow.CurveSize1, bow.LightEmission = 0.46, 0.46, 0.94
+	end
+	self.fire = {}
+	for i = 1, 6 do
+		local mark = marker(wake, "Sheared copper vapor", Vector3.zero)
+		local gui, density = Plume.mount(mark, "melt")
+		self.fire[i] = { mark = mark, gui = gui, density = density }
+	end
+	self.smoke = {}
+	for i = 1, 10 do
+		local mark = marker(wake, "Ablated dust", Vector3.zero)
+		local gui, img = sprite(mark, "Fine ash", "smoke_main.dds", 1.35)
+		img.ImageColor3 = rgb(if i % 3 == 0 then "D2A39F" else "B49AA2")
+		self.smoke[i] = { mark = mark, gui = gui, img = img }
+	end
 	self.sparks = {}
-	for i = 1, 16 do
-		local p = ellipse(wake, "Ablating ember", if i % 4 == 0 then "E7B6FF" else "FFD79A", neon)
-		self.sparks[i] = p
+	for i = 1, 14 do
+		self.sparks[i] = ellipse(wake, "Fusion spark", if i % 5 == 0 then "CBB4F3" else "FFCB83", neon)
 	end
 end
 
@@ -410,210 +354,249 @@ local function drawWake(self, t, base)
 	local reverse = (Strike.position(t - 0.04) - head).Unit
 	local side = reverse:Cross(Vector3.yAxis).Unit
 	local up = side:Cross(reverse).Unit
-	local stepLength = (Strike.position(t - 0.85) - head).Magnitude
-	local length = math.clamp(stepLength * 1.33, 26, 71)
-	local pose = base * CFrame.lookAt(head, head + reverse)
-	self.torch:PivotTo(pose * A(0, 0, 0.14 * math.sin(t * 3.1)))
-	self.wakeAnchor.CFrame = pose
-	self.wakeEnd.Position = V(0, 3, -length)
-	self.wispEnd.Position = V(1 + math.sin(t * 2.1) * 1.15, 2.2, -length * 0.78)
-	for i, lobe in self.billows do
-		local u = if lobe.fire then ((i - 1) / 10 + t * 0.38) % 1 else ((i - 11) / 6 + t * 0.29) % 1
-		local age = if lobe.fire then 0.035 + u * 0.56 else 0.24 + u * 0.87
-		local swirl = (up * math.sin(i * 2.15 + t * 2.3) + side * math.cos(i * 2.15 + t * 2.3)) * (0.42 + u * 1.45)
-		local path = Strike.position(t - age)
-		-- A minimum exhaust speed keeps the train streaming even high above the cove.
-		local d = math.max((path - head).Magnitude, age * 38)
-		lobe.anchor.Position = base:PointToWorldSpace(head + reverse * (1.5 + d) + swirl + up * (u * u * 1.9))
-		local width = if lobe.fire then 7.1 - 3.4 * u else 5.5 - 2.1 * u
-		lobe.gui.Size = UDim2.fromScale(width * 1.5, width)
-		lobe.img.Rotation = i * 61 + t * (if i % 2 == 0 then 29 else -23)
-		local opacity = (if lobe.fire then 0.94 else 0.76) * ease(u, -0.08, 0.11) * (1 - ease(u, 0.43, 1))
-		lobe.img.ImageTransparency = 1 - opacity
+	local length = math.clamp((Strike.position(t - 0.85) - head).Magnitude * 1.51, 27, 73)
+	self.wakeAnchor.CFrame = base * CFrame.lookAt(head, head + reverse)
+	self.wakeEnd.Position = V(1 + 1.5 * math.cos(t * 1.5), 3.8, -length)
+	for i, s in self.streams do
+		local phi = s.theta + 0.49 * math.sin(t * 2.2 + i)
+		local span = length * (0.34 + 0.17 * math.sin(i * 2.2) + 0.09 * math.sin(t * 3 + i))
+		local radius = 1.0 + 0.88 * math.cos(i * 2 + t * 1.8)
+		s.tip.Position = V(math.cos(phi) * radius, math.sin(phi) * radius + 0.7, -span)
+		s.tip.Axis = V(0.3 * math.sin(phi + 0.84), 0.3 * math.cos(phi), -1).Unit
+		s.inner.CurveSize1 = span * 0.24
+		s.outer.CurveSize1 = span * 0.24
+	end
+	for i, k in self.fire do
+		local u = ((i - 1) / #self.fire + t * 0.62) % 1
+		local phi = i * 2.39 + t * 2.24
+		local slip = (side * math.cos(phi) + up * math.sin(phi)) * (0.38 + 1.10 * u)
+		k.mark.Position = base:PointToWorldSpace(head + reverse * (1.4 + u * length * 0.51) + slip + up * u * u)
+		local size = 8.7 - 4.0 * u
+		k.gui.Size = UDim2.fromScale(size * 1.31, size)
+		Plume.show(k.gui, k.density, i * 67 + t * 24, 0.96 * ease(u, -0.055, 0.12) * (1 - ease(u, 0.56, 1)))
+	end
+	for i, s in self.smoke do
+		local u = ((i - 1) / #self.smoke + t * 0.34) % 1
+		local slip = (side * math.sin(i * 2.1 + t) + up * math.cos(i * 2.1 + t)) * (0.32 + 2.0 * u)
+		s.mark.Position =
+			base:PointToWorldSpace(head + reverse * (3 + length * (0.13 + 0.89 * u)) + slip + up * u * u * 4.2)
+		local size = 4.1 + u * 3.6
+		s.gui.Size = UDim2.fromScale(1.3 * size, size)
+		s.img.ImageTransparency = 1 - 0.65 * ease(u, 0, 0.16) * (1 - ease(u, 0.44, 1))
+		s.img.Rotation = i * 42 + t * (if i % 2 == 0 then 24 else -22)
 	end
 	for i, p in self.sparks do
-		local u = (t * (0.77 + i % 3 * 0.12) + i * 0.618) % 1
+		local u = (t * (0.73 + i % 3 * 0.14) + i * 0.618) % 1
 		local a = i * 2.399
-		local outward = (side * math.cos(a) + up * math.sin(a)) * (1.9 + u * (4 + i % 5))
-		local pos = head + reverse * (2 + u * length * 0.92) + outward
-		local w = 0.14 + (1 - u) * 0.24
-		between(p, base, pos, pos + reverse * (1.05 + u * 3), w, w)
-		p.Transparency = 0.08 + 0.90 * u * u
+		local outward = (side * math.cos(a) + up * math.sin(a)) * (2.25 + u * (3 + i % 5))
+		local pos = head + reverse * (1 + u * length * 0.8) + outward
+		local w = 0.09 + (1 - u) * 0.18
+		between(p, base, pos, pos + reverse * (1.45 + u * 3.4), w, w)
+		p.Transparency = 0.07 + 0.93 * u * u
 	end
 end
 
-local function buildImpact(self, rng)
+local function craterBed(self, rng)
 	local root = self.root
 	self.cap = stratum(root, "Unbroken bedrock", "7A6669", V(16.3, 0.95, 15.5), V(0, -0.47, 0))
 	local crater = P.model(root, "Buried Starfall")
 	self.crater = crater
-	stratum(crater, "Crater floor", "3F3547", V(16.7, 0.47, 16), V(0, -2.42, 0))
-	local core = ball(crater, "Exposed core", V(0, -0.97, 0), V(4.15, 3.1, 3.9), "866384", stone)
-	self.core = core
-	self.pulse = ball(crater, "Violet inclusion", V(0.16, 0.48, 0.16), V(1.19, 0.54, 1.32), "F3BCFF", neon)
-	self.light = P.light(self.pulse, "D69AFF", 19, 2.2)
-	for i = 1, 21 do
-		local theta = tau * i / 21
-		local dir = V(math.cos(theta), 0, math.sin(theta))
-		local n = dir * 7.61
-		local mass = rng:NextNumber(0.72, 1.16)
-		P.box(
+	stratum(crater, "Bowl floor", "463A4A", V(16.7, 0.54, 16), V(0, -2.54, 0))
+	-- Sew the tilted crater wall to the existing 24-vertex shore opening.
+	local previous
+	for i = 0, 24 do
+		local a = tau * i / 24
+		local x, z = math.cos(a), math.sin(a)
+		local lip = V(8.1 * x, -0.03, 7.7 * z)
+		local ledge = V(x * 4.3, -1.51 + 0.38 * math.sin(a * 3.2), z * 4.1)
+		local foot = V(x * 2.22, -2.27, z * 1.84)
+		if previous then
+			P.face(crater, previous[1], lip, ledge, rgb("80625F"))
+			P.face(crater, previous[1], ledge, previous[2], rgb("77585C"))
+			P.face(crater, previous[2], ledge, foot, rgb("5C4857"))
+			P.face(crater, previous[2], foot, previous[3], rgb("675362"))
+		end
+		previous = { lip, ledge, foot }
+	end
+	for i = 1, 7 do
+		local a = i * 2.399
+		local chip = sculpt(
 			crater,
-			"Overturned crust",
-			n + V(0, -0.27, 0),
-			V(2.1 * mass, 0.64 * mass, 2.5 * mass),
-			if i % 4 == 0 then "997365" else "61505B",
-			A(rng:NextNumber(-0.18, 0.18), -theta + 0.15, rng:NextNumber(-0.21, 0.21)),
-			stone
+			if i % 3 == 0 then "Slag blade" else "Spall",
+			"Overturned shale",
+			0.68 + 0.56 * rng:NextNumber()
 		)
-		local a, b = dir * 7.9, dir * 4.7 + V(0, -1.9, 0)
-		local tangent = V(-dir.Z, 0, dir.X) * 1.45
-		P.face(crater, a + tangent, a - tangent, b + tangent * 0.68, rgb("574351"))
-		P.face(crater, a - tangent, b - tangent * 0.68, b + tangent * 0.68, rgb("6D5059"))
+		chip:PivotTo(CF(7.5 * math.cos(a), -0.05, 7.0 * math.sin(a)) * A(0.38 * math.sin(a), -a, 0.19))
+	end
+	self.shard = P.crystal(crater, Vector3.zero, 1.40)
+	for _, facet in self.shard:GetChildren() do
+		if facet.Name == "Facet" then
+			facet.Color = facet.Color:Lerp(rgb("A269CB"), 0.44)
+		end
+	end
+	self.core = marker(crater, "Seam glow", Vector3.zero)
+	self.light = P.light(self.core, "BFA0FF", 17, 1.7)
+	-- The cleft cradles the crystal above the bottom of the bowl. Its back
+	-- wall keeps the pointed base grounded in the close shot.
+	for i, pos in { V(-0.89, -1.33, -0.35), V(0.81, -1.26, -0.56), V(0.1, -1.29, -1.0) } do
+		local socket = sculpt(crater, "Spall", "Fractured socket", 1.12)
+		socket:PivotTo(CF(pos) * A(0.29 * i, -i * 0.72, 0.38))
+	end
+	self.scree = {}
+	for i, asset in { "Spall", "Slag blade", "Spall", "Slag blade" } do
+		local rock = sculpt(crater, asset, "Loose flank", 0.69 + 0.12 * i)
+		local a = (i - 1) * tau / 4 + 0.43
+		local d = V(math.cos(a), 0, math.sin(a))
+		self.scree[i] = { rock = rock, dir = d, yaw = -a }
 	end
 	self.cracks = {}
-	for i = 1, 8 do
+	for i = 1, 6 do
 		local angle = i * 2.399
-		local length = if i % 3 == 0 then 10.6 else 6.7
-		local prior = V(0.16, 0.44, 0.16)
-		for j = 1, 4 do
-			local r = length * j / 4
-			local a = angle + 0.16 * math.sin(j * 2.1 + i)
-			local p =
-				V(math.cos(a) * r, if r > 7.6 then 0.12 else -1.64 + math.max(0, 1 - r / 3) * 1.60, math.sin(a) * r)
-			local seg = pair(
-				crater,
-				"Hot fracture",
-				prior,
-				p,
-				0.28 * (1 - j * 0.14),
-				if i % 3 == 0 then "FFD69B" else "DE9AF7",
-				neon
-			)
-			table.insert(self.cracks, { p = seg, r = r })
-			prior = p
+		local prev = V(0.05, -1.97, 0.03)
+		for j = 1, 5 do
+			local r = (i % 2 == 0 and 6.8 or 9.6) * j / 5
+			local theta = angle + 0.13 * math.sin(j * 2.3 + i)
+			local p = V(math.cos(theta) * r, math.min(0.13, -2.17 + r * 0.29), math.sin(theta) * r)
+			local seg = pair(crater, "Shock melt", prev, p, 0.19 * (1 - j * 0.12), "E8A98C", neon)
+			table.insert(self.cracks, { p = seg, distance = r })
+			prev = p
 		end
 	end
-	self.sediment = {}
-	for i = 1, 5 do
-		local m = P.model(crater, "Settling rock")
-		local lo, hi = tau * (i - 1) / 5 - 0.035, tau * i / 5 + 0.035
-		local mid = (lo + hi) * 0.5
-		local lip = V(math.cos(mid) * 7.5, 0, math.sin(mid) * 7.1)
-		local hue = rgb(({ "6F585E", "8C6D65", "9C7D6C", "8B7368", "82696A" })[i])
-		local center = V(0.07 * math.cos(mid), -0.08, 0.07 * math.sin(mid))
-		local last
-		for k = 0, 5 do
-			local a = lo + (hi - lo) * k / 5
-			local v = V(math.cos(a) * 8.05, -0.13 + (k % 2) * 0.09, math.sin(a) * 7.65)
-			if last then
-				P.face(m, center - lip, last - lip, v - lip, hue)
-				local edge = V(0, 0.55, 0)
-				P.face(m, last - lip - edge, v - lip - edge, v - lip, hue:Lerp(rgb("513E50"), 0.40))
-				P.face(m, last - lip, v - lip, last - lip - edge, hue:Lerp(rgb("513E50"), 0.40))
+end
+
+local function buildImpact(self, rng)
+	craterBed(self, rng)
+	local crown = P.model(self.root, "Impact crown")
+	self.crown = crown
+	self.fault = sculpt(crown, "Contact fault", "Impact contact", 1)
+	self.impactLight = P.light(self.fault.PrimaryPart, "FFD799", 72, 7.5)
+
+	-- Long vaporized curtains follow the direction of motion. The lee side
+	-- gets taller, darker fingers; the cross-range sheets stay low and wide.
+	self.curtains = {}
+	for i, item in
+		{
+			{ "Low curtain", -0.58, 2.68, 0.01 },
+			{ "Tall curtain", 0.37, 2.50, 0.055 },
+			{ "Split curtain", 1.36, 2.6, 0.12 },
+			{ "Tall curtain", 2.64, 1.87, 0.16 },
+			{ "Low curtain", 3.60, 2.18, 0.21 },
+			{ "Split curtain", 4.77, 2.35, 0.10 },
+		}
+	do
+		local m = sculpt(crown, item[1], "Overturned ejecta sheet", item[3] * 0.36)
+		local surfaces = {}
+		for _, p in m:GetChildren() do
+			if p ~= m.PrimaryPart then
+				table.insert(surfaces, p)
 			end
-			last = v
 		end
-		self.sediment[i] = { m = m, lip = lip }
+		self.curtains[i] = { m = m, faces = surfaces, az = item[2], scale = item[3] * 0.36, delay = item[4], fade = -1 }
 	end
 
-	local crown = P.model(root, "Impact crown")
-	self.crown = crown
-	self.flash = ellipse(crown, "Impact flash", "FFF5D3", neon)
-	self.impactLight = P.light(self.flash, "FFD495", 58, 4)
-	self.lobes = {}
-	for i = 1, 14 do
-		local a = i * 2.399
-		local dir = V(math.cos(a), 0, math.sin(a))
-		local p = ellipse(crown, "Incandescent ejecta", if i % 3 == 0 then "FFBE68" else "FF915C", neon)
-		local ash =
-			ellipse(crown, "Rolling ash", if i % 3 == 0 then "876F74" else "A78279", Enum.Material.SmoothPlastic)
-		local flameSprite, flameImage = sprite(p, "Rolling flame", "explosion01_core_main.dds", 3.2)
-		local dustSprite, dustImage = sprite(ash, "Volcanic ash", "smoke_main.dds", 0.85)
-		dustImage.ImageColor3 = rgb(if i % 2 == 0 then "9B8E90" else "BBA59C")
-		flameImage.Rotation, dustImage.Rotation = i * 41, i * 79
-		self.lobes[i] = {
-			flameSprite = flameSprite,
-			flameImage = flameImage,
-			dustSprite = dustSprite,
-			dustImage = dustImage,
-			fire = p,
-			ash = ash,
-			dir = dir,
-			delay = (i % 5) * 0.052,
-			radius = rng:NextNumber(7, 15),
-			lift = rng:NextNumber(7.5, 15.8),
+	local origin = marker(crown, "Traveling pressure fronts", Vector3.zero)
+	self.fronts = {}
+	for p = 1, 2 do
+		local joints, edges = {}, {}
+		local n = 18
+		for i = 1, n do
+			local a = tau * (i - 1) / n
+			local dir = V(math.cos(a), 0, math.sin(a))
+			joints[i] = { a = knot(origin, Vector3.zero, V(-dir.Z, 0, dir.X)), dir = dir }
+		end
+		for i, joint in joints do
+			local edge = beam(
+				origin,
+				joint.a,
+				joints[i % n + 1].a,
+				1.4,
+				0.9,
+				if p == 1 then gradient("FFF3CE", "FAD6A0", "E9B484") else gradient("CA9B8B", "BC9DA1", "998C9A"),
+				NumberSequence.new(0.32)
+			)
+			edge.Texture, edge.TextureMode = "rbxasset://textures/particles/smoke_main.dds", Enum.TextureMode.Stretch
+			edge.LightEmission, edge.LightInfluence = if p == 1 then 0.68 else 0.13, 0.16
+			edges[i] = edge
+		end
+		self.fronts[p] = { joints = joints, edges = edges, fade = -1 }
+	end
+
+	self.dust = {}
+	for i = 1, 20 do
+		local a = tau * ((i - 1) / 20) + 0.09 * math.sin(i * 2.3)
+		local d = V(math.cos(a), 0, math.sin(a))
+		local mark = marker(crown, "Rolling curtain of dust", Vector3.zero)
+		local gui, img = sprite(mark, "Windblown silt", "smoke_main.dds", 1)
+		img.ImageColor3 = rgb(({ "D8B49C", "BB9590", "B2A0A1", "DAC3A6" })[i % 4 + 1])
+		self.dust[i] = {
+			mark = mark,
+			gui = gui,
+			img = img,
+			dir = d,
+			delay = (i % 4) * 0.043 + 0.065,
+			size = rng:NextNumber(9.2, 14.6),
+			speed = rng:NextNumber(11, 20),
 		}
 	end
-	-- Project the pressure wave flush to the ground with a feathered edge.
-	-- Each sheet belongs to the private set and vanishes as it clears the cove.
-	self.waves = {}
-	for i = 1, 2 do
-		local sheet = marker(crown, "Pressure front", V(0, 0.46, 0))
-		local gui = Instance.new("SurfaceGui")
-		gui.Face, gui.LightInfluence, gui.Brightness = Enum.NormalId.Top, 0, if i == 1 then 2.4 else 1.1
-		gui.CanvasSize, gui.Parent = Vector2.new(256, 256), sheet
-		local image = Instance.new("ImageLabel")
-		image.BackgroundTransparency, image.Size = 1, UDim2.fromScale(1, 1)
-		image.Image, image.ImageColor3 =
-			"rbxasset://textures/particles/explosion01_shockwave_main.dds", rgb(if i == 1 then "FFF0C3" else "CCC2B2")
-		image.Parent = gui
-		self.waves[i] = { p = sheet, image = image }
+	-- Fine material and coarse material separate in flight. Warm silt rises on
+	-- the same inclined paths as the sheets and curls downwind after they fall.
+	self.ash = {}
+	for i = 1, 18 do
+		local az = if i % 3 == 0 then (i % 5) * 1.23 else 0.53 + 1.95 * math.sin(i * 2.399)
+		local dir = V(math.sin(az), 0, math.cos(az))
+		local mark = marker(crown, "Airborne scoria", Vector3.zero)
+		local gui, img = sprite(mark, "Torn ash cloud", "smoke_main.dds", 1.4)
+		self.ash[i] = {
+			mark = mark,
+			gui = gui,
+			img = img,
+			dir = dir,
+			delay = 0.055 + (i % 6) * 0.056,
+			rise = 5.2 + (i % 5) * 1.65,
+			span = 1 + (i % 4) * 1.1,
+			size = 6.1 + (i % 5) * 1.3,
+			warm = rgb(({ "FFD9A2", "EAB476", "FFAA70", "FFD484" })[i % 4 + 1]),
+			cool = rgb(({ "8C8188", "A29591", "7F7783", "937E81" })[i % 4 + 1]),
+		}
 	end
-	self.column = marker(crown, "Rising column", Vector3.zero)
-	self.columnSprite, self.columnImage = sprite(self.column, "Fire column", "explosion01_core_main.dds", 3.6)
+	self.bloom = {}
+	for i, profile in
+		{
+			{ "melt", 0, 0, 0.0, 4.6, 15.2, 0.08 },
+			{ "melt", 0.6, 0.5, 0.047, 7.9, 13.5, 0.45 },
+			{ "melt", 2.1, -0.8, 0.09, 11.5, 12.8, 0.31 },
+			{ "melt", -1.7, -0.3, 0.13, 7.5, 11.6, -0.31 },
+			{ "ash", -2.3, -0.1, 0.20, 9.5, 14, -0.72 },
+			{ "ash", 1.0, -1.4, 0.25, 13.8, 15, 0.44 },
+			{ "ash", 2.2, 0.9, 0.34, 10.5, 11.8, 0.78 },
+		}
+	do
+		local mark = marker(crown, "Boiling ejecta", Vector3.zero)
+		local gui, density = Plume.mount(mark, profile[1])
+		self.bloom[i] = { mark = mark, gui = gui, density = density, profile = profile }
+	end
 	self.ejecta = {}
-	for i = 1, 28 do
+	for i = 1, 19 do
+		local s = rng:NextNumber(0.28, 0.91)
 		local a = i * 2.399
-		local speed = rng:NextNumber(7.8, 21.5)
-		local v = V(math.cos(a) * speed, rng:NextNumber(13, 36), math.sin(a) * speed)
-		local s = rng:NextNumber(0.23, 0.96)
-		local p = ball(crown, "Basalt ejecta", Vector3.zero, V(s * 1.5, s, s * 1.4), "695363", stone)
-		local scale = rng:NextNumber(1, 1.7)
-		local tail, tip = ribbon(
-			p,
-			Vector3.zero,
-			V(0, -4, 0),
-			s * scale + 0.18,
-			0.04,
-			ColorSequence.new(rgb("FFB772"), rgb("9E818B")),
-			NumberSequence.new({
-				NumberSequenceKeypoint.new(0, 0.06),
-				NumberSequenceKeypoint.new(0.38, 0.24),
-				NumberSequenceKeypoint.new(1, 1),
-			})
+		local v = V(
+			math.cos(a) * rng:NextNumber(7, 24) + 4.2,
+			rng:NextNumber(12, 28),
+			math.sin(a) * rng:NextNumber(6, 18) + 3
 		)
-		tail.LightEmission, tail.TextureSpeed = 0.85, 0
-		self.ejecta[i] = { p = p, tail = tail, tip = tip, v = v, s = s, scale = scale, delay = (i % 4) * 0.07 }
+		local rock = sculpt(crown, if i % 3 == 0 then "Slag blade" else "Spall", "Spalled rock", s)
+		local tail, tip = ribbon(
+			rock.PrimaryPart,
+			Vector3.zero,
+			V(1, -3, 0),
+			0.41 + s * 0.35,
+			0.06,
+			gradient("FFC78B", "D7A480", "A89698"),
+			NumberSequence.new(0.17, 1)
+		)
+		tail.LightEmission, tail.LightInfluence = 0.58, 0.12
+		self.ejecta[i] = { rock = rock, tail = tail, tip = tip, v = v, scale = s, delay = 0.04 + (i % 5) * 0.045 }
 	end
-	local plume = Instance.new("ParticleEmitter")
-	plume.Name, plume.Texture, plume.Rate = "Impact dust", "rbxasset://textures/particles/smoke_main.dds", 0
-	plume.Lifetime, plume.Speed = NumberRange.new(1.2, 2.0), NumberRange.new(6, 20)
-	plume.SpreadAngle, plume.Drag = Vector2.new(72, 72), 1.7
-	plume.Color = ColorSequence.new(rgb("BF9384"), rgb("655C69"))
-	plume.Size = NumberSequence.new(2.4, 8.1)
-	plume.Transparency = NumberSequence.new({
-		NumberSequenceKeypoint.new(0, 0.35),
-		NumberSequenceKeypoint.new(0.55, 0.58),
-		NumberSequenceKeypoint.new(1, 1),
-	})
-	plume.Parent = core
-	local flame = Instance.new("ParticleEmitter")
-	flame.Name, flame.Texture, flame.Rate =
-		"Incandescent dust", "rbxasset://textures/particles/explosion01_core_main.dds", 0
-	flame.Lifetime, flame.Speed = NumberRange.new(0.38, 0.92), NumberRange.new(13, 32)
-	flame.SpreadAngle, flame.Drag = Vector2.new(51, 51), 2.4
-	flame.LightEmission, flame.Brightness = 1, 2
-	flame.Rotation, flame.RotSpeed = NumberRange.new(0, 359), NumberRange.new(-75, 75)
-	flame.Size = NumberSequence.new({
-		NumberSequenceKeypoint.new(0, 4.2),
-		NumberSequenceKeypoint.new(0.45, 13),
-		NumberSequenceKeypoint.new(1, 16),
-	})
-	flame.Transparency = NumberSequence.new(0.02, 1)
-	flame.Parent = core
-	self.blastFlame = flame
-	self.plume = plume
 end
 
 function Strike.new(shelf)
@@ -627,92 +610,137 @@ function Strike.new(shelf)
 	return self
 end
 
+local function pressure(self, age, motion)
+	for i, f in self.fronts do
+		local s = math.max(0, age - (if i == 1 then 0.065 else 0.25))
+		local r = 2.8 + (if i == 1 then 65 else 31) * s
+		local opacity = (if i == 1 then 0.73 else 0.42) * ease(s, 0, 0.095) * (1 - ease(s, 0.49, 1.48))
+		if not motion then
+			opacity *= 0.57
+		end
+		local fade = math.round((1 - opacity) * 30) / 30
+		if fade ~= f.fade then
+			f.fade = fade
+			local alpha = NumberSequence.new(fade)
+			for _, edge in f.edges do
+				edge.Transparency = alpha
+				edge.Enabled = fade < 1
+			end
+		end
+		if opacity > 0.01 then
+			for j, joint in f.joints do
+				local radial = r * (1 + 0.033 * math.sin(j * 1.83))
+				local edge = f.edges[j]
+				joint.a.Position = joint.dir * radial + V(0, 0.63 + 0.35 * i + 0.25 * math.sin(j * 1.75) + s * 0.55, 0)
+				local w = (if i == 1 then 0.59 else 1.55) * (1 + 0.7 * s)
+				edge.Width0, edge.Width1 = w * (1 + 0.2 * math.sin(j * 2)), w * (1 + 0.2 * math.sin((j + 1) * 2))
+				edge.CurveSize0, edge.CurveSize1 = r * 0.061, r * 0.061
+			end
+		end
+	end
+end
+
 local function drawBlast(self, t, base, motion)
 	local age = t - flightTime
-	-- First the compression flash, then a crown of fire with its own rolling ash
-	-- and delayed ballistics. The last airborne stones outlive the flash.
-	local flash = self.flash
-	local burst = math.clamp(age / 0.32, 0, 1)
-	flash.Size = V(1 + burst * 17, 0.8 + burst * 11, 1 + burst * 17)
-	flash.Position = base:PointToWorldSpace(V(0, 1.15 + burst * 2.9, 0))
-	flash.Transparency = if age > 0.54 then 1 else 0.12 + 0.88 * ease(age, 0.14, 0.54)
-	self.impactLight.Brightness = (if motion then 5.5 else 2.5) * (1 - ease(age, 0.18, 1.35))
-	for i, lobe in self.lobes do
-		local s = math.max(0, age - lobe.delay)
-		local rise = ease(s, 0, 0.76)
-		local climb = ease(s, 0.44, 2.7)
-		local lead = lobe.dir * (lobe.radius * (0.14 + 0.84 * rise + 0.16 * climb))
-			+ V(0, 1 + lobe.lift * (0.27 * rise + 0.66 * climb), 0)
-		local size = 0.3 + rise * (6 + i % 4) + climb * 2.2
-		lobe.fire.Position = base:PointToWorldSpace(lead)
-		lobe.fire.Size = V(size, size * (1.18 + 0.32 * rise), size * 0.85)
-		local fireOpacity = if age < lobe.delay then 0 else 1 - ease(s, 0.42, 1.49)
-		lobe.fire.Transparency = 1 - 0.18 * fireOpacity * (1 - ease(s, 0.08, 0.51))
-		lobe.flameSprite.Size = UDim2.fromScale(size * 2.3, size * (2.5 + 0.36 * rise))
-		lobe.flameImage.ImageTransparency = 1 - fireOpacity
-		lobe.flameImage.Rotation = i * 41 + s * (if i % 2 == 0 then 27 else -24)
-		lobe.ash.Position = base:PointToWorldSpace(lead + lobe.dir * climb * 2 + V(0, climb * 1.8, 0))
-		lobe.ash.Size = V(size * (1 + 0.55 * climb), size * (0.85 + 0.49 * climb), size * (0.81 + 0.5 * climb))
-		local smokeOpacity = ease(s, 0.24, 0.81) * (1 - ease(s, 1.20, 2.96))
-		lobe.ash.Transparency = 1
-		lobe.dustSprite.Size = UDim2.fromScale(size * (1.9 + 0.56 * climb), size * (2.4 + 0.5 * climb))
-		lobe.dustImage.ImageTransparency = 1 - smokeOpacity
-		lobe.dustImage.Rotation = i * 79 + s * (if i % 2 == 0 then -20 else 19)
-	end
-	for j, wave in self.waves do
-		local s = math.max(0, age - (j - 1) * 0.23)
-		local span = 2 + s * (if j == 1 then 86 else 58)
-		wave.p.Size = V(span, 0.055, span)
-		wave.p.CFrame = base * CF(0, 0.56 + s * 0.35, 0)
-		wave.image.ImageTransparency = if age < (j - 1) * 0.23 then 1 else ease(s, 0.34, 1.58)
-	end
-	local rise = ease(age, 0.06, 0.72)
-	self.column.Position = base:PointToWorldSpace(V(0, 2 + rise * 11 + ease(age, 0.72, 1.5) * 5, 0))
-	self.columnSprite.Size = UDim2.fromScale(3 + rise * 15, 4 + rise * 39)
-	self.columnImage.ImageTransparency = ease(age, 0.6, 1.48)
-	self.columnImage.Rotation = -8 + age * 9
-	for i, chunk in self.ejecta do
-		local s = math.max(0, age - chunk.delay)
-		local function point(dt)
-			return V(0, 0.7, 0) + chunk.v * dt - V(0, 12.0 * dt * dt, 0)
+	self.fault:PivotTo(base * CF(1, -0.26 - 0.8 * ease(age, 0.10, 0.42), 0.7) * A(0, -0.64, 0))
+	place(self.fault, if age < 0.25 then self.crown else self.shelf)
+	self.impactLight.Brightness = (if motion then 8 else 3.2) * (1 - ease(age, 0.015, 0.24))
+	for i, c in self.curtains do
+		local s = age - c.delay
+		local u = ease(s, 0, 0.64)
+		local fall = ease(s, 0.55, 1.65)
+		local opacity = 0.70 * ease(s, -0.005, 0.12) * (1 - ease(s, 0.40, 1.08))
+		place(c.m, if opacity > 0.015 then self.crown else self.shelf)
+		if opacity > 0.015 then
+			-- Lift a torn sheet, let its lip bend outwards, then collapse it onto the rim.
+			local yaw = c.az + 0.10 * math.sin(u * math.pi + i)
+			local pose = A(0, yaw, 0)
+				* CF(0, -c.scale * 1.7 * (1 - u) - 0.65 * fall, 1 + u * 2.2 + fall * 5)
+				* A(-0.25 * (1 - u) + fall * 1.13, 0, 0.07 * math.sin(i))
+			c.m:PivotTo(base * pose)
+			local fade = math.floor((1 - opacity) * 18 + 0.5) / 18
+			if c.fade ~= fade then
+				c.fade = fade
+				for _, p in c.faces do
+					p.Transparency = fade
+				end
+			end
 		end
-		local pos = point(s)
-		local hidden = age < chunk.delay or pos.Y < 0.4
-		chunk.p.CFrame = base * CF(pos) * A(s * 4, i + s * 3, s * 1.5)
-		chunk.p.Transparency = if hidden then 1 else ease(age, 2.45, 3.2)
-		local behind = point(math.max(-0.015, s - 0.23 * chunk.scale))
-		chunk.tip.Position = chunk.p.CFrame:PointToObjectSpace(base:PointToWorldSpace(behind))
-		chunk.tail.Enabled = not hidden and s < 1.48
-		chunk.tail.Width0 = (0.15 + chunk.s * 0.9) * (1 - 0.68 * ease(s, 0.48, 1.40))
 	end
-	if age < 0.6 and not self.emitted then
-		self.plume:Emit(if motion then 62 else 26)
-		self.blastFlame:Emit(if motion then 48 else 20)
-		self.emitted = true
+	pressure(self, age, motion)
+	for i, dust in self.dust do
+		local s = math.max(0, age - dust.delay)
+		local front = 1 - math.exp(-1.75 * s)
+		local rad = 2.3 + front * dust.speed + s * 1.2
+		local up = 0.46 + front * (1.15 + i % 3 * 0.35) + s * s * 0.29
+		dust.mark.Position = base:PointToWorldSpace(dust.dir * rad + V(1.3 * front, up, 1.7 * front))
+		local size = dust.size * (0.14 + 0.86 * front + 0.15 * s)
+		dust.gui.Size = UDim2.fromScale(size * 1.55, size * (0.38 + 0.18 * front))
+		dust.img.Rotation = 9 * math.sin(i * 3.3) + s * (if i % 2 == 0 then 6 else -6)
+		dust.img.ImageTransparency = 1 - 0.77 * ease(s, 0, 0.39) * (1 - ease(s, 1.0, 2.68))
+	end
+	for i, cloud in self.ash do
+		local s = math.max(0, age - cloud.delay)
+		local swell = 1 - math.exp(-3.6 * s)
+		local rad = 0.6 + cloud.span * swell + 3 * s
+		local h = cloud.rise * swell + 1.18 * s
+		cloud.mark.Position = base:PointToWorldSpace(cloud.dir * rad + V(1.50 * s, h, 1.24 * s))
+		local size = cloud.size * (0.18 + 0.82 * swell + 0.4 * s)
+		cloud.gui.Size = UDim2.fromScale(size * 1.16, size * (0.86 + 0.32 * swell))
+		cloud.img.Rotation = i * 67 + s * (if i % 2 == 0 then -14 else 13)
+		local cold = ease(s, 0.21, 1.03)
+		cloud.img.ImageColor3 = cloud.warm:Lerp(cloud.cool, cold)
+		cloud.img.ImageTransparency = 1 - 0.90 * ease(s, 0, 0.26) * (1 - ease(s, 0.97 + (i % 4) * 0.06, 2.2))
+	end
+	for i, cloud in self.bloom do
+		local b = cloud.profile
+		local s = math.max(0, age - b[4])
+		local rise = 1 - math.exp(-4.1 * s)
+		local cooling = b[1] == "ash"
+		local h = 0.72 + b[5] * rise + s * (if cooling then 1.7 else 0.4)
+		local offset = V(b[2] * (1 + rise) + b[7] * s * 2.1, h, b[3] * (1 + rise))
+		cloud.mark.Position = base:PointToWorldSpace(offset)
+		local span = b[6] * (0.10 + 0.90 * rise + s * 0.37)
+		cloud.gui.Size = UDim2.fromScale(span * (1.15 + 0.22 * rise), span * (1.21 - 0.22 * rise))
+		local opacity = (if cooling then 0.85 else 0.98)
+			* ease(s, 0, 0.24)
+			* (1 - ease(s, if cooling then 0.68 else 0.42, if cooling then 1.55 else 0.99))
+		Plume.show(cloud.gui, cloud.density, b[7] * 21 + s * (if i % 2 == 0 then -8 else 7), opacity)
+	end
+	for i, e in self.ejecta do
+		local s = age - e.delay
+		local function point(h)
+			return e.v * h - V(0, 13.2 * h * h, 0)
+		end
+		local p = point(math.max(0, s))
+		local visible = s >= 0 and p.Y > 0
+		place(e.rock, if visible then self.crown else self.shelf)
+		if visible then
+			local cf = CF(p) * A(s * (2.3 + i % 3), i + s * 2.8, s * 1.6)
+			e.rock:PivotTo(base * cf)
+			e.tip.Position = cf:PointToObjectSpace(point(math.max(0, s - 0.17)))
+			e.tail.Enabled = s < 1.4
+		end
 	end
 end
 
 local function drawBurial(self, t, base)
-	local cover = ease(t, 13.13, 15.1)
-	self.core.Position = base:PointToWorldSpace(V(0, -0.97 - cover * 1.18, 0))
-	self.pulse.Position = base:PointToWorldSpace(V(0.16, 0.48 - cover * 0.29, 0.16))
-	local finalPulse = ease(t, 14.76, 15.13)
-	self.pulse.Size = V(1.19 - cover * 0.58, 0.54 - cover * 0.30, 1.32 - cover * 0.65) * (1 + finalPulse * 0.36)
-	self.light.Brightness = 1.8 + math.sin(t * 5) * 0.22 + finalPulse * 3.1
-	for _, v in self.cracks do
-		v.p.Transparency = 0.06 + 0.92 * cover * math.clamp(v.r / 2.5, 0, 1)
+	local settle = ease(t, 12.65, 13.74)
+	local y = 0.12 - settle * 4.68
+	local center = V(0.16 + 0.22 * settle, y, 0.09)
+	self.shard:PivotTo(base * CF(center) * A(0.09 + 0.42 * settle, -0.58 + 0.73 * settle, -0.22 - 0.22 * settle))
+	self.core.Position = base:PointToWorldSpace(center)
+	self.light.Brightness = 0.34 + 1.00 * ease(t, 10.72, 12.05) * (1 - 0.91 * settle)
+	for i, seam in self.cracks do
+		local warm = ease(t, flightTime + 0.012 * seam.distance, flightTime + 0.06 + 0.02 * seam.distance)
+		local cold = ease(t, 10.45 + seam.distance * 0.04, 12.28)
+		seam.p.Transparency = 1 - warm * (1 - 0.94 * cold)
 	end
-	for j, layer in self.sediment do
-		local u = ease(t, 12.98 + j * 0.15, 13.8 + j * 0.23)
-		if u ~= layer.last then
-			local m = layer.m
-			place(m, if u > 0 then self.crater else self.shelf)
-			if u > 0 then
-				m:ScaleTo(math.max(0.01, u))
-				m:PivotTo(base * CF(layer.lip - V(0, (1 - u) * 0.80, 0)))
-			end
-			layer.last = u
-		end
+	for i, chunk in self.scree do
+		local u = ease(t, 12.79 + i * 0.065, 13.64 + i * 0.03)
+		local d = 2.4 + 0.13 * i - (1.82 + i * 0.035) * u
+		local pos = chunk.dir * d + V(0, -1.65 + 0.35 * math.sin(u * math.pi) - 0.1 * u, 0)
+		chunk.rock:PivotTo(base * CF(pos) * A(-0.26 - 0.44 * u, chunk.yaw + 0.27 * u, 0.31 - 0.39 * u))
 	end
 end
 
@@ -722,13 +750,12 @@ function Strike:draw(t, base, motion)
 	place(self.wake, if flying then self.root else self.shelf)
 	place(self.cap, if flying then self.root else self.shelf)
 	place(self.crater, if flying then self.shelf else self.root)
-	local exploding = not flying and t < flightTime + 3.2
+	local exploding = not flying and t < flightTime + 2.83
 	place(self.crown, if exploding then self.root else self.shelf)
 	if flying then
 		local at = Strike.position(t)
-		self.meteor:PivotTo(base * CF(at) * A(0.23 + t * 0.69, 0.55 + t * 0.77, t * 0.39))
+		self.meteor:PivotTo(base * CF(at) * A(0.36 + t * 0.41, 0.72 + t * 0.68, t * 0.45))
 		drawWake(self, t, base)
-		self.emitted = false
 	else
 		if exploding then
 			drawBlast(self, t, base, motion)

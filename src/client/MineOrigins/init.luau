@@ -4,6 +4,7 @@ local Prompts = game:GetService("ProximityPromptService")
 local Run = game:GetService("RunService")
 local StarterGui = game:GetService("StarterGui")
 local Film = require(script.Film)
+local Beats = require(script.Beats)
 local Audio = require(script.Parent.HarborAudio)
 local W = require(script.Parent.Widgets)
 local rgb = Color3.fromHex
@@ -11,7 +12,7 @@ local Opening = {}
 
 -- Keep gameplay labels and the live avatar out of its double's shot. Streamed-in
 -- signs and accessories use the same restoration path as existing instances.
-local function clearSightlines(character, map)
+local function clearSightlines(root, isCharacter)
 	local hidden, connections = {}, {}
 	local function hidePart(p)
 		if p:IsA("BasePart") and hidden[p] == nil then
@@ -37,8 +38,7 @@ local function clearSightlines(character, map)
 			hide(p)
 		end
 	end
-	watch(character, hidePart)
-	watch(map, hideSign)
+	watch(root, if isCharacter then hidePart else hideSign)
 	return function()
 		for _, c in connections do
 			c:Disconnect()
@@ -88,10 +88,17 @@ local function compose(screen, safe)
 	local era = W.text(safe, "", 0, 0, 1, 1, 14, rgb("FFE0AE"))
 	era.Name, era.AnchorPoint = "Era", Vector2.new(0.5, 1)
 	textLimit(era, Enum.Font.BuilderSansBold, 18)
-	local card = W.text(safe, "", 0, 0, 1, 1, 46, rgb("FFF0CA"))
-	card.Name, card.AnchorPoint, card.Position = "Intertitle", Vector2.new(0.5, 0.5), UDim2.fromScale(0.5, 0.48)
-	card.Size, card.TextTransparency = UDim2.fromScale(0.86, 0.18), 1
-	local cardLimit = textLimit(card, Enum.Font.BuilderSansExtraBold, 88)
+	-- Dates stay on the landscape. The shoulder shot at spawn carries the title.
+	local dateline = W.text(safe, "", 0, 0, 1, 1, 17, rgb("FFEDC8"))
+	dateline.Name, dateline.AnchorPoint = "Date", Vector2.new(0, 0)
+	dateline.Position, dateline.Size = UDim2.fromScale(0.05, 0.105), UDim2.fromScale(0.66, 0.075)
+	dateline.TextXAlignment, dateline.TextStrokeColor3 = Enum.TextXAlignment.Left, rgb("17202A")
+	textLimit(dateline, Enum.Font.BuilderSansBold, 22)
+	local card = W.text(safe, "", 0, 0, 1, 1, 43, rgb("FFF2D3"))
+	card.Name, card.AnchorPoint = "Intertitle", Vector2.new(0, 1)
+	card.Position, card.Size = UDim2.fromScale(0.055, 0.89), UDim2.fromScale(0.80, 0.10)
+	card.TextXAlignment, card.TextStrokeColor3 = Enum.TextXAlignment.Left, rgb("151622")
+	textLimit(card, Enum.Font.BuilderSansExtraBold, 58)
 	local skip = Instance.new("TextButton")
 	skip.Name, skip.Text, skip.Font, skip.TextSize = "Skip", "Skip  ›", Enum.Font.BuilderSansMedium, 16
 	skip.AnchorPoint, skip.Position, skip.Size = Vector2.new(1, 0), UDim2.new(1, -12, 0, 6), UDim2.fromOffset(84, 44)
@@ -111,7 +118,7 @@ local function compose(screen, safe)
 	end
 	bars:GetPropertyChangedSignal("AbsoluteSize"):Connect(resize)
 	resize()
-	return caption, era, skip, fade, card, cardLimit, scrim
+	return caption, era, skip, fade, card, dateline, scrim
 end
 
 function Opening.play(player, net, hud)
@@ -134,13 +141,14 @@ function Opening.play(player, net, hud)
 	local shelf = Instance.new("Folder")
 	shelf.Name = "Offstage"
 	local oldClock = Lighting.ClockTime
-	local controls, chatEnabled, skipped, finished, restoreSightlines
+	local controls, chatEnabled, skipped, finished, revealAvatar, revealSigns, film
+	local remoteReplay = false
 	local lens = Instance.new("DepthOfFieldEffect")
 	lens.Name, lens.Enabled, lens.Parent = "Mine origins focus", false, camera
 	hud.inOpening, hud.root.Visible, Prompts.Enabled = true, false, false
 	aimGui.Enabled = false
 	local function run()
-		local caption, era, skip, fade, card, cardLimit, scrim = compose(screen, safe)
+		local caption, era, skip, fade, card, dateline, scrim = compose(screen, safe)
 		skip.Activated:Connect(function()
 			skipped = true
 		end)
@@ -163,15 +171,23 @@ function Opening.play(player, net, hud)
 			StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Chat, false)
 		end
 		camera.CameraType = Enum.CameraType.Scriptable
-		restoreSightlines = clearSightlines(char, workspace:FindFirstChild("CitrineCove"))
+		revealAvatar = clearSightlines(char, true)
+		revealSigns = clearSightlines(workspace:FindFirstChild("CitrineCove"), false)
 		if workspace.StreamingEnabled then
 			task.spawn(function()
 				pcall(player.RequestStreamAroundAsync, player, site, 4)
 			end)
 		end
 		local motion = player:GetAttribute("MenuMotion") ~= false
-		local film = Film.new(shelf, stage, camera, site, gate, motion, oldClock, char)
+		local landing = net:GetAttribute("Landing") or root.Position
+		local handoff =
+			{ root = root, start = root.Position, landing = landing, view = oldView, focus = oldFocus, fov = oldFov }
+		film = Film.new(shelf, stage, camera, site, gate, motion, oldClock, char, handoff)
 		local sound = Audio.origins(screen)
+		-- Submit the first view under black before starting the score and camera clock.
+		film:draw(0, false)
+		Run.PreRender:Wait()
+		Run.PreRender:Wait()
 		local start = os.clock()
 		while not skipped and player.Character == char and root.Parent and workspace.CurrentCamera == camera do
 			local t = os.clock() - start
@@ -183,10 +199,14 @@ function Opening.play(player, net, hud)
 				and gateModel
 				and gateModel:FindFirstChild("Mine sign")
 			local black = film:draw(t, live ~= nil)
-			lens.Enabled = (t >= 13.12 and t < 15.55)
-				or (t >= 18.78 and t < 20.19)
-				or (t >= 22.04 and t < 24.36)
-				or (t >= 28.78 and t < 31.52)
+			if t >= Beats.arrival and revealAvatar then
+				revealAvatar()
+				revealAvatar = nil
+			end
+			lens.Enabled = (t >= 10.05 and t < Beats.history)
+				or (t >= 27.36 and t < 29.04)
+				or (t >= 30.83 and t < 32.96)
+				or (t >= 37.56 and t < 40.02)
 			if lens.Enabled then
 				lens.FocusDistance = (camera.Focus.Position - camera.CFrame.Position).Magnitude
 				lens.InFocusRadius, lens.FarIntensity, lens.NearIntensity = 2.2, 0.34, 0.08
@@ -196,12 +216,16 @@ function Opening.play(player, net, hud)
 			caption.TextTransparency, era.TextTransparency = 1 - opacity, 1 - opacity
 			caption.TextStrokeTransparency = 1 - 0.56 * opacity
 			local title, titleOpacity = Film.card(t)
-			card.Text, card.TextTransparency = title, 1 - titleOpacity
-			cardLimit.MaxTextSize = if t < 30 then 50 else 88
+			card.Text, card.TextTransparency = if titleOpacity > 0 then title else "", 1 - titleOpacity
+			card.TextStrokeTransparency = 1 - 0.65 * titleOpacity
+			local period, strength = Film.era(t)
+			dateline.Text, dateline.TextTransparency = period, 1 - strength
+			dateline.TextStrokeTransparency = 1 - 0.70 * strength
 			scrim.BackgroundTransparency = 1 - 0.87 * opacity
 			fade.BackgroundTransparency = 1 - black
 			sound(t)
 			if t >= Film.duration then
+				remoteReplay = (root.Position - landing).Magnitude >= 38
 				finished = true
 				break
 			end
@@ -215,15 +239,21 @@ function Opening.play(player, net, hud)
 	local ok, result = xpcall(run, debug.traceback)
 	Actions:UnbindAction("Watch mine origins")
 	Actions:UnbindAction("Skip mine origins")
+	if film then
+		film:Destroy()
+	end
 	stage:Destroy()
 	shelf:Destroy()
 	lens:Destroy()
-	if restoreSightlines then
-		restoreSightlines()
+	if revealAvatar then
+		revealAvatar()
+	end
+	if revealSigns then
+		revealSigns()
 	end
 	Lighting.ClockTime = oldClock
 	if workspace.CurrentCamera == camera then
-		if player.Character == char then
+		if player.Character == char and (not finished or remoteReplay) then
 			camera.CFrame, camera.Focus = oldView, oldFocus
 		end
 		camera.FieldOfView, camera.CameraType = oldFov, oldType
@@ -237,7 +267,7 @@ function Opening.play(player, net, hud)
 	hud.root.Visible, Prompts.Enabled = oldHud, oldPrompts
 	aimGui.Enabled = oldAim
 	safe:Destroy()
-	if ok and finished then
+	if ok and finished and remoteReplay then
 		result.Parent.Letterbox.Visible = false
 		result.Parent["Subtitle shade"].Visible = false
 		W.tween(result, 0.35, { BackgroundTransparency = 1 }).Completed:Wait()

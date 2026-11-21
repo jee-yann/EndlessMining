@@ -146,65 +146,11 @@ for i = 1, 5 do
 	notes[i] = voice
 end
 function Audio.origins(parent)
-	local beats = require(script.Parent.MineOrigins.Beats)
 	if music.IsPlaying then
 		music:Stop()
 	end
-	local air = sound("Entry roar", "rbxasset://sounds/action_falling.ogg", 0, 0.64, parent)
-	air.Looped = true
-	air:Play()
-	local impact = sound("Landfall", "rbxasset://sounds/impact_explosion_03.mp3", 0.51, 0.78, parent)
-	local boom = sound("Pressure wave", impact.SoundId, 0.29, 0.49, parent)
-	local spray = sound("Water thrown ashore", "rbxasset://sounds/impact_water.mp3", 0.23, 0.70, parent)
-	local ping = sound("Starfall resonance", oreVoices.Starfall.SoundId, 0.26, 0.91, parent)
-	ping.PlaybackRegionsEnabled, ping.PlaybackRegion = true, NumberRange.new(0.08, 1.36)
-	local echo = Instance.new("ReverbSoundEffect")
-	echo.DecayTime, echo.WetLevel, echo.Parent = 2.35, -7, ping
-	local hammer = sound("Survey knock", oreVoices.Iron.SoundId, 0.23, 1.04, parent)
-	hammer.PlaybackRegionsEnabled, hammer.PlaybackRegion = true, NumberRange.new(0.012, 0.21)
-	local reply = sound("Returned knock", hammer.SoundId, 0.21, 0.80, parent)
-	reply.PlaybackRegionsEnabled, reply.PlaybackRegion = true, hammer.PlaybackRegion
-	echo:Clone().Parent = reply
-	local split = sound("Split basalt", oreVoices.Stone.SoundId, 0.29, 0.83, parent)
-	split.PlaybackRegionsEnabled, split.PlaybackRegion = true, NumberRange.new(0.015, 0.32)
-	local cues = {
-		{ 0.18, ping, 0.69 },
-		{ 6.90, split, 0.67 },
-		{ beats.impact, impact, 0.84 },
-		{ 10.20, boom, 0.49 },
-		{ 11.07, spray, 0.67 },
-		{ 13.52, split, 0.61 },
-		{ 15.10, ping, 0.67 },
-		{ beats.outbound[1], hammer, 1.04 },
-		{ beats.outbound[2], hammer, 1.04 },
-		{ beats.outbound[3], hammer, 1.04 },
-		{ beats.returned[1], reply, 0.82 },
-		{ beats.returned[2], reply, 0.82 },
-		{ beats.returned[3], reply, 0.82 },
-		{ beats.pick, split, 0.86 },
-		{ beats.answer, ping, 1.15 },
-		{ 31.68, reply, 0.64 },
-		{ 32.30, ping, 0.72 },
-	}
-	local nextCue = 1
-	return function(t)
-		local rush = math.clamp(t / 9.9, 0, 1)
-		air.Volume = if t < 9.9
-			then 0.012 + 0.26 * rush ^ 1.7
-			elseif t < 13.2 then 0.060 * (1 - math.clamp((t - 9.9) / 3.3, 0, 1))
-			else 0
-		air.PlaybackSpeed = 0.58 + 0.57 * rush
-		while cues[nextCue] and cues[nextCue][1] <= t do
-			local cue = cues[nextCue]
-			if t - cue[1] < 0.55 then
-				local voice = cue[2]
-				voice.PlaybackSpeed = cue[3]
-				voice.TimePosition = if voice.PlaybackRegionsEnabled then voice.PlaybackRegion.Min else 0
-				voice:Play()
-			end
-			nextCue += 1
-		end
-	end
+	local soundtrack = require(script.Parent.MineOrigins.Soundtrack)
+	return soundtrack(parent, musicChannel, sfxChannel)
 end
 local unlockNotes = {}
 for i = 1, 4 do

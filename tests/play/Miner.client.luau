@@ -84,7 +84,7 @@ local function test()
 		assert(stage and camera.CameraType == Enum.CameraType.Scriptable and not p:GetAttribute("IntroSeen"))
 		assert(
 			resonance.SoundGroup == harbor["Stone break"].SoundGroup
-				and resonance.SoundId == harbor["Starfall break"].SoundId
+				and resonance.SoundId == "rbxasset://sounds/volume_slider.ogg"
 		)
 		assert(not song.IsPlaying and resonance:FindFirstChildOfClass("ReverbSoundEffect"))
 		if r:GetAttribute("CheckSwing") then
@@ -108,6 +108,7 @@ local function test()
 			song.SoundGroup.Volume = mix
 		else
 			local landed, outbound, returned = false, 0, 0
+			local spawnAt = p.Character.HumanoidRootPart.Position
 			opening.Landfall.Played:Once(function()
 				landed = not song.IsPlaying
 			end)
@@ -129,10 +130,13 @@ local function test()
 			end, 12, "impact opens the crater")
 			assert(coast:FindFirstChild("Buried Starfall"))
 			waitFor(function()
-				return titles.Intertitle.Text == "8 MILLION YEARS LATER"
-					and opening.Dissolve.BackgroundTransparency < 0.05
-			end, 9, "black time cut")
-			local crew = stage:WaitForChild("The knocking crew", 4)
+				return stage:FindFirstChild("Citrine through time") and not coast.Parent
+			end, 8, "impact site gives way to the cove under construction")
+			assert(opening.Dissolve.BackgroundTransparency > 0.95, "visible geography through the time transition")
+			waitFor(function()
+				return titles.Date.Text == "THE FIRST SURVEY"
+			end, 13, "vegetated island reaches first survey")
+			local crew = stage:WaitForChild("The knocking crew", 12)
 			local actor = crew["Expedition miner"]
 			assert(actor:FindFirstChildOfClass("Humanoid") and actor:FindFirstChild("Head"))
 			assert(
@@ -158,8 +162,14 @@ local function test()
 				return light.Brightness > 0.8
 			end, 8, "the ore answers the player's hit")
 			waitFor(function()
-				return actor.Head.Position.Z < gate.Z and titles.Intertitle.Text == "IT KNOCKED BACK"
-			end, 9, "player crosses the actual portal before title")
+				return titles.Intertitle.Text == "IT KNOCKED BACK" and returned == 4
+			end, 8, "one deep answer leads back toward spawn")
+			waitFor(function()
+				return not crew.Parent and p.Character.Head.LocalTransparencyModifier < 1
+			end, 4, "real avatar revealed on the landing")
+			assert((p.Character.HumanoidRootPart.Position - spawnAt).Magnitude < 8, "the local film never moves the actual player")
+			assert((spawnAt - n:GetAttribute("Landing")).Magnitude < 22)
+			assert(opening.Dissolve.BackgroundTransparency > 0.95, "handoff stays on the live map")
 		end
 		waitFor(function()
 			return not opening.Parent
@@ -169,6 +179,7 @@ local function test()
 				and gui.SafeArea.Visible
 				and workspace.CurrentCamera.CameraType ~= Enum.CameraType.Scriptable
 				and not camera:FindFirstChild("Mine origins focus")
+				and not camera:FindFirstChild("Cinematic sound sources")
 		end, 16, "opening returns camera and HUD")
 	end
 	local ownerVision

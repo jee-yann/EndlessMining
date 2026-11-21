@@ -7,11 +7,13 @@ Citrine Cove is a multiplayer Roblox mining simulator. Aim at a cave wall or flo
 ## Play locally
 
 1. Open `build/Mine-Everything.rbxlx` in Roblox Studio, or use the existing **Endless Mining** Studio place connected to this project's Rojo server. To create the build from a fresh checkout, use the commands below.
-2. Press **F5**. A fresh save opens with *It Knocked Back*. Follow a molten meteor into the ancient headland. Eight million years later, a survey hammer sends three knocks into the rock from Citrine Cove’s footbridge. When the same rhythm comes back, your own Roblox avatar tries a pick on the stone outside the mine. The 3D cast and effects play locally, and the present-day shots use the harbor where you play. Use **Skip**, **Enter**, or gamepad **B** to start immediately. Replay the opening from **Settings → It Knocked Back**. Follow the gold marker through the stone arch. Hold the left mouse button on the dirt floor, or aim the center dot and hold **Mine** on touch.
+2. Press **F5**. A fresh save opens with *It Knocked Back*, a 45-second animated introduction. A meteor strikes the future site of the mine. Rain fills the crater, trees take root, and the first crew cuts a gallery and builds the bridge. In present-day Citrine Cove, a survey hammer sends three taps underground. When three knocks come back, your avatar tries one strike. The shot follows the answer across the bridge to your spawn compass, where the first expedition begins. Use **Skip**, **Enter**, or gamepad **B** to start immediately. Replay it from **Settings → It Knocked Back**. Follow the gold marker through the arch. Hold the left mouse button on the dirt floor, or aim the center dot and hold **Mine** on touch.
 3. Dig through the two dirt layers and look for black coal in the stone. Bring your haul to the amber **Sell** pad, then visit **Upgrades**. Speed costs 30 gold and shortens each swing. Buying a different upgrade also counts. Break another block with your new gear to finish the expedition. The guide remembers progress across visits and can be skipped in **Settings → First expedition**.
 4. The depth display counts blocks below the gallery. At 27 blocks deep you enter Iron Shelf. **Index** lists ore chances by depth, and **↑ Surface** brings you to the path outside the mine. The trip takes longer from greater depths. After eight blocks, **Jobs → First strike** awards 25 gold. A larger backpack costs 24 gold, 2 dirt and 1 coal.
 
 The place uses each player’s equipped Roblox avatar. If Studio Output reports an authentication error for a missing head or clothing texture, refresh the Studio sign-in and start another play session.
+
+The opening has its own score. Its three-note theme returns in the bridge-building music and in the answer to your pick. The score, hammer, underground replies and character murmurs use sounds bundled with Roblox. Music and effects follow their respective volume controls. Settings’ motion preference also selects steadier camera shots.
 
 ![Music, sound effects and menu motion in Settings](map/Settings-preview.jpg)
 
@@ -126,7 +128,9 @@ $terrainTest = (Resolve-Path '.\tests\Mine.spec.luau').Path
 & $studioExe --task RunScript --localPlaceFile $miningPlace --runScriptFile $terrainTest --outputFile "$env:TEMP\EndlessMining-terrain.log" --quitAfterExecution
 ```
 
-Look for a standalone `MINING_TESTS_PASSED` output line. The map checks cover the walk from spawn, both market counters, their lights, the outer paths, 360 directions around the rock rim and the surface threshold and the diggable hut floor. The mining checks cover save ownership, profile validation, economy, three seeds, shared depletion, server reach and obstructions, two pure dirt layers, regional stone percentages, sealed caves, depth gates and long headings across chunk boundaries. Run the input and two-client checks with Python 3 and a signed-in Studio session. The runner builds two temporary places with the test players and music mute already configured.
+Look for a standalone `MINING_TESTS_PASSED` output line. The map checks cover the walk from spawn, both market counters, their lights, the outer paths, 360 directions around the rock rim and the surface threshold and the diggable hut floor. The mining checks cover save ownership, profile validation, economy, three seeds, shared depletion, server reach and obstructions, two pure dirt layers, regional stone percentages, sealed caves, depth gates and long headings across chunk boundaries. Run the same Studio command with `tests/Origins.spec.luau` for the cutscene’s two camera matches, late-streaming entrance, reduced-motion shots and final spawn view. It prints `MINING_ORIGINS_TESTS_PASSED` on success.
+
+Run the input and two-client checks with Python 3 and a signed-in Studio session. The runner builds two temporary places with the test players and music mute already configured.
 
 ```powershell
 python tests/run_play.py "$studioExe"
