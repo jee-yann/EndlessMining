@@ -1,7 +1,9 @@
 local Shared = game:GetService("ReplicatedStorage").Shared
 local Config, Ores = require(Shared.GameConfig), require(Shared.Ores)
+local Art = require(Shared.MineralRelief)
 local Physics = game:GetService("PhysicsService")
 local Geology = require(script.Parent.Geology)
+local Details = require(script.Parent.CaveDetails)
 local Blocks = {}
 Blocks.__index = Blocks
 local edge, cell = Config.Chunk, Config.Cell
@@ -26,6 +28,7 @@ end
 function Blocks:reset(seed)
 	self.folder:ClearAllChildren()
 	self.chunks = {}
+	self.starterCuts = {}
 	self.geology = Geology.new(seed)
 end
 function Blocks:cellAt(point)
@@ -64,13 +67,19 @@ local function brick(self, p, material)
 	local strength = Config.strength(Config.FloorY + (p.Y + 0.5) * cell)
 	local grade = if ore and ore.name == "Stone" then Config.StoneGrades[strength] else nil
 	local tint = if grade then grade.color elseif ore then ore.color else Color3.fromRGB(111, 77, 59)
+	if material == Enum.Material.Ice then
+		tint = Config.layer((-p.Y - 0.5) * cell).color
+	end
+	if ore and Art.matrix[ore.name] then
+		tint = Color3.fromHex(Art.matrix[ore.name]):Lerp(ore.color, 0.22)
+	end
 	local grain = (p.X * 7 + p.Y * 3 + p.Z * 11) % 5
 	part.Color = tint:Lerp(if grain < 2 then Color3.new(0, 0, 0) else Color3.new(1, 1, 1), math.abs(grain - 2) * 0.016)
 	part.Material = if not ore
 		then Enum.Material.SmoothPlastic
-		elseif ore.hardness >= 5 then Enum.Material.Neon
+		elseif not ore.host then Enum.Material.SmoothPlastic
 		else Enum.Material.Plastic
-	local face = if grade then grade.face elseif ore then Enum.SurfaceType.Studs else Enum.SurfaceType.Smooth
+	local face = if grade then grade.face elseif ore and ore.host then Enum.SurfaceType.Studs else Enum.SurfaceType.Smooth
 	part.TopSurface, part.BottomSurface, part.LeftSurface, part.RightSurface, part.FrontSurface, part.BackSurface =
 		face, face, face, face, face, face
 	part.Anchored, part.CanTouch, part.CastShadow = true, false, true
@@ -100,8 +109,24 @@ function Blocks:expose(p, face, open)
 		part = brick(self, p, material)
 		chunk[i] = part
 	end
-	local mask = bit32.bor(part:GetAttribute("OpenFaces") or 0, bit32.lshift(1, face))
+	local old = part:GetAttribute("OpenFaces") or 0
+	local mask = bit32.bor(old, bit32.lshift(1, face))
+	if old == mask then
+		return
+	end
 	part:SetAttribute("OpenFaces", mask)
+	local ceiling = face == Enum.NormalId.Bottom.Value
+		and (p.X + p.Z) % 3 == 0
+		and self.geology:isCave(p - Vector3.yAxis)
+	if ceiling and part.Name == "Stone" then
+		part:SetAttribute("CalciteFaces", bit32.bor(part:GetAttribute("CalciteFaces") or 0, 2^face))
+	end
+	if face == Enum.NormalId.Top.Value and p.Y < -3 then
+		local feature = self.geology:feature(p + Vector3.yAxis)
+		if feature then
+			Details.place(self, part, feature)
+		end
+	end
 	if not part.Parent then
 		part.Parent = self.folder
 	end
@@ -132,8 +157,71 @@ function Blocks:take(p)
 		return nil
 	end
 	chunk[i] = false
+	if p.Y == -1 and p.X >= -5 and p.X <= -3 and p.Z >= -3 and p.Z <= -2 then
+		self.starterCuts[p] = os.clock() + 75
+	end
 	part:Destroy()
 	self:openNeighbours({ p })
 	return ore
+end
+-- Only refill a shaft mouth above an occupied tunnel if there is still another
+-- connected exit to the hall. Unexplored cells are solid, including outside the island.
+function Blocks:otherExit(start, closing)
+	local queue, seen = { start }, { [start] = true, [closing] = true }
+	local cursor = 1
+	while cursor <= #queue and cursor <= 1024 do
+		local p = queue[cursor]
+		if p.Y == -1 and Config.inHall((p + Vector3.one * 0.5) * cell) then
+			return true
+		end
+		for _, delta in directions do
+			local q = p + delta
+			if q.Y < 0 and not seen[q] then
+				seen[q] = true
+				local chunk, index = self:slot(q, false)
+				if chunk and chunk[index] == false then
+					table.insert(queue, q)
+				end
+			end
+		end
+		cursor += 1
+	end
+	return false
+end
+function Blocks:refreshStarter(now, miners)
+	for p, due in self.starterCuts do
+		if now < due then
+			continue
+		end
+		local center = self:center(p)
+		local below, bi = self:slot(p - Vector3.yAxis, false)
+		local clear, underground = true, false
+		for _, position in miners do
+			local offset = position - center
+			underground = underground or position.Y < self.top.Y
+			if offset.Magnitude < cell * 2 then
+				clear = false
+				break
+			end
+		end
+		if not clear or (underground and below and below[bi] == false and not self:otherExit(p - Vector3.yAxis, p)) then
+			self.starterCuts[p] = now + 5
+			continue
+		end
+		local chunk, i = self:slot(p, false)
+		chunk[i] = nil
+		self:expose(p, Enum.NormalId.Top.Value, {})
+		for j, delta in directions do
+			local neighbor, index = self:slot(p + delta, false)
+			local solid = neighbor and neighbor[index]
+			if solid == false then
+				self:expose(p, j - 1, {})
+			elseif solid then
+				local opposite = (j + 2) % 6
+				solid:SetAttribute("OpenFaces", bit32.band(solid:GetAttribute("OpenFaces"), bit32.bnot(2 ^ opposite)))
+			end
+		end
+		self.starterCuts[p] = nil
+	end
 end
 return Blocks

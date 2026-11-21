@@ -25,7 +25,11 @@ function Pages.pets(menu)
 	equip.Activated:Connect(function()
 		menu.net.Action:FireServer("Pet", if menu.player:GetAttribute("Pet") == "Rock" then "" else "Rock")
 	end)
-	local card = W.frame(menu.list, "Rename", 1, 76, 447, 119, W.card, 12)
+	local _, drakeDetail, drake = menu:row(2, "Cave Drake", "Pets", W.aqua)
+	drake.Activated:Connect(function()
+		menu.net.Action:FireServer("Pet", if menu.player:GetAttribute("Pet") == "Drake" then "" else "Drake")
+	end)
+	local card = W.frame(menu.list, "Rename", 1, 145, 447, 119, W.card, 12)
 	W.title(card, "Companion name", 13, 5, 300, 25, 19, W.white, true)
 	local box = Instance.new("TextBox")
 	box.Name, box.Position, box.Size = "Name", UDim2.fromOffset(13, 36), UDim2.fromOffset(262, 34)
@@ -47,12 +51,19 @@ function Pages.pets(menu)
 	end
 	table.insert(menu.updates, function()
 		local active = menu.player:GetAttribute("Pet") == "Rock"
+		local ownsDrake = menu.player:GetAttribute("DrakeUnlocked") == true
+		local flying = menu.player:GetAttribute("Pet") == "Drake"
+		drakeDetail.Text = if ownsDrake
+			then "Flying cosmetic companion"
+			else "Hatch an egg in a natural cave below 185 blocks"
+		drake.Text, drake.Interactable = if flying then "Unequip" elseif ownsDrake then "Equip" else "Locked", ownsDrake
+		drake.BackgroundColor3 = if flying then W.green elseif ownsDrake then W.aqua else W.muted
 		local name = menu.player:GetAttribute("PetName") or "Pebble"
 		detail.Text = name .. "   ·   Cosmetic companion"
 		box.PlaceholderText = name
 		equip.Text, equip.BackgroundColor3 = if active then "Unequip" else "Equip", if active then W.green else W.violet
 	end)
-	return 3
+	return 4
 end
 function Pages.achievements(menu)
 	for i, award in Guide.achievements do
@@ -87,6 +98,7 @@ function Pages.index(menu)
 		local bar = W.frame(card, "Swatch", 5, 7, 6, 38, W.muted, 3)
 		local name = W.title(card, "", 17, 1, 193, 21, 16, W.white, true)
 		local worth = W.text(card, "", 17, 23, 196, 23, 12, W.muted, true)
+		worth.RichText = true
 		table.insert(menu.updates, function()
 			local found = menu.player:GetAttribute("Found" .. ore.name)
 			local hidden = ore.secret and not found
@@ -94,11 +106,8 @@ function Pages.index(menu)
 			name.Text = if hidden then "???" else ore.name .. (if found then "   ✓" else "")
 			worth.Text = if hidden
 				then "Mine it to identify"
-				else string.format(
-					"%s G each   ·   %d XP",
-					W.number(ore.value * (if menu.player:GetAttribute("DoubleGold") then 2 else 1)),
-					ore.xp
-				)
+				else W.unitPrice(ore.value * (if menu.player:GetAttribute("DoubleGold") then 2 else 1))
+					.. "   ·   " .. ore.xp .. " base XP"
 		end)
 	end
 	local y = 30

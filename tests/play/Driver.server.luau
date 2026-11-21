@@ -1,4 +1,5 @@
 local rep = game:GetService("ReplicatedStorage")
+local config = require(rep.Shared.GameConfig)
 local test = game:GetService("StudioTestService")
 local mode = rep:GetAttribute("MiningTestMode")
 local completed = false
@@ -28,14 +29,13 @@ report.OnServerEvent:Connect(function(player, stage, detail)
 	elseif stage == "position" then
 		local char = player.Character
 		local x = if inputTest then 0 elseif player.UserId % 2 == 0 then -4 else 5
-		char:PivotTo(CFrame.new(n:GetAttribute("Origin") + Vector3.new(x, 2.5, -12.5)))
+		char:PivotTo(CFrame.new(n:GetAttribute("Origin") + Vector3.new(x, 2.5, -2.5 * config.Cell)))
 		char.HumanoidRootPart.Anchored = true
 	elseif stage == "depthSample" then
 		local root = player.Character.HumanoidRootPart
 		root.Anchored = true
 		root.CFrame = CFrame.new(n:GetAttribute("Origin") + Vector3.new(-1, 2.5, -18))
 	elseif stage == "minedShaft" then
-		local config = require(rep.Shared.GameConfig)
 		local origin = n:GetAttribute("Origin")
 		local params = RaycastParams.new()
 		params.FilterType = Enum.RaycastFilterType.Include
@@ -59,6 +59,8 @@ report.OnServerEvent:Connect(function(player, stage, detail)
 		player.Character.HumanoidRootPart.Anchored = false
 	elseif stage == "openPage" then
 		n.Feedback:FireClient(player, "page", detail)
+	elseif stage == "renewalNotice" then
+		n.Feedback:FireClient(player, "resetSoon", 30)
 	elseif stage == "station" then
 		local island = workspace.CitrineCove
 		local positions = {
@@ -66,6 +68,7 @@ report.OnServerEvent:Connect(function(player, stage, detail)
 			Gear = island["Shore market"].Upgrades["Service mat"],
 			Store = island["Harbor Plaza"].Store.Counter,
 			Book = island["Harbor Plaza"].Book.Counter,
+			Supplies = island["Harbor Plaza"].Supplies.Counter,
 		}
 		if positions[detail] then
 			player.Character:PivotTo(CFrame.new(positions[detail].Position + Vector3.yAxis * 3))
@@ -73,6 +76,8 @@ report.OnServerEvent:Connect(function(player, stage, detail)
 		end
 	elseif stage == "closePage" then
 		n.Feedback:FireClient(player, "close")
+	elseif stage == "readyForPracticeReset" then
+		player:SetAttribute("ReadyForPracticeReset", true)
 	elseif stage == "passed" then
 		done[player] = detail
 		local results = {}

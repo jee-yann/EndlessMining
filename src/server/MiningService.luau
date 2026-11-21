@@ -5,6 +5,7 @@ local Config, Ores = require(Shared.GameConfig), require(Shared.Ores)
 local Pattern = require(Shared.BlockPattern)
 local Profile = require(script.Parent.Profile)
 local Expeditions = require(Shared.Expeditions)
+local Skills = require(Shared.Skills)
 local Mining = {}
 
 function Mining.validPoint(v)
@@ -28,7 +29,7 @@ function Mining.target(world, character, point, normal)
 	end
 	local params = RaycastParams.new()
 	params.FilterDescendantsInstances = { character }
-	local part = Pattern.visiblePart(head.Position, anchor, normal, params, character:GetAttribute("PickReach"))
+	local part = Pattern.reachablePart(head.Position, anchor, normal, params, character:GetAttribute("PickReach"))
 	if not part or part.Parent ~= world.grid.folder then
 		return nil
 	end
@@ -56,7 +57,7 @@ function Mining.start(world, net, sessions, sync)
 	local function beginStroke(player, character, point, normal, now)
 		nextSwing[player] = now + 0.035
 		local session = sessions[player]
-		if not session or not world.ready then
+		if not session or session.resetting or not world.ready then
 			return
 		end
 		local p = session.profile
@@ -72,18 +73,25 @@ function Mining.start(world, net, sessions, sync)
 			strokes[player] = nil
 			return
 		end
-		local duration = Ores.cutTime(
-			Profile.stat(p, "Speed") * (if p.skills.Tempo then 0.9 else 1),
-			world:oreAt(point),
-			Config.strength(point.Y - world.origin.Y)
+		local ore = world:oreAt(point)
+		local duration, tempered = Skills.cutTime(
+			Profile.stat(p, "Speed"),
+			ore,
+			Config.strength(point.Y - world.origin.Y),
+			p.temper,
+			p.skills
 		)
 		strokes[player] = {
+			profile = p,
 			point = point,
 			normal = normal,
 			due = now + duration,
+			tempered = tempered,
 			character = character,
 			generation = world.generation,
 		}
+		character:SetAttribute("MiningTarget", point)
+		character:SetAttribute("MiningOre", ore.name)
 		character:SetAttribute("MiningSwing", duration)
 	end
 	net.Swing.OnServerEvent:Connect(function(player, active, point, normal)
@@ -159,7 +167,10 @@ function Mining.start(world, net, sessions, sync)
 		local ore = Ores.byName[name]
 		local discovery = not ore.host and not profile.discoveries[name]
 		local oldLevel = Expeditions.level(profile.xp)
-		local awards = Profile.recordCut(profile, name)
+		local awards = Profile.recordCut(profile, name, Config.depthInBlocks(Config.FloorY + world.origin.Y - center.Y))
+		if request.tempered then
+			profile.temper = math.max(0, profile.temper - 1)
+		end
 		sync(player, profile)
 		for _, award in awards do
 			net.Feedback:FireClient(player, "achievement", award)
@@ -209,7 +220,9 @@ function Mining.start(world, net, sessions, sync)
 			if
 				world.ready
 				and session
+				and not session.resetting
 				and request
+				and request.profile == session.profile
 				and request.generation == world.generation
 				and request.character == player.Character
 				and now - request.time < 1

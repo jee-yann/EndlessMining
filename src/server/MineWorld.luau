@@ -41,7 +41,10 @@ function World.new(seed, surface)
 			emptyRegion(origin + Config.SiteMin, origin + Config.SiteMax, surface)
 			and emptyRegion(origin + Config.SurfaceMin, origin + Config.SurfaceMax, surface)
 		then
+			local flares = Instance.new("Folder")
+			flares.Name, flares.Parent = "Survey flares", surface or workspace
 			return setmetatable({
+				flares = flares,
 				origin = origin,
 				seed = seed,
 				ready = false,
@@ -56,6 +59,7 @@ end
 
 function World:generate()
 	self.ready = false
+	self.flares:ClearAllChildren()
 	self.removed = 0
 	self.generation = (self.generation or 0) + 1
 	self.grid:reset(self.seed)

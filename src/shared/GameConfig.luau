@@ -1,15 +1,17 @@
+local cell = 6
 local Config = {
 	LandscapeSeed = 73129,
 	ResetAfter = 2400,
+	ResetSeconds = 3600,
 	ResetWarning = 20,
-	-- Grid coordinates are relative to the entrance. Mining blocks are five studs.
-	Cell = 5,
+	-- The gallery begins one cell behind the entrance and spans ten cells on each axis.
+	Cell = cell,
 	Chunk = 8,
 	FloorY = 0,
 	DirtLayers = 2,
-	HallHalfWidth = 25,
-	HallFront = -5,
-	HallBack = -55,
+	HallHalfWidth = 5 * cell,
+	HallFront = -cell,
+	HallBack = -11 * cell,
 	MineBlockTag = "EndlessMiningBlockFolder",
 	SiteMin = Vector3.new(-96, -112, -168),
 	SiteMax = Vector3.new(96, 40, 0),
@@ -20,6 +22,7 @@ local Config = {
 	SurfaceName = "Citrine Cove",
 	Reach = 34,
 	StoreName = "EndlessMining_v1",
+	AllowProgressReset = true, -- Prototype Settings option. Set false to retire it for release.
 	LeaseSeconds = 180,
 	AutosaveSeconds = 45,
 	-- Maximum pattern faces checked per second across all players.
@@ -70,6 +73,24 @@ Config.Layers = {
 		},
 		material = Enum.Material.Basalt,
 		color = Color3.fromRGB(89, 84, 105),
+	},
+	{
+		depthBlocks = 340,
+		name = "Frostglass Reach",
+		oreChances = {
+			Coal = 1,
+			Copper = 2,
+			Iron = 5,
+			Gold = 5,
+			Diamond = 7,
+			Emerald = 4,
+			Amethyst = 0.8,
+			Sapphire = 0.35,
+			Emberglass = 0.22,
+			Starfall = 0.025,
+		},
+		material = Enum.Material.Ice,
+		color = Color3.fromRGB(134, 171, 190),
 	},
 }
 function Config.depthInBlocks(depthStuds)

@@ -8,7 +8,7 @@ local list = {
 		xp = 0,
 		hardness = 1,
 		material = Enum.Material.Mud,
-		color = rgb(200, 140, 93),
+		color = rgb(151, 98, 65),
 		flash = "Dirt",
 		host = true,
 	},
@@ -30,7 +30,7 @@ local list = {
 		xp = 3,
 		hardness = 1,
 		material = Enum.Material.Asphalt,
-		color = rgb(62, 69, 89),
+		color = rgb(79, 82, 95),
 		flash = "Coal seam",
 	},
 	{
@@ -40,7 +40,7 @@ local list = {
 		xp = 5,
 		hardness = 2,
 		material = Enum.Material.Ground,
-		color = rgb(203, 151, 97),
+		color = rgb(195, 122, 84),
 		flash = "Native copper",
 	},
 	{
@@ -84,6 +84,28 @@ local list = {
 		flash = "Legendary emerald!",
 	},
 	{
+		name = "Amethyst",
+		rarity = "Mythic",
+		value = 1700,
+		xp = 29,
+		hardness = 6,
+		material = Enum.Material.Glass,
+		color = rgb(154, 74, 219),
+		flash = "Amethyst geode",
+		secret = true,
+	},
+	{
+		name = "Sapphire",
+		rarity = "Mythic",
+		value = 2400,
+		xp = 36,
+		hardness = 6,
+		material = Enum.Material.Marble,
+		color = rgb(54, 98, 243),
+		flash = "Sapphire crystal",
+		secret = true,
+	},
+	{
 		name = "Emberglass",
 		rarity = "Mythic",
 		value = 3600,
@@ -111,7 +133,7 @@ for _, ore in list do
 	byName[ore.name] = ore
 	byMaterial[ore.material] = ore
 end
-for _, m in { Enum.Material.Rock, Enum.Material.Slate, Enum.Material.Basalt } do
+for _, m in { Enum.Material.Rock, Enum.Material.Slate, Enum.Material.Basalt, Enum.Material.Ice } do
 	byMaterial[m] = byName.Stone
 end
 local effort = {
@@ -123,11 +145,17 @@ local effort = {
 	Gold = 2.05,
 	Diamond = 2.5,
 	Emerald = 3,
+	Amethyst = 3.4,
+	Sapphire = 3.75,
 	Emberglass = 4,
 	Starfall = 5.5,
 }
-local function cutTime(base, ore, strength)
-	return base * effort[ore.name] * (1 + 0.45 * ((strength or 1) - 1))
+local function cutTime(base, ore, strength, charges, temperMultiplier)
+	local tempered = (charges or 0) > 0 and math.max(strength or 1, ore.hardness) >= 2
+	return base * effort[ore.name] * (1 + 0.45 * ((strength or 1) - 1)) * (if tempered
+		then temperMultiplier or 0.8
+		else 1),
+		tempered
 end
 local rarityRank = { Common = 1, Uncommon = 2, Rare = 3, Epic = 4, Legendary = 5, Mythic = 6, Celestial = 7 }
 local function carried(player)

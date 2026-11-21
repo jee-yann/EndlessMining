@@ -40,7 +40,79 @@ local function test()
 		return gui:GetAttribute("ControllerReady") and not p.PlayerGui:FindFirstChild("MiningLoading")
 	end, 18, "controller starts without a loading screen")
 	assert(not p.Character.HumanoidRootPart.Anchored, "free to move at spawn")
+	do
+		local opening = p.PlayerGui:WaitForChild("Mine origins", 6)
+		local titles = p.PlayerGui:WaitForChild("Keeper subtitles", 2)
+		assert(opening and titles.Skip and not gui.SafeArea.Visible, "skippable first visit")
+		local board = opening.Matte.Sky["Picture plane"]
+		local frame = board.Picture
+		local wick = opening:WaitForChild("Wick resonance", 4)
+		assert(frame.CurrentCamera and not p:GetAttribute("IntroSeen"))
+		assert(wick.SoundGroup == harbor["Stone break"].SoundGroup and wick.SoundId == harbor["Starfall break"].SoundId)
+		assert(not song.IsPlaying and wick:FindFirstChildOfClass("ReverbSoundEffect"))
+		if r:GetAttribute("CheckSwing") then
+			-- Exercise the live music handoff with its output muted for the entire check.
+			local mix = song.SoundGroup.Volume
+			song.SoundGroup.Volume = 0
+			rep:SetAttribute("MuteTestMusic", false)
+			local input=game.UserInputService:CreateVirtualInput()
+			input:SendKey(true,Enum.KeyCode.Return)
+			task.wait(.08)
+			input:SendKey(false,Enum.KeyCode.Return)
+			waitFor(function() return not opening.Parent end,2,"skip immediately")
+			waitFor(function() return song.IsPlaying and song.Volume > 0.06 end,3,"music fades up after skip")
+			assert(song.SoundGroup.Volume == 0)
+			rep:SetAttribute("MuteTestMusic", true)
+			song:Stop()
+			song.SoundGroup.Volume = mix
+		else
+			local coast, landed
+			opening.Landfall.Played:Once(function() landed = not song.IsPlaying end)
+			waitFor(function()
+				coast = frame:FindFirstChild("Impact coast")
+				return coast and coast:FindFirstChild("Falling ember")
+			end, 8, "landfall at the future mine")
+			waitFor(function() return landed and coast:FindFirstChild("Star heart") end, 5, "impact leaves the fragment")
+			waitFor(function() return board:FindFirstChild("Tide") end, 5, "sea submerges the strike")
+			waitFor(function() return board:FindFirstChild("Meadow") end, 6, "sea retreats")
+			waitFor(function() return board:FindFirstChild("Find") end, 7, "the fishers find a chip")
+			waitFor(function() return board:FindFirstChild("Harbor") and board["Lantern sweep"].Visible end, 8, "settlement lights the beacon")
+			waitFor(function() return board:FindFirstChild("Workshop") and titles.Caption.Text:find("drill crew") end, 14, "core sample evidence")
+			waitFor(function() return not opening.Matte.Visible and titles.Caption.Text:find("dusk") end, 10, "handoff at the playable mine")
+		end
+		waitFor(function()
+			return not opening.Parent and not titles.Parent and p:GetAttribute("IntroSeen") and gui.SafeArea.Visible
+				and workspace.CurrentCamera.CameraType~=Enum.CameraType.Scriptable
+		end,16,"opening returns camera and HUD")
+	end
 	local ownerVision
+	do
+		local marker = workspace.Terrain:WaitForChild("First expedition waypoint", 4)
+		waitFor(function() return marker.Destination.Enabled end, 4, "mine waypoint after the opening")
+		assert(p:GetAttribute("ExpeditionStep") == "Dig" and marker.Destination.TextLabel.Text:find("Mine"))
+		assert((marker.WorldPosition - n:GetAttribute("Entrance")).Magnitude < 6)
+		if r:GetAttribute("CheckSwing") then
+			local guide = require(p.PlayerScripts.Client.FirstExpedition).new(p, n)
+			local eye = p.Character.Head
+			local _, touch = guide:objective(eye, true, 0, true, false, "Dig")
+			local _, mouse = guide:objective(eye, true, 0, false, false, "Dig")
+			assert(touch:find("hold Mine") and mouse:find("mouse button"))
+			local _, touchSale = guide:objective(eye, false, 0, true, true, "Ore")
+			assert(touchSale:find("Tap the prompt") and guide.label.Text:find("Sell"))
+			local probe = { Position = Vector3.new(3000, 1800, 3000) }
+			local coal = Instance.new("Part")
+			coal.Name, coal.Anchored, coal.Size = "Coal", true, Vector3.one * 6
+			coal.Position, coal.Parent = probe.Position - Vector3.zAxis * 16, workspace.CitrineCove.MineBlocks
+			local cover = coal:Clone()
+			cover.Name, cover.Position, cover.Parent = "Stone", probe.Position - Vector3.zAxis * 8, coal.Parent
+			assert(not guide:visibleOre(probe), "no guidance through a solid stone wall")
+			cover:Destroy()
+			guide.nextSearch = 0
+			assert(guide:visibleOre(probe) == coal, "mark the exposed coal")
+			coal:Destroy()
+			guide.anchor:Destroy()
+		end
+	end
 	if p.UserId == 45241447 then
 		ownerVision = p.PlayerGui:WaitForChild("OwnerOreVision", 3)
 		assert(ownerVision and not ownerVision.ResetOnSpawn, "Pixelii receives ore vision")
@@ -61,8 +133,20 @@ local function test()
 		end, 8, voice.Name .. " failed to load")
 	end
 	if r:GetAttribute("CheckSwing") then
-		local seenIds = {}
+		local seenIds, digSignatures = {}, {}
+		local emitter = Instance.new("Attachment")
+		emitter.Parent = workspace.Terrain
 		for _, ore in require(rep.Shared.Ores).list do
+			audio.dig(ore.name, emitter)
+			local signature = ""
+			for _, layer in emitter:GetChildren() do
+				waitFor(function() return layer.IsLoaded end, 3, ore.name .. " dig sample")
+				assert(layer.SoundGroup == harbor["Coal break"].SoundGroup and layer.PlaybackRegion.Min < layer.TimeLength)
+				signature ..= layer.SoundId .. tostring(layer.PlaybackRegion)
+			end
+			assert(emitter:FindFirstChild("Pick impact") and not digSignatures[signature], ore.name .. " dig sound")
+			digSignatures[signature] = true
+			emitter:ClearAllChildren()
 			local voice = harbor[ore.name .. " break"]
 			assert(not seenIds[voice.SoundId .. voice.PlaybackSpeed], "duplicate ore sound")
 			seenIds[voice.SoundId .. voice.PlaybackSpeed] = true
@@ -85,7 +169,7 @@ local function test()
 					and notes
 						== (if ore.name == "Starfall"
 							then 5
-							elseif ore.name == "Emberglass" then 4
+							elseif ore.rarity == "Mythic" then 4
 							else math.max(0, ore.hardness - 3))
 			end, 2, ore.name .. " break and reward notes")
 			strike:Disconnect()
@@ -93,6 +177,7 @@ local function test()
 				signal:Disconnect()
 			end
 		end
+		emitter:Destroy()
 	end
 	local car = workspace.CitrineCove["Citrine Highlands"]["Moving cabins"]["Ore carrier 1"]
 	local start = car:GetPivot().Position
@@ -107,6 +192,7 @@ local function test()
 		Gear = map["Shore market"].Upgrades["Service mat"],
 		Store = map["Harbor Plaza"].Store.Counter,
 		Book = map["Harbor Plaza"].Book.Counter,
+		Supplies = map["Harbor Plaza"].Supplies.Counter,
 	}
 	local function visit(key, activate)
 		local pad = counters[key]
@@ -123,6 +209,11 @@ local function test()
 	end
 	local roster = gui.SafeArea["Server leaderboard"]
 	assert(not game.StarterGui:GetCoreGuiEnabled(Enum.CoreGuiType.PlayerList))
+	if game.UserInputService.PreferredInput == Enum.PreferredInput.Touch then
+		assert(not roster.Visible and not roster.Miners.Visible, "phone roster starts in Menu")
+	else
+		assert(roster.Visible and roster.Miners.Visible and roster.Columns.Visible, "desktop roster starts expanded")
+	end
 	local me = roster.Miners:WaitForChild(tostring(p.UserId), 3)
 	assert(me and me.Level.Text == "1" and me.Gold.Text == "0" and me.Title.Text == "Noob Miner")
 	local wallet = gui.SafeArea.Wallet
@@ -135,6 +226,23 @@ local function test()
 	end
 	assert(gui.SafeArea["Action dock"]:FindFirstChild("Achievements"))
 	local safe = gui.SafeArea
+	assert(
+		safe.Mine.BackgroundTransparency == 1 and not safe:FindFirstChild("Auto mine"),
+		"single clear mining control"
+	)
+	assert(safe.Mine["Mining mode"].Text == "Hold to mine" and safe.Mine["Gesture hint"].Text == "Double-tap for auto")
+	local jobButton = safe["Current job"].OpenJob
+	assert(jobButton:IsA("GuiButton") and jobButton.BackgroundTransparency == 0, "solid jobs button")
+	for _, b in gui:GetDescendants() do
+		if b:IsA("TextButton") and b.Text == "×" then
+			assert(b.BackgroundColor3.R > b.BackgroundColor3.G * 2, "red close button")
+			local gleam = b["Enamel highlight"]
+			assert(
+				not b.AutoButtonColor and gleam.Size.X.Scale <= 0.4 and gleam.Size.X.Offset == 0,
+				"short close highlight"
+			)
+		end
+	end
 	local originalSize = safe.Size
 	for _, size in { Vector2.new(760, 323), Vector2.new(320, 615), Vector2.new(568, 250) } do
 		safe.Size = UDim2.fromOffset(size.X, size.Y)
@@ -146,16 +254,25 @@ local function test()
 		local pack = safe["Edge shortcuts"].Pack
 		local menuButton = safe["Edge shortcuts"].Menu
 		assert(pack.AbsoluteSize.Y >= 44 and menuButton.AbsoluteSize.Y >= 44, "edge tap targets")
-		assert(
-			safe.Wallet.AbsolutePosition.X + safe.Wallet.AbsoluteSize.X <= safe.Location.AbsolutePosition.X
-				or safe.Location.AbsolutePosition.Y + safe.Location.AbsoluteSize.Y
-					<= safe.Wallet.AbsolutePosition.Y + 1,
-			"corner stats overlap"
-		)
+		local right = menuButton.AbsolutePosition.X + menuButton.AbsoluteSize.X
+		local equipment = controls.Equipment
+		assert(math.abs(equipment.AbsolutePosition.X + equipment.AbsoluteSize.X - right) <= 1, "stats align with Menu")
+		assert(ring.AbsolutePosition.Y >= equipment.AbsolutePosition.Y + equipment.AbsoluteSize.Y, "separate level row")
+		waitFor(function()
+			local a, b = wallet.AbsolutePosition, safe.Location.AbsolutePosition
+			local aEnd, bEnd = a + wallet.AbsoluteSize, b + safe.Location.AbsoluteSize
+			return aEnd.X <= b.X + 1 or bEnd.X <= a.X + 1 or aEnd.Y <= b.Y + 1 or bEnd.Y <= a.Y + 1
+		end, 2, "corner stats overlap at " .. tostring(size))
 	end
 	safe.Size = originalSize
 	assert(not menu["Inventory tabs"]:FindFirstChild("Achievements"))
 	assert(menu["Inventory tabs"]:FindFirstChild("Passes") and not menu["Inventory tabs"]:FindFirstChild("Skills"))
+	local tabViewport = menu["Inventory pages"]
+	local pager = tabViewport.UIPageLayout
+	assert(
+		tabViewport.ClipsDescendants and pager.FillDirection == Enum.FillDirection.Horizontal,
+		"horizontal tab viewport"
+	)
 	for _, page in
 		{
 			"Menu",
@@ -170,6 +287,7 @@ local function test()
 			"Jobs",
 			"Book",
 			"Store",
+			"Supplies",
 		}
 	do
 		if counters[page] then
@@ -189,13 +307,34 @@ local function test()
 			Book = "Stone",
 			Pack = "Stone",
 			Store = "Double Gold",
+			Supplies = "Survey flare",
 		})[page]
 		waitFor(function()
 			if page == "Skills" then
-				return overlay["Skill map"].Visible and not menu.Visible
+				local map = overlay:FindFirstChild("Skill map")
+				return map and map.Visible and not menu.Visible
+			end
+			local tab = tabViewport:FindFirstChild(page)
+			if tab then
+				return tabViewport.Visible and pager.CurrentPage == tab and tab:FindFirstChild(listing)
 			end
 			return overlay.Visible and menu.Listings:FindFirstChild(listing)
 		end, 5, "open " .. page)
+		if page == "Gear" and r:GetAttribute("CheckSwing") then
+			local held = p:GetAttribute("HeldStone")
+			p:SetAttribute("HeldStone", 29)
+			local label = menu.Listings.Power.Requirements
+			waitFor(function()
+				return label.Text:find("✓ Stone 29/3", 1, true) and label.TextFits
+			end, 2, "workshop shows all carried ingredients")
+			local benefit = menu.Listings.Power.Benefit
+			assert(benefit.Text == "Mines Copper" and benefit.TextFits and not label.Text:find("Mines", 1, true))
+			assert(benefit.AbsolutePosition.Y + benefit.AbsoluteSize.Y <= menu.Listings.Power.Action.AbsolutePosition.Y)
+			p:SetAttribute("HeldStone", held)
+		end
+		if page == "Pets" or page == "Passes" then
+			assert(pager.Animated and menu.Position == UDim2.fromScale(0.5, 0.5), "only tab content should swipe")
+		end
 		if page == "Achievements" then
 			assert(not menu["Inventory tabs"].Visible)
 			assert(menu.Listings:FindFirstChild("Practicing My Scales"))
@@ -293,7 +432,55 @@ local function test()
 		local camera = workspace.CurrentCamera
 		local input = game:GetService("UserInputService"):CreateVirtualInput()
 		assert(input, "Studio virtual input unavailable")
-		r:FireServer("openPage", "Settings")
+		local function tapKey(code)
+			input:SendKey(true, code)
+			task.wait()
+			input:SendKey(false, code)
+		end
+		tapKey(Enum.KeyCode.Tab)
+		waitFor(function() return not roster.Miners.Visible end, 2, "fold default roster")
+		tapKey(Enum.KeyCode.Tab)
+		waitFor(function() return roster.Miners.Visible end, 2, "reopen roster")
+		do
+			assert(not safe["Action dock"]:FindFirstChild("Keybind", true), "letter badges removed")
+			tapKey(Enum.KeyCode.O)
+			game:GetService("RunService").Heartbeat:Wait()
+			assert(not overlay.Visible, "O is reserved for the camera")
+			for _, slot in {
+				{ "Inventory", Enum.KeyCode.B }, { "Skills", Enum.KeyCode.K }, { "Achievements", Enum.KeyCode.H },
+				{ "Book", Enum.KeyCode.J }, { "Settings", Enum.KeyCode.P },
+			} do
+				local page, code = slot[1], slot[2]
+				tapKey(code)
+				waitFor(function()
+					if not overlay.Visible then
+						return false
+					elseif page == "Skills" then
+						return overlay["Skill map"].Visible
+					elseif page == "Inventory" then
+						return tabViewport.Visible and pager.CurrentPage.Name == page
+					end
+					local row = ({ Achievements = "Practicing My Scales", Book = "Stone", Settings = "Music volume" })[page]
+					return menu.Visible and menu.Listings:FindFirstChild(row)
+				end, 3, page .. " shortcut")
+			end
+			tapKey(Enum.KeyCode.P)
+			waitFor(function() return not overlay.Visible end, 2, "toggle Settings closed")
+			r:FireServer("openPage", "Pets")
+			waitFor(function() return overlay.Visible and pager.CurrentPage.Name == "Pets" end, 3, "pets tab")
+			local name = tabViewport.Pets.Rename:FindFirstChildOfClass("TextBox")
+			name:CaptureFocus()
+			waitFor(function() return name:IsFocused() end, 2, "typing pet name")
+			tapKey(Enum.KeyCode.B)
+			task.wait(0.2)
+			assert(overlay.Visible and name:IsFocused() and pager.CurrentPage.Name == "Pets", "B while typing")
+			name:ReleaseFocus()
+			waitFor(function() return not game.UserInputService:GetFocusedTextBox() end, 2, "pet name focus released")
+			game:GetService("RunService").Heartbeat:Wait()
+			tapKey(Enum.KeyCode.B)
+			waitFor(function() return not overlay.Visible end, 2, "B closes inventory from Pets")
+		end
+		tapKey(Enum.KeyCode.P)
 		waitFor(function()
 			return overlay.Visible and menu.Listings:FindFirstChild("Music volume")
 		end, 4, "settings")
@@ -322,6 +509,31 @@ local function test()
 		assert(song.SoundGroup.Volume == 0, "effects changed music")
 		adjust("Music volume", 55, "MusicVolume", song.SoundGroup)
 		adjust("Sound effects", 80, "SfxVolume", harbor["Coal break"].SoundGroup)
+		local function clickButton(button)
+			clickAt(button.AbsolutePosition + button.AbsoluteSize * 0.5 + game.GuiService:GetGuiInset())
+		end
+		for _, channel in {
+			{ "Music volume", "MusicMuted", "MusicVolume", song.SoundGroup },
+			{ "Sound effects", "SfxMuted", "SfxVolume", harbor["Coal break"].SoundGroup },
+		} do
+			local row = menu.Listings[channel[1]]
+			local button, track = row.Mute, row.Slider.Track
+			local volume, tint = p:GetAttribute(channel[3]), track.Fill.BackgroundColor3
+			clickButton(button)
+			waitFor(function()
+				return p:GetAttribute(channel[2]) and button["Mute slash"].Visible and not button.Waves.Visible
+					and not row.Slider.Interactable and channel[4].Volume == 0
+			end, 3, "mute " .. channel[1])
+			assert(track.Fill.BackgroundColor3 ~= tint and not row.Slider.Selectable)
+			clickButton(track)
+			assert(p:GetAttribute(channel[3]) == volume and math.abs(track.Fill.Size.X.Scale - volume / 100) < 0.001)
+			clickButton(button)
+			waitFor(function()
+				return not p:GetAttribute(channel[2]) and math.abs(channel[4].Volume - volume / 100) < 0.001
+					and row.Slider.Interactable and button.Waves.Visible and not button["Mute slash"].Visible
+					and track.Fill.BackgroundColor3 == tint
+			end, 3, "restore volume")
+		end
 		r:FireServer("closePage")
 		waitFor(function()
 			return not overlay.Visible
@@ -344,6 +556,11 @@ local function test()
 		local map = overlay["Skill map"]
 		local viewport = map["Map viewport"]
 		local canvas = viewport.Branches
+		assert(map["Map header"]["Skill point balance"].Count.Text == "0")
+		assert(canvas.Reach["Skill state"].Symbol.Text == "1" and canvas.Focus["Skill state"].Padlock.Visible)
+		assert(not ring["Skill points"].Visible and #canvas["Unlock lights"]:GetChildren() == 0)
+		assert(canvas:FindFirstChild("Reach to Focus") and canvas:FindFirstChild("Lamp to Focus"))
+		assert(canvas:FindFirstChild("Constellation") and canvas:FindFirstChild("HotSteel"))
 		local before = canvas.AbsolutePosition
 		local dragStart = viewport.AbsolutePosition
 			+ viewport.AbsoluteSize * Vector2.new(0.55, 0.24)
@@ -370,9 +587,34 @@ local function test()
 		local hand = p.Character:FindFirstChild("RightHand") or p.Character:FindFirstChild("Right Arm")
 		-- Inspect six surfaces, including an isolated block that can be viewed from every side.
 		local painter = require(p.PlayerScripts.Client.Effects).new()
+		local face = head.Position + Vector3.xAxis * 6
+		local warm = Color3.fromRGB(255, 225, 169)
+		painter:aim({ face })
+		assert(not painter.faceLamp and not painter.preview:FindFirstChildWhichIsA("Light", true), "hover lit a block")
+		painter:setMiningLight(face, 9, warm)
+		local source = painter.faceLamp
+		assert(
+			source.Enabled
+				and source.Shadows
+				and source.Range == 9
+				and source.Color == warm
+				and (painter.faceMount.WorldPosition - face).Magnitude < 0.01
+		)
+		painter:aim(nil)
+		assert(source.Enabled and source.Color == warm, "outline changed the mining light")
+		painter:setMiningLight(face + Vector3.one, 15, ores.byName.Emerald.color)
+		assert(source == painter.faceLamp and source.Range == 15 and source.Color == ores.byName.Emerald.color)
+		painter:setMiningLight(nil)
+		assert(not source.Enabled)
+		for i = 1, 6 do
+			painter:oreLight(face + Vector3.xAxis * i, false)
+		end
+		assert(#painter.oreLights == 4)
+		painter:clearOreLights()
+		assert(#painter.oreLights == 0)
 		local cube = Instance.new("Part")
 		cube.Anchored, cube.Size, cube.Position, cube.Parent =
-			true, Vector3.one * 5, head.Position + Vector3.yAxis * 48, workspace
+			true, Vector3.one * config.Cell, head.Position + Vector3.yAxis * 48, workspace
 		cube:SetAttribute("OpenFaces", 63)
 		painter:damage(cube, 0.15)
 		local overlays = cube.Fractures:GetChildren()
@@ -404,6 +646,7 @@ local function test()
 			assert(not surface.Parent, "orphan crack")
 		end
 		painter:clearDamage()
+		painter.faceMount:Destroy()
 		painter.preview:Destroy()
 		painter.sparkOrigin:Destroy()
 		local function visibleOre(name)
@@ -435,9 +678,9 @@ local function test()
 			assert(not ownerVision:FindFirstChildWhichIsA("BoxHandleAdornment"), "fresh dirt floor marked as ore")
 		end
 		-- Drill the two starter shafts through the real cut protocol before aiming at ore.
-		for _, x in { -2.5, 2.5 } do
-			for _, y in { -2.5, -7.5 } do
-				local at = origin + Vector3.new(x, y, -12.5)
+		for _, x in { -0.5, 0.5 } do
+			for _, y in { -0.5, -1.5 } do
+				local at = origin + Vector3.new(x, y, -2.5) * config.Cell
 				local used = p:GetAttribute("Used")
 				n.Swing:FireServer(true, at, Vector3.yAxis)
 				task.wait(ores.cutTime(0.8, ores.byName.Dirt) + 0.18)
@@ -470,7 +713,7 @@ local function test()
 		camera.CameraType = Enum.CameraType.Scriptable
 		local root = p.Character.HumanoidRootPart
 		local eye = root.Position + Vector3.yAxis * math.min(1.3, root.Size.Y * 0.6)
-		local face = aim + aimNormal * 2.5
+		local face = aim + aimNormal * (config.Cell / 2)
 		local intoWall = CFrame.lookAt(face - aimNormal * 1.5, eye)
 		local render = game:GetService("RunService")
 		local attempted = false
@@ -482,25 +725,50 @@ local function test()
 			return attempted and (camera.CFrame.Position - face):Dot(aimNormal) > 0.15
 		end, 3, "camera clipped through an exposed face")
 		render:UnbindFromRenderStep("Test wall camera")
-		camera.CFrame = CFrame.lookAt(head.Position, aim + aimNormal * 2.5)
+		camera.CFrame = CFrame.lookAt(head.Position, aim + aimNormal * (config.Cell / 2))
 		local xy = camera.ViewportSize * 0.5
 		input:SendMousePosition(xy)
 		local meter = gui.SafeArea.Feedback["Mining progress"]
 		local function outlined()
 			local marker = workspace.MiningSelection:FindFirstChild("Selected block")
-			if not marker or (marker:GetPivot().Position - aim).Magnitude > 0.02 or #marker:GetChildren() ~= 12 then
-				return false
-			end
-			for _, edge in marker:GetChildren() do
-				if not edge:IsA("BasePart") or edge.CanQuery or edge.CanCollide then
-					return false
-				end
-			end
-			return true
+			return marker and (marker.Position - aim).Magnitude <= 0.02
 		end
+		p:SetAttribute("SkillFocus", true)
 		waitFor(outlined, 4, "depth-tested borders on the selected cell")
+		assert(not workspace.Terrain:FindFirstChild("Face lantern"), "hover activated Face Lantern")
+		local selection = workspace.MiningSelection["Selected block"]
+		assert(not selection:FindFirstChildWhichIsA("Light", true))
+		assert(selection.Transparency == 1 and not selection.CanQuery and not selection.CanCollide)
+		local corners, edges = 0, 0
+		local neighbors = {}
+		for _, item in selection:GetChildren() do
+			if item:IsA("Attachment") then
+				corners += 1
+			else
+				assert(item:IsA("Beam") and item.LightInfluence == 0 and item.LightEmission > 0 and item.ZOffset == 0)
+				local a, b = item.Attachment0, item.Attachment1
+				assert(a.Parent == selection and b.Parent == selection)
+				neighbors[a], neighbors[b] = neighbors[a] or {}, neighbors[b] or {}
+				assert(not table.find(neighbors[a], b), "duplicate visible edge")
+				table.insert(neighbors[a], b)
+				table.insert(neighbors[b], a)
+				edges += 1
+			end
+		end
+		assert(corners == 8 and edges == 12, "a single glowing outline")
+		for _, adjacent in neighbors do
+			assert(#adjacent == 3, "disconnected corner")
+		end
 		local cursor = p.PlayerGui.MiningAim["Mining cursor"]
 		assert(cursor.Visible and not cursor["No entry"].Visible, "mineable cursor")
+		p:SetAttribute("Used", p:GetAttribute("PackSlots"))
+		waitFor(function() return cursor.Visible and cursor["No entry"].Visible end, 2, "full bag uses blocked cursor")
+		input:SendMouseButton(xy, Enum.UserInputType.MouseButton1, true)
+		task.wait(0.2)
+		assert(not meter.Visible and not workspace.Terrain:FindFirstChild("Face lantern"))
+		input:SendMouseButton(xy, Enum.UserInputType.MouseButton1, false)
+		p:SetAttribute("Used", startingHaul)
+		waitFor(function() return cursor.Visible and not cursor["No entry"].Visible end, 2, "bag with room restores pick cursor")
 		assert(game:GetService("StarterPlayer").LoadCharacterAppearance, "account appearance disabled")
 		assert(
 			not p.PlayerGui:FindFirstChild("Inside rock") and p.Character:FindFirstChild("Head clearance", true),
@@ -526,23 +794,62 @@ local function test()
 			return math.deg(angle)
 		end
 		assert(gripError() < 0.035, "idle hand grip")
+		r:FireServer("renewalNotice")
+		waitFor(function()
+			for _, label in meter.Parent:GetChildren() do
+				if label:IsA("TextLabel") and label.Text == "Mine renews in 30 seconds" then
+					return true
+				end
+			end
+			return false
+		end, 3, "mining notice")
 		input:SendMouseButton(xy, Enum.UserInputType.MouseButton1, true)
 		waitFor(function()
 			return meter.Visible and meter.Charge.Size.X.Scale > 0.1 and swingAngle() > 60
 		end, 3, "raised pick and progress")
+		local barGap = meter.AbsolutePosition.Y - (cursor.AbsolutePosition.Y + cursor.AbsoluteSize.Y)
+		assert(barGap >= 4 and barGap <= 16, "expected the progress bar just below the animated pick, gap " .. barGap)
+		local mount = workspace.Terrain:FindFirstChild("Face lantern")
+		local lamp = mount and mount:FindFirstChildOfClass("PointLight")
+		assert(lamp and lamp.Enabled and lamp.Color == warm and lamp.Range == 9, "active cut is missing its warm light")
+		local firstContact = mount.WorldPosition
+		input:SendMousePosition(xy + Vector2.new(6, 0))
+		waitFor(function()
+			return lamp.Enabled and (mount.WorldPosition - firstContact).Magnitude > 0.015
+		end, 2, "lantern follows the pick across the face")
+		local mouse = game.UserInputService:GetMouseLocation()
+		local ray = camera:ViewportPointToRay(mouse.X, mouse.Y)
+		local contact = workspace:Raycast(ray.Origin, ray.Direction * 64, params)
+		assert(
+			contact and (mount.WorldPosition - contact.Position - contact.Normal * 0.45).Magnitude < 0.1,
+			"lamp missed the struck face"
+		)
 		assert(workspace.CitrineCove.MineBlocks:FindFirstChild("Fractures", true) ~= nil, "visible impact cracks")
+		local impact = root:WaitForChild("Pick impact", 2)
+		assert(impact and impact.SoundId == harbor["Coal break"].SoundId)
 		input:SendMouseButton(xy, Enum.UserInputType.MouseButton1, false)
 		waitFor(function()
 			return not meter.Visible and swingAngle() < 20
 		end, 3, "cancelled swing")
+		assert(not lamp.Enabled and outlined(), "release must extinguish the lamp while keeping the border")
 		assert(p:GetAttribute("Used") == startingHaul, "early release spent a block")
+		p:SetAttribute("SkillFocusII", true)
+		p:SetAttribute("SkillLongbeam", true)
+		p:SetAttribute("FoundCoal", true)
+		local hitCount = 0
+		local hits = impact.Played:Connect(function() hitCount += 1 end)
 		input:SendMouseButton(xy, Enum.UserInputType.MouseButton1, true)
+		local coalTint = ores.byName.Coal.color:Lerp(Color3.new(1, 1, 1), 0.35)
+		waitFor(function()
+			return lamp.Enabled and lamp.Color == coalTint and lamp.Range == 15
+		end, 2, "Prism Lens ore tint and Wide Beam range during a cut")
 		local peaks, high, maxGap, replicated = 0, false, 0, false
 		local deadline = os.clock() + 3
 		repeat
 			game:GetService("RunService").PostSimulation:Wait()
 			maxGap = math.max(maxGap, gripError())
-			replicated = replicated or p.Character:GetAttribute("MiningSwing") ~= nil
+			replicated = replicated
+				or (p.Character:GetAttribute("MiningSwing") ~= nil and p.Character:GetAttribute("MiningOre") == "Coal")
 			local angle = swingAngle()
 			if not high and angle > 85 then
 				high = true
@@ -553,6 +860,9 @@ local function test()
 		until p:GetAttribute("Used") > startingHaul or os.clock() > deadline
 		input:SendMouseButton(xy, Enum.UserInputType.MouseButton1, false)
 		assert(p:GetAttribute("Used") == startingHaul + 1, "completed cut")
+		hits:Disconnect()
+		assert(hitCount >= 2, "expected repeated digging sounds during the cut")
+		assert(not lamp.Enabled, "completed cut left its lamp on")
 		if ownerVision then
 			waitFor(function()
 				return not coalMarker.Parent
@@ -580,7 +890,8 @@ local function test()
 			return popup and popup:FindFirstChild("Ore popup")
 		end, 2, "world ore popup")
 		assert(
-			(popup.WorldPosition - aim).Magnitude < 2.6 and popup["Ore popup"].TextLabel.Text == "+1 Coal",
+			(popup.WorldPosition - (aim + aimNormal * (config.Cell / 2))).Magnitude < 0.02
+				and popup["Ore popup"].TextLabel.Text == "+1 Coal",
 			"popup location and label"
 		)
 		waitFor(function()
@@ -588,13 +899,14 @@ local function test()
 		end, 2, "popup fades out")
 		local copper, copperNormal = visibleOre("Copper")
 		assert(copper, "visible locked copper")
-		camera.CFrame = CFrame.lookAt(head.Position, copper + copperNormal * 2.5)
+		camera.CFrame = CFrame.lookAt(head.Position, copper + copperNormal * (config.Cell / 2))
 		waitFor(function()
 			return cursor.Visible and cursor["No entry"].Visible
 		end, 5, "locked copper cursor")
 		local collected = p:GetAttribute("Used")
 		input:SendMouseButton(xy, Enum.UserInputType.MouseButton1, true)
 		task.wait(0.85)
+		assert(not lamp.Enabled, "locked ore lit up while holding mine")
 		input:SendMouseButton(xy, Enum.UserInputType.MouseButton1, false)
 		assert(
 			p:GetAttribute("Used") == collected
@@ -623,9 +935,84 @@ local function test()
 		p.Character.Humanoid:MoveTo(at)
 		waitFor(function()
 			return (root.Position - at).Magnitude < 1.8
-		end, 5, "avatar fits one five-stud cut")
+		end, 5, "avatar fits one six-stud cut")
+		visit("Sell", false)
+		r:FireServer("openPage", "Sell")
+		waitFor(function() return overlay.Visible and menu.Listings:FindFirstChild("Stone") end, 3, "sell controls")
+		task.wait(0.3)
+		do
+			local row = menu.Listings.Dirt
+			assert(p:GetAttribute("HeldDirt") == 4, "four dirt from the starter shafts")
+			local worth = p:GetAttribute("BagValue")
+			local gold = p:GetAttribute("Gold")
+			waitFor(function() return row["Sell quantity"].Text == "Sell 1 Dirt\n+1 gold" and row.More.Interactable end, 2, "default sell one")
+			clickButton(row["Select stack"])
+			assert(row["Sell quantity"].Text == "Sell 4 Dirt\n+4 gold" and row["Unit price"].ContentText:find("0 left after sale"))
+			assert(p:GetAttribute("HeldDirt") == 4 and p:GetAttribute("Gold") == gold, "selection must only preview")
+			local track = row.Slider.Track
+			local start = track.AbsolutePosition + Vector2.new(0, track.AbsoluteSize.Y / 2) + game.GuiService:GetGuiInset()
+			local target = start + Vector2.new(track.AbsoluteSize.X * 2 / 3, 0)
+			input:SendMousePosition(start)
+			input:SendMouseButton(start, Enum.UserInputType.MouseButton1, true)
+			task.wait(0.07)
+			input:SendMousePosition(target)
+			task.wait(0.07)
+			input:SendMouseButton(target, Enum.UserInputType.MouseButton1, false)
+			waitFor(function() return row["Sell quantity"].Text == "Sell 3 Dirt\n+3 gold" and row["Unit price"].ContentText:find("1 left after sale") end, 2, "quantity drag preview")
+			clickButton(row.Fewer)
+			assert(row["Sell quantity"].Text == "Sell 2 Dirt\n+2 gold" and p:GetAttribute("Gold") == gold)
+			clickButton(row["Sell quantity"])
+			waitFor(function()
+				return p:GetAttribute("HeldDirt") == 2 and p:GetAttribute("Gold") == gold + 2 and row["Sell quantity"].Text == "Sell 1 Dirt\n+1 gold"
+			end, 3, "sell two and reset quantity")
+			assert(menu.Status["Sell all"].Text == string.format("Sell entire pack\n%d blocks · +%d G", p:GetAttribute("Used"), worth - 2))
+			task.wait(0.25)
+			clickButton(menu.Status["Sell all"])
+			waitFor(function()
+				return p:GetAttribute("Used") == 0 and p:GetAttribute("Gold") == gold + worth and not menu.Status["Sell all"].Interactable
+			end, 3, "sell entire pack from menu")
+		end
+		do
+			r:FireServer("openPage", "Settings")
+			waitFor(function() return menu.Listings:FindFirstChild("Reset progress") end, 3, "reset option")
+			task.wait(0.3)
+			local guide = menu.Listings["First expedition"].Action
+			menu.Listings.CanvasPosition = Vector2.new(0, menu.Listings.AbsoluteCanvasSize.Y)
+			task.wait(.18)
+			clickButton(guide)
+			waitFor(function() return p:GetAttribute("ExpeditionStep") == "Skipped" and not guide.Interactable end, 3, "skip expedition")
+			menu.Listings.CanvasPosition = Vector2.zero
+			task.wait(.18)
+			local row = menu.Listings["Reset progress"]
+			local gold = p:GetAttribute("Gold")
+			assert(gold > 0 and not row.Erase.Visible)
+			clickButton(row.Review)
+			assert(row.Erase.Visible and row.Review.Text == "Cancel" and p:GetAttribute("Gold") == gold)
+			clickButton(row.Review)
+			assert(not row.Erase.Visible and p:GetAttribute("Gold") == gold, "cancel kept the miner")
+			clickButton(menu.Listings["Sound effects"].Mute)
+			clickButton(row.Review)
+			clickButton(row.Erase)
+			waitFor(function()
+				return p:GetAttribute("Gold") == 0 and p:GetAttribute("Mined") == 0 and p:GetAttribute("ProgressResets") == 1
+					and (root.Position - n:GetAttribute("Landing")).Magnitude < 8
+			end, 5, "confirmed reset returns a fresh miner to spawn")
+			assert(p:GetAttribute("MiningXP") == 0 and not p:GetAttribute("FoundCoal") and p:GetAttribute("Level") == 1)
+			assert(p:GetAttribute("ExpeditionStep") == "Dig" and p:GetAttribute("IntroSeen"))
+			assert(p:GetAttribute("SfxMuted") and p:GetAttribute("SfxVolume") == 80 and not row.Erase.Visible)
+			assert(menu.Listings["Sound effects"].Mute["Mute slash"].Visible)
+			local replay = menu.Listings["The First Wick"].Action
+			menu.Listings.CanvasPosition = Vector2.new(0,menu.Listings.AbsoluteCanvasSize.Y)
+			task.wait(.2)
+			clickButton(replay)
+			local subs = p.PlayerGui:WaitForChild("Keeper subtitles",3)
+			assert(subs and not gui.SafeArea.Visible and p:GetAttribute("IntroSeen"), "returning miner can replay")
+			clickButton(subs.Skip)
+			waitFor(function() return not subs.Parent and gui.SafeArea.Visible end,2,"on-screen skip restores play")
+			assert(p:GetAttribute("ExpeditionStep")=="Dig" and p:GetAttribute("ProgressResets")==1)
+		end
 		return string.format(
-			"depth-tested faces, %d swings in one cut, grip error %.4f studs, early release",
+			"reset controls, mute icons, %d swings in one cut, grip error %.4f studs, early release",
 			peaks,
 			maxGap
 		)
@@ -633,14 +1020,14 @@ local function test()
 	local gameRay = RaycastParams.new()
 	gameRay.FilterDescendantsInstances = { p.Character }
 	local normals = { Vector3.yAxis, Vector3.zAxis, Vector3.xAxis, -Vector3.xAxis, -Vector3.zAxis, -Vector3.yAxis }
-	local function dig(count)
+	local function dig(count, requiredName)
 		-- Two miners deplete the same gallery. Re-aim at an exposed face each cut,
 		-- including the sides and the floor that open up behind the original wall.
 		local eye = head.Position
 		local best, side, material, score = nil, nil, nil, math.huge
 		for _, brick in workspace.CitrineCove.MineBlocks:GetChildren() do
 			local ore = ores.byName[brick.Name]
-			if not ore or ore.hardness > 1 then
+			if not ore or ore.hardness > 1 or (requiredName and ore.name ~= requiredName) then
 				continue
 			end
 			local half = brick.Size * 0.5
@@ -675,6 +1062,7 @@ local function test()
 		task.wait(0.12)
 	end
 	assert(p:GetAttribute("Used") == 36, "starter pack incomplete: " .. tostring(p:GetAttribute("Used")))
+	assert(p:GetAttribute("ExpeditionStep") == "Sell", "collected an actual ore")
 	waitFor(function()
 		return discovered
 	end, 4, "first ore discovery")
@@ -700,29 +1088,108 @@ local function test()
 	n.Action:FireServer("Sell")
 	task.wait(0.4)
 	assert(p:GetAttribute("Used") == 36 and p:GetAttribute("Gold") == 0, "exchange must require a visit")
-	visit("Sell", true)
+	visit("Sell", false)
+	local sellPrompt = counters.Sell.Service
+	task.wait(0.25)
+	sellPrompt:InputHoldBegin()
+	task.wait(0.08)
+	sellPrompt:InputHoldEnd()
 	waitFor(function()
-		return gui.SafeArea:FindFirstChild("Sale receipt")
-	end, 4, "sale payout")
-	waitFor(function()
-		return p:GetAttribute("Gold") == value and p:GetAttribute("Used") == 0
-	end, 6, "exchange")
+		return overlay.Visible and menu.Listings:FindFirstChild("Coal") and not sellPrompt.Enabled
+	end, 4, "tap opens sell menu")
+	assert(p:GetAttribute("Used") == 36 and p:GetAttribute("Gold") == 0, "a tap must not sell the pack")
+	local selected
 	for _, ore in ores.list do
-		assert(p:GetAttribute("Held" .. ore.name) == 0)
+		if ore.host and p:GetAttribute("Held" .. ore.name) > 1 then
+			selected = ore
+			break
+		end
 	end
+	local row = menu.Listings[selected.name]
+	local initial = p:GetAttribute("Held" .. selected.name)
+	assert(row.Visible and row["Sell quantity"].Interactable and row["Select stack"].Interactable)
+	assert(row.Stock.RichText and row.Stock.Text:find("×" .. initial .. "</font>", 1, true))
+	assert(row["Unit price"].Text:lower():find('<font color="#ffd14c">' .. selected.value .. " g each</font>", 1, true))
+	local portion = math.min(initial - 1, 3)
+	n.Action:FireServer("Sell", selected.name, portion)
+	waitFor(function()
+		return p:GetAttribute("Used") == 36 - portion and p:GetAttribute("Gold") == selected.value * portion
+	end, 3, "sell chosen quantity")
+	task.wait(0.22)
+	n.Action:FireServer("Sell", selected.name, "Stack")
+	waitFor(function()
+		return p:GetAttribute("Used") == 36 - initial and not row["Select stack"].Interactable
+	end, 3, "sell one material")
+	assert(p:GetAttribute("Gold") == selected.value * initial and overlay.Visible)
+	-- Keep one mined coal for the next backpack. Sell the rest through the same menu.
+	assert(p:GetAttribute("HeldCoal") >= 1)
+	for _, ore in ores.list do
+		local attr = "Held" .. ore.name
+		local keep = if ore.name == "Coal" then 1 else 0
+		while p:GetAttribute(attr) > keep do
+			local before = p:GetAttribute(attr)
+			task.wait(0.25)
+			n.Action:FireServer("Sell", ore.name, if keep == 1 then 1 else "Stack")
+			waitFor(function() return p:GetAttribute(attr) < before end, 3, "sell surplus " .. ore.name)
+		end
+	end
+	local saleGold = value - ores.byName.Coal.value
+	assert(p:GetAttribute("Gold") == saleGold and p:GetAttribute("Used") == 1)
+	assert(p:GetAttribute("ExpeditionStep") == "Upgrade", "sale advanced the expedition")
+	r:FireServer("closePage")
+	waitFor(function() return not overlay.Visible and sellPrompt.Enabled end, 3, "return to sell prompt")
 	n.Action:FireServer("Buy", "Capacity")
 	task.wait(0.4)
-	assert(p:GetAttribute("Capacity") == 1 and p:GetAttribute("Gold") == value, "workshop must require a visit")
+	assert(p:GetAttribute("Capacity") == 1 and p:GetAttribute("Gold") == saleGold, "workshop must require a visit")
 	visit("Gear", true)
-	n.Action:FireServer("Buy", "Capacity")
-	task.wait(0.28)
-	if p:GetAttribute("Capacity") == 1 then
-		n.Action:FireServer("Buy", "Capacity")
+	local function checkBagRecipe(ready)
+		local row = menu.Listings:WaitForChild("Capacity", 3)
+		assert(row)
+		waitFor(function()
+			local requirements = row.Requirements
+			local text = requirements.Text
+			local function has(color, label)
+				return text:lower():find('<font color="#' .. color .. '">' .. label:lower() .. "</font>", 1, true)
+					~= nil
+			end
+			return requirements.RichText
+				and requirements.TextFits
+				and has("6eec96", "✓ 24 G")
+				and has(if ready then "6eec96" else "ff8d89", if ready then "✓ Dirt 2/2" else "× Dirt 0/2")
+				and has("6eec96", "✓ Coal 1/1")
+				and row.Action.Interactable == ready
+		end, 3, "individual bag ore and gold requirements")
 	end
+	checkBagRecipe(false)
+	n.Action:FireServer("Buy", "Capacity")
+	task.wait(0.3)
+	assert(p:GetAttribute("Capacity") == 1 and p:GetAttribute("Gold") == saleGold, "bag requires dirt")
+	visit("Supplies", true)
+	waitFor(function() return menu.Listings:FindFirstChild("Survey flare") end, 3, "Field Supplies")
+	assert(not menu.Listings:FindFirstChild("Coal") and not menu.Listings:FindFirstChild("Copper"))
+	n.Action:FireServer("Supply", "Coal")
+	task.wait(0.3)
+	assert(p:GetAttribute("HeldCoal") == 1 and p:GetAttribute("Gold") == saleGold)
+	r:FireServer("position")
 	waitFor(function()
-		return p:GetAttribute("Capacity") == 2 and p:GetAttribute("Gold") == value - 24
+		return (p.Character.Head.Position - origin).Z < 0 and not overlay.Visible
+	end, 5, "return for bag materials")
+	for _ = 1, 60 do
+		if p:GetAttribute("HeldDirt") == 2 then
+			break
+		end
+		dig(1, "Dirt")
+		task.wait(0.14)
+	end
+	assert(p:GetAttribute("HeldDirt") == 2)
+	visit("Gear", true)
+	checkBagRecipe(true)
+	n.Action:FireServer("Buy", "Capacity")
+	waitFor(function()
+		return p:GetAttribute("Capacity") == 2 and p:GetAttribute("Gold") == saleGold - 24
 	end, 5, "purchase")
 	assert(kit["Field pack"].Size.Magnitude > packSize.Magnitude, "pack grew after capacity upgrade")
+	assert(p:GetAttribute("ExpeditionStep") == "Return", "any workshop upgrade counts")
 	r:FireServer("position")
 	waitFor(function()
 		return (p.Character.Head.Position - origin).Z < 0 and not overlay.Visible
@@ -740,7 +1207,8 @@ local function test()
 		task.wait(0.14)
 	end
 	assert(p:GetAttribute("Used") == 2, "single-block mining after upgrade")
-	assert(p:GetAttribute("Found" .. discovered) and p:GetAttribute("Mined") == 38, "ore discovery and lifetime blocks")
+	assert(p:GetAttribute("ExpeditionStep") == "Done", "new gear tested in the field")
+	assert(p:GetAttribute("Found" .. discovered) and p:GetAttribute("Mined") == 40, "ore discovery and lifetime blocks")
 	n.Action:FireServer("Job", 2)
 	n.Action:FireServer("Job", 1)
 	waitFor(function()
@@ -770,7 +1238,7 @@ local function test()
 		return p:GetAttribute("SeenAchievementsPetName")
 	end, 5, "scroll reads new achievement")
 	local afterJob = p:GetAttribute("Gold")
-	assert(afterJob == value - 24 + 80 + 25)
+	assert(afterJob == saleGold - 24 + 80 + 25)
 	task.wait(0.25)
 	n.Action:FireServer("Job", 2)
 	task.wait(0.3)
@@ -783,8 +1251,9 @@ local function test()
 	local double = p:GetAttribute("BagValue") * 2
 	visit("Sell", true)
 	waitFor(function()
-		return p:GetAttribute("Gold") == afterJob + double
+		return p:GetAttribute("Gold") == afterJob + double and gui.SafeArea:FindFirstChild("Sale receipt")
 	end, 5, "double sale")
+	assert(p:GetAttribute("Used") == 0 and not overlay.Visible, "hold quick-sell empties the pack")
 	visit("Store", true)
 	n.Action:FireServer("PreviewPass", "PrismTrail")
 	waitFor(function()
@@ -818,9 +1287,37 @@ local function test()
 		return not passage.Enabled
 	end, 6, "surface fade completed")
 	assert(os.clock() - departed > 0.6 and not song.IsPlaying, "depth travel and test mute")
+	do
+		local other
+		r:FireServer("readyForPracticeReset")
+		waitFor(function()
+			for _, miner in game.Players:GetPlayers() do
+				if miner ~= p then other = miner end
+			end
+			return other and other:GetAttribute("ReadyForPracticeReset")
+		end, 35, "both practice miners are ready")
+		if p.UserId < other.UserId then
+			n.Action:FireServer("ResetProgress", 0)
+			waitFor(function()
+				return p:GetAttribute("ProgressResets") == 1 and p:GetAttribute("Capacity") == 1
+					and p.leaderstats.Depth.Value == 0 and p:GetAttribute("Jobs") == 0
+					and not p:GetAttribute("SeenBookDirt") and p:GetAttribute("AwardPetName") == 0
+			end, 4, "reset clears gear, depth, jobs, achievements and read markers")
+			assert(p:GetAttribute("PetName") == "Pebble" and p:GetAttribute("Pet") == "")
+			assert(p:GetAttribute("PrismTrail") and p:GetAttribute("DoubleGold"), "passes survive reset")
+			n.Action:FireServer("Pet", "Rock")
+			n.Action:FireServer("ResetProgress", 0)
+			waitFor(function() return p:GetAttribute("Pet") == "Rock" end, 2, "fresh miner can equip a pet")
+			task.wait(0.3)
+			assert(p:GetAttribute("Pet") == "Rock" and p:GetAttribute("ProgressResets") == 1, "stale confirmation")
+		else
+			waitFor(function() return other:GetAttribute("ProgressResets") == 1 end, 5, "peer reset")
+			assert(p:GetAttribute("Gold") == afterJob + double and p:GetAttribute("Capacity") == 2 and p:GetAttribute("Jobs") == 2)
+		end
+	end
 	return string.format(
-		"38 blocks, %d gold sale, larger pack, physical ore index, settings, entrance return (%.1fs)",
-		value,
+		"40 blocks, %d gold sale, larger pack, physical ore index, settings, entrance return (%.1fs)",
+		saleGold,
 		os.clock() - first
 	)
 end

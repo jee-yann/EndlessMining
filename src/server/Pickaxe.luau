@@ -63,7 +63,7 @@ function Pickaxe.equip(player, char)
 		CFrame.new(0, 0.90, 0),
 		Color3.fromRGB(255, 201, 72)
 	)
-	component(
+	local tape = component(
 		model,
 		handle,
 		"Grip tape",
@@ -72,8 +72,8 @@ function Pickaxe.equip(player, char)
 		Color3.fromRGB(42, 67, 80)
 	)
 	local grip = Instance.new("Weld")
-	grip.Name, grip.Part0, grip.Part1 = "Grip", hand, handle
-	grip.C0, grip.C1, grip.Parent = palmOffset(), handleGrip, handle
+	grip.Name, grip.Part0, grip.Part1 = "Grip", hand, tape
+	grip.C0, grip.C1, grip.Parent = palmOffset(), handleGrip.Rotation, handle
 	local scaleChanged
 	local function bindPalm()
 		palm = hand:FindFirstChild("RightGripAttachment")
@@ -94,7 +94,7 @@ function Pickaxe.equip(player, char)
 	bindPalm()
 	local added = hand.ChildAdded:Connect(attachmentChanged)
 	local removed = hand.ChildRemoved:Connect(attachmentChanged)
-	model.PrimaryPart, model.Parent = handle, char
+	model.PrimaryPart = handle
 	local tipA, tipB = Instance.new("Attachment"), Instance.new("Attachment")
 	tipA.Position, tipB.Position = Vector3.new(-0.91, 0.76, 0), Vector3.new(0.91, 0.76, 0)
 	tipA.Parent, tipB.Parent = handle, handle
@@ -102,10 +102,29 @@ function Pickaxe.equip(player, char)
 	trail.Name, trail.Attachment0, trail.Attachment1 = "Pick arc", tipA, tipB
 	trail.Lifetime, trail.LightEmission, trail.Transparency = 0.12, 0.65, NumberSequence.new(0.48, 1)
 	trail.Parent = handle
+	local crystals = {}
+	for _, side in { -1, 1 } do
+		for i = 1, 2 do
+			local facet = component(
+				model,
+				handle,
+				"Crystal tine",
+				Vector3.new(0.17, 0.7 - i * 0.08, 0.22),
+				CFrame.new(side * (0.26 + i * 0.24), 1.13, 0) * CFrame.Angles(0, 0, -side * (0.25 + i * 0.18)),
+				pale
+			)
+			facet.Material, facet.Transparency = Enum.Material.Neon, 1
+			table.insert(crystals, facet)
+		end
+	end
 	local function update()
 		local level = player:GetAttribute("Power") or 1
 		local tint = if level == 1 then pale else Ores.byName[socketOres[level]].color
 		socket.Color = if level == 1 then Color3.fromRGB(237, 181, 82) else tint
+		for i, facet in crystals do
+			facet.Transparency = if level >= 5 and (level == 6 or i % 2 == 1) then 0 else 1
+			facet.Color = if level == 6 and i % 2 == 0 then Color3.fromRGB(201, 156, 255) else tint:Lerp(pale, 0.38)
+		end
 		for _, blade in model:GetChildren() do
 			if blade.Name == "Steel" or blade.Name == "Beak" then
 				blade.Color = tint
@@ -117,6 +136,7 @@ function Pickaxe.equip(player, char)
 		trail.Enabled = level >= 3 and char:GetAttribute("MiningSwing") ~= nil
 	end
 	update()
+	model.Parent = char
 	local changed = player:GetAttributeChangedSignal("Power"):Connect(update)
 	local swing = char:GetAttributeChangedSignal("MiningSwing"):Connect(update)
 	model.Destroying:Once(function()

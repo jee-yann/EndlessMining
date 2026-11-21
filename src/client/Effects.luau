@@ -26,28 +26,84 @@ function Effects:chime(pitch)
 	Audio.reward(pitch)
 end
 local function newMarker()
-	local model = Instance.new("Model")
-	model.Name = "Selected block"
-	local width = 0.085
-	local half = Config.Cell * 0.5
-	-- Real edges share the same depth buffer as the mined rock, including the
-	-- selected cell itself. The rock hides the back edges and any buried edges.
-	for _, axis in { Vector3.xAxis, Vector3.yAxis, Vector3.zAxis } do
-		local across = Vector3.new(axis.Z, axis.X, axis.Y)
-		local up = axis:Cross(across)
-		for _, a in { -half, half } do
-			for _, b in { -half, half } do
-				local edge = Instance.new("Part")
-				edge.Name, edge.Anchored, edge.CastShadow = "Edge", true, false
-				edge.CanCollide, edge.CanTouch, edge.CanQuery = false, false, false
-				edge.Material, edge.Color = Enum.Material.Neon, Color3.fromRGB(68, 220, 186)
-				edge.Size = axis * Config.Cell + (Vector3.one - axis) * width
-				edge.Position, edge.Parent = across * a + up * b, model
+	local marker = Instance.new("Part")
+	marker.Name, marker.Anchored, marker.Transparency = "Selected block", true, 1
+	marker.CanCollide, marker.CanTouch, marker.CanQuery, marker.CastShadow = false, false, false, false
+	marker.Size = Vector3.one * Config.Cell
+	local corners = {}
+	for x = 0, 1 do
+		for y = 0, 1 do
+			for z = 0, 1 do
+				local index = Vector3.new(x, y, z)
+				local corner = Instance.new("Attachment")
+				-- Sit just outside the faces so the front rim stays visible against flush rock.
+				corner.Position = (index - Vector3.one * 0.5) * (Config.Cell + 0.04)
+				corner.Parent, corners[index] = marker, corner
 			end
 		end
 	end
-	model.WorldPivot = CFrame.identity
-	return model
+	for index, corner in corners do
+		for _, axis in { Vector3.xAxis, Vector3.yAxis, Vector3.zAxis } do
+			local neighbor = corners[index + axis]
+			if neighbor then
+				local edge = Instance.new("Beam")
+				edge.Name, edge.Attachment0, edge.Attachment1 = "Rim", corner, neighbor
+				edge.FaceCamera, edge.Segments, edge.LightInfluence = true, 1, 0
+				edge.LightEmission, edge.Brightness = 0.8, 1.9
+				edge.Color = ColorSequence.new(Color3.fromRGB(94, 238, 205))
+				edge.Width0, edge.Width1 = 0.085, 0.085
+				edge.Transparency = NumberSequence.new(0.04)
+				edge.Parent = marker
+			end
+		end
+	end
+	return marker
+end
+
+local function surveyLight(name)
+	local mount = Instance.new("Attachment")
+	mount.Name, mount.Parent = name, workspace.Terrain
+	local light = Instance.new("PointLight")
+	light.Brightness, light.Shadows, light.Enabled, light.Parent = 1, true, false, mount
+	return mount, light
+end
+
+function Effects:oreLight(point, constellation)
+	self.oreLights = self.oreLights or {}
+	local limit = if constellation then 8 else 4
+	if #self.oreLights >= limit then
+		table.remove(self.oreLights, 1):Destroy()
+	end
+	local mount, light = surveyLight("Miner’s firefly")
+	mount.WorldPosition = point
+	light.Color, light.Range, light.Enabled = Color3.fromRGB(130, 242, 208), 12, true
+	table.insert(self.oreLights, mount)
+	task.delay(if constellation then 30 else 15, function()
+		local i = table.find(self.oreLights, mount)
+		if i then
+			table.remove(self.oreLights, i)
+			mount:Destroy()
+		end
+	end)
+end
+
+function Effects:clearOreLights()
+	for _, mount in self.oreLights or {} do
+		mount:Destroy()
+	end
+	self.oreLights = {}
+end
+
+function Effects:setMiningLight(facePoint, range, tint)
+	if facePoint then
+		if not self.faceLamp then
+			self.faceMount, self.faceLamp = surveyLight("Face lantern")
+		end
+		self.faceMount.WorldPosition = facePoint
+		self.faceLamp.Range, self.faceLamp.Color, self.faceLamp.Enabled = range, tint, true
+	elseif self.faceLamp then
+		self.faceLamp.Enabled = false
+	end
 end
 
 function Effects:aim(cells)
@@ -63,8 +119,8 @@ function Effects:aim(cells)
 				marker = newMarker()
 				self.markers[i] = marker
 			end
-			if marker:GetPivot().Position ~= center then
-				marker:PivotTo(CFrame.new(center))
+			if marker.Position ~= center then
+				marker.Position = center
 			end
 			if not marker.Parent then
 				marker.Parent = self.preview
@@ -256,7 +312,7 @@ function Effects:burst(point, spread, ore, quiet)
 		else Vector3.yAxis
 	local rare = ore.hardness >= 4
 	if rare then
-		self.sparkOrigin.WorldPosition = point + outward * 3
+		self.sparkOrigin.WorldPosition = point + outward * (Config.Cell / 2 + 0.5)
 		self.glints.Color = ColorSequence.new(ore.color, Color3.new(1, 1, 1))
 		self.glints:Emit(9)
 	end
@@ -271,7 +327,7 @@ function Effects:burst(point, spread, ore, quiet)
 			if rare and i % 2 == 0 then Enum.Material.Neon else Enum.Material.Plastic
 		chip.TopSurface, chip.BottomSurface = Enum.SurfaceType.Studs, Enum.SurfaceType.Smooth
 		local drift = Vector3.new(rng:NextNumber(-1, 1), rng:NextNumber(-0.3, 1), rng:NextNumber(-1, 1))
-		local start = point + outward * 2.5 + drift * math.min(spread * 0.5, 4)
+		local start = point + outward * (Config.Cell / 2) + drift * math.min(spread * 0.5, 4)
 		chip.CFrame = CFrame.new(start) * CFrame.Angles(i, 0, i * 0.7)
 		chip.Parent = workspace
 		self.activeChips += 1

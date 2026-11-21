@@ -1,10 +1,14 @@
 -- Each badge is drawn on a 32-unit canvas so its silhouette survives touch HUD scaling.
 local W = require(script.Parent.Widgets)
+local FieldKit = require(script.Parent.FieldKit)
 local Icons = {}
 function Icons.draw(parent, key, x, y, size, tint)
 	local canvas = W.frame(parent, key .. " icon", x, y, 32, 32, W.ink)
 	canvas.BackgroundTransparency = 1
 	W.scale(canvas).Scale = size / 32
+	if FieldKit.draw(canvas, key) then
+		return canvas
+	end
 	local function shape(name, sx, sy, w, h, color, r, angle, outline)
 		if outline and w >= 7 and h >= 6 then
 			local side = W.frame(canvas, "Extruded edge", sx + 0.6, sy + 1.6, w, h, color:Lerp(W.ink, 0.52), r)
@@ -84,11 +88,6 @@ function Icons.draw(parent, key, x, y, size, tint)
 		for i, color in { W.gold, W.aqua, W.green, W.pink } do
 			shape("Tile", 3 + ((i - 1) % 2) * 14, 3 + math.floor((i - 1) / 2) * 14, 12, 12, color, 3, 0, true)
 		end
-	elseif key == "Settings" then
-		for i, xx in { 8, 16, 24 } do
-			shape("Rail", xx - 1, 4, 3, 24, W.panel, 2)
-			shape("Dial", xx - 4, if i == 2 then 17 else 8, 9, 7, light, 3, 0, true)
-		end
 	elseif key == "Jobs" then
 		shape("Clipboard", 6, 5, 20, 24, W.gold, 3, -6, true)
 		shape("Paper", 9, 9, 14, 16, light, 1, -6)
@@ -96,14 +95,6 @@ function Icons.draw(parent, key, x, y, size, tint)
 		for i = 0, 2 do
 			shape("Entry", 11, 12 + i * 4, 9 - i, 2, W.panel, 1, -6)
 		end
-	elseif key == "Book" then
-		shape("Binding", 2, 6, 28, 21, W.panel, 3, 0, true)
-		shape("Left page", 4, 5, 11, 19, light, 2, 5, true)
-		shape("Right page", 17, 5, 11, 19, light, 2, -5, true)
-		for i = 0, 2 do
-			shape("Entry", 6, 11 + i * 3, 6, 1, W.line, 1, 5)
-		end
-		shape("Gem print", 20, 11, 5, 7, W.green, 2, 25, true)
 	elseif key == "Passes" then
 		shape("Pass", 3, 7, 26, 18, W.violet, 4, -9, true)
 		shape("Prism stamp", 12, 10, 9, 10, W.gold, 2, 35, true)
@@ -115,18 +106,6 @@ function Icons.draw(parent, key, x, y, size, tint)
 		for _, xx in { 7, 17 } do
 			shape("Awning stripe", xx, 6, 5, 8, light, 1)
 		end
-	elseif key == "Capacity" or key == "Pack" then
-		shape("Strap", 11, 3, 10, 8, W.gold, 3, 0, true)
-		shape("Pack", 5, 8, 22, 21, W.orange, 5, 0, true)
-		shape("Fold", 7, 8, 18, 7, W.gold, 3, 0, true)
-		shape("Pocket", 9, 19, 14, 6, W.gold, 2, 0, true)
-		shape("Buckle", 14, 14, 5, 6, light, 1, 0, true)
-	elseif key == "Skills" then
-		shape("Stem", 15, 9, 3, 16, W.panel, 1)
-		shape("Fork", 6, 17, 20, 3, W.panel, 1)
-		for _, p in { { 12, 3 }, { 2, 16 }, { 21, 16 }, { 12, 23 } } do
-			shape("Talent", p[1], p[2], 7, 7, W.green, 1, 45, true)
-		end
 	elseif key == "Pets" then
 		shape("Rock", 3, 10, 26, 17, W.muted, 6, -5, true)
 		shape("Crown", 7, 6, 18, 7, light, 3, -4, true)
@@ -134,11 +113,6 @@ function Icons.draw(parent, key, x, y, size, tint)
 			shape("Eye", xx, 14, 3, 4, W.ink, 1)
 		end
 		shape("Smile", 14, 20, 4, 2, W.ink, 1)
-	elseif key == "Achievements" or key == "Titles" then
-		shape("Ribbon", 9, 15, 6, 15, W.pink, 2, 19, true)
-		shape("Ribbon", 18, 15, 6, 15, W.pink, 2, -19, true)
-		shape("Medal", 6, 2, 20, 20, W.gold, 10, 0, true)
-		shape("Star", 12, 8, 8, 8, light, 2, 45)
 	elseif key == "Crew" then
 		shape("Head", 10, 4, 12, 12, W.gold, 6, 0, true)
 		shape("Coat", 5, 18, 22, 11, W.aqua, 5, 0, true)

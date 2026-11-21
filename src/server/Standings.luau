@@ -1,5 +1,6 @@
 local Players = game:GetService("Players")
-local DSS = game:GetService("DataStoreService")
+local RunService = game:GetService("RunService")
+local UserService = game:GetService("UserService")
 local Data = require(script.Parent.DataService)
 local Standings = {}
 
@@ -21,148 +22,87 @@ function Standings.top(scores, levels)
 	return lines, rows
 end
 
-function Standings.start(court, event)
-	local friends, cache = {}, {}
-	local nextRead = 0
-	local function scan(player, state)
-		local function active()
-			return player.Parent == Players and friends[player] == state
+local function draw(board, scores, levels, empty)
+	local lines, rows = Standings.top(scores, levels)
+	local face = board.Standings.Lettering
+	for i = 1, 5 do
+		face["Row" .. i].Text = lines[i] or (if i == 1 then empty else "")
+	end
+	for i = 1, 3 do
+		local podium = board["Podium " .. i]
+		local row = rows[i]
+		podium:SetAttribute("StandingName", row and row.name)
+		podium:SetAttribute(if levels then "StandingLevel" else "StandingDepth", row and row.score)
+		podium:SetAttribute("StandingId", row and row.id)
+	end
+end
+
+local function refreshGlobal(board, names)
+	local ok, page = pcall(Data.globalDepths)
+	if not ok then
+		board.Standings.Lettering.Title.Text = "GLOBAL RECORDS OFFLINE"
+		if not board["Podium 1"]:GetAttribute("StandingId") then
+			board.Standings.Lettering.Row1.Text = "Checking again shortly"
 		end
-		local ok = pcall(function()
-			if player.UserId <= 0 then
-				return
+		return
+	end
+	local scores, missing, currentNames = {}, {}, {}
+	for _, record in page do
+		local id = tonumber(record.key)
+		if id and id > 0 then
+			local player = Players:GetPlayerByUserId(id)
+			currentNames[id] = if player then player.DisplayName else names[id]
+			if not currentNames[id] then
+				table.insert(missing, id)
 			end
-			local pages = Players:GetFriendsAsync(player.UserId)
-			repeat
-				for _, friend in pages:GetCurrentPage() do
-					state.names[friend.Id] = friend.DisplayName or friend.Username
-				end
-				if pages.IsFinished or not active() then
-					break
-				end
-				pages:AdvanceToNextPageAsync()
-			until false
-			if not active() or player:GetAttribute("SaveStatus") ~= "Saving enabled" then
-				return
+			scores[id] = { score = record.value }
+		end
+	end
+	if #missing > 0 then
+		local resolved, users = pcall(UserService.GetUserInfosByUserIdsAsync, UserService, missing)
+		if resolved then
+			for _, user in users do
+				currentNames[user.Id] = user.DisplayName
 			end
-			for id in state.names do
-				while active() and not state.near do
-					task.wait(2)
-				end
-				if not active() then
-					return
-				end
-				if Players:GetPlayerByUserId(id) then
-					continue
-				end
-				local old = cache[id]
-				if not old or os.clock() >= old.expires then
-					while
-						active()
-						and (
-							os.clock() < nextRead
-							or DSS:GetRequestBudgetForRequestType(Enum.DataStoreRequestType.GetAsync) < 8
-						)
-					do
-						task.wait(0.35)
-					end
-					if not active() then
-						return
-					end
-					nextRead = os.clock() + 0.25
-					local loaded, score = pcall(Data.readDepth, id)
-					if loaded then
-						cache[id] = { score = score, expires = os.clock() + 600 }
-					else
-						state.partial = true
-					end
-				end
+		end
+	end
+	table.clear(names)
+	for id, row in scores do
+		names[id] = currentNames[id]
+		row.name = names[id] or ("Miner #" .. id)
+	end
+	board.Standings.Lettering.Title.Text = "DEEPEST DESCENT"
+	draw(board, scores, false, "No depth records yet")
+end
+
+function Standings.start(court)
+	local practice = RunService:IsStudio() and game.GameId == 0
+	court.Server.Standings.Lettering.Title.Text = "HIGHEST LEVEL"
+	if practice then
+		court.Global.Standings.Lettering.Title.Text = "PRACTICE DEPTHS"
+	else
+		task.spawn(function()
+			local names = {}
+			while true do
+				refreshGlobal(court.Global, names)
+				task.wait(60)
 			end
 		end)
-		state.complete, state.partial = true, state.partial or not ok
-		state.refresh = os.clock() + (if state.partial then 60 else 300)
 	end
-	Players.PlayerRemoving:Connect(function(player)
-		friends[player] = nil
-	end)
 	task.spawn(function()
 		while true do
-			local scores = {}
-			for _, p in Players:GetPlayers() do
-				if p:GetAttribute("ProfileReady") then
-					scores[p.UserId] = { name = p.DisplayName, score = p.leaderstats.Depth.Value }
-				end
-			end
-			local levels = {}
-			for _, p in Players:GetPlayers() do
-				if scores[p.UserId] then
-					levels[p.UserId] = { name = p.DisplayName, score = p:GetAttribute("Level") or 1 }
-				end
-			end
-			local lines, ranked = Standings.top(levels, true)
-			court.Server.Standings.Lettering.Title.Text = "HIGHEST LEVEL"
-			for rank = 1, 3 do
-				local stand = court.Server["Podium " .. rank]
-				local row = ranked[rank]
-				stand:SetAttribute("StandingName", row and row.name)
-				stand:SetAttribute("StandingLevel", row and row.score)
-				stand:SetAttribute("StandingId", row and row.id)
-			end
-			for i = 1, 5 do
-				court.Server.Standings.Lettering["Row" .. i].Text = lines[i]
-					or (if i == 1 then "Waiting for miners" else "")
-			end
+			local levels, depths = {}, {}
 			for _, player in Players:GetPlayers() do
-				local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-				local near = root
-					and math.min(
-							(root.Position - court.Friends.Standings.Position).Magnitude,
-							(root.Position - court.Server.Standings.Position).Magnitude
-						)
-						<= 34
-				local state = friends[player]
-				if state then
-					state.near = near
-				end
-				if not near or not scores[player.UserId] then
-					continue
-				end
-				if not state or (state.complete and os.clock() >= state.refresh) then
-					state = { names = {}, near = true }
-					friends[player] = state
-					task.spawn(scan, player, state)
-				end
-				local personal = { [player.UserId] = { name = "You", score = scores[player.UserId].score } }
-				for id, display in state.names do
-					local value = scores[id] or cache[id]
-					if value and value.score ~= nil then
-						personal[id] = { name = display, score = value.score }
+				if player:GetAttribute("ProfileReady") then
+					levels[player.UserId] = { name = player.DisplayName, score = player:GetAttribute("Level") or 1 }
+					if practice and player.leaderstats.Depth.Value > 0 then
+						depths[player.UserId] = { name = player.DisplayName, score = player.leaderstats.Depth.Value }
 					end
-				end
-				local list, rankedFriends = Standings.top(personal)
-				local note = if not state.complete
-					then "Checking friends…"
-					elseif state.partial then "Some scores unavailable"
-					elseif player:GetAttribute("SaveStatus") ~= "Saving enabled" then "FRIENDS IN THIS SESSION"
-					elseif #list == 1 then "No other miners ranked yet"
-					else ""
-				local signature = table.concat(list, "\n") .. note
-				for i = 1, math.min(3, #rankedFriends) do
-					signature ..= "/" .. rankedFriends[i].id
-				end
-				if state.last ~= signature then
-					state.last = signature
-					local winners = {}
-					for i = 1, math.min(3, #rankedFriends) do
-						winners[i] = rankedFriends[i]
-					end
-					event:FireClient(player, list, note, winners)
 				end
 			end
-			for id, record in cache do
-				if os.clock() > record.expires + 600 then
-					cache[id] = nil
-				end
+			draw(court.Server, levels, true, "Waiting for miners")
+			if practice then
+				draw(court.Global, depths, false, "Mine deeper to set a record")
 			end
 			task.wait(2)
 		end

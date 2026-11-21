@@ -1,4 +1,5 @@
 local RunService = game:GetService("RunService")
+local Audio = require(script.Parent.HarborAudio)
 local Swing = {}
 Swing.__index = Swing
 
@@ -15,7 +16,15 @@ function Swing.new(character)
 	if not shoulder then
 		return nil
 	end
-	return setmetatable({ shoulder = shoulder, elbow = joint(character, "RightElbow") }, Swing)
+	return setmetatable(
+		{
+			character = character,
+			shoulder = shoulder,
+			elbow = joint(character, "RightElbow"),
+			waist = joint(character, "Waist"),
+		},
+		Swing
+	)
 end
 
 function Swing:restore()
@@ -24,6 +33,9 @@ function Swing:restore()
 	end
 	if self.elbow and self.elbow.Transform == self.lastElbow then
 		self.elbow.Transform = self.baseElbow
+	end
+	if self.waist and self.waist.Transform == self.lastWaist then
+		self.waist.Transform = self.baseWaist
 	end
 end
 
@@ -53,7 +65,9 @@ function Swing:play(duration)
 			self:destroy()
 			return
 		end
-		self.phase = (self.phase + dt / self.period) % 1
+		local nextPhase = self.phase + dt / self.period
+		local contact = (self.phase < 0.82 and nextPhase >= 0.82) or nextPhase >= 1.82
+		self.phase = nextPhase % 1
 		self.weight = math.clamp(self.weight + (if self.playing then 14 else -11) * dt, 0, 1)
 		if self.weight == 0 and not self.playing then
 			self:destroy()
@@ -68,10 +82,28 @@ function Swing:play(duration)
 		local lift = (1 - math.cos(arc * math.pi)) * 0.5
 		local pitch = math.rad(39 + 94 * lift - 12 * recoil) * self.weight
 		local axes = self.shoulder.C0.Rotation
+		local root = self.character:FindFirstChild("HumanoidRootPart")
+		if self.playing and contact and root then
+			Audio.dig(self.ore or self.character:GetAttribute("MiningOre"), root)
+		end
+		local target = self.target or self.character:GetAttribute("MiningTarget")
+		local aim = CFrame.identity
+		if root and target then
+			local dir = root.CFrame:PointToObjectSpace(target)
+			local yaw = math.clamp(math.atan2(-dir.X, -dir.Z), -1.1, 1.1)
+			local tilt = math.clamp(math.atan2(dir.Y, Vector2.new(dir.X, dir.Z).Magnitude), -0.65, 0.65)
+			aim = CFrame.Angles(0, yaw * self.weight, 0) * CFrame.Angles(tilt * self.weight, 0, 0)
+		end
+		if self.waist then
+			self.baseWaist = self.waist.Transform
+			self.waist.Transform = self.baseWaist * aim
+			self.lastWaist = self.waist.Transform
+			aim = CFrame.identity
+		end
 		local offset =
 			CFrame.Angles(pitch, math.rad(-14 * lift + 5 * recoil) * self.weight, math.rad(17 * lift - 5) * self.weight)
 		self.baseShoulder = self.shoulder.Transform
-		self.shoulder.Transform = axes:Inverse() * offset * axes * self.baseShoulder
+		self.shoulder.Transform = axes:Inverse() * aim * offset * axes * self.baseShoulder
 		self.lastShoulder = self.shoulder.Transform
 		if self.elbow then
 			self.baseElbow = self.elbow.Transform

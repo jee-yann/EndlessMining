@@ -102,11 +102,10 @@ function Roster:toggle()
 	self.relayout()
 end
 
-function Roster:layout(scale, top, compact, availableHeight)
+function Roster:layout(scale, top, compact, availableHeight, touch)
 	local roomForRows = math.floor((availableHeight / scale - 65) / rowHeight)
-	compact = compact or roomForRows < 1
-	local maxRows = if compact then 3 else math.min(4, roomForRows)
-	local expanded = self.override == true
+	local maxRows = if touch then 3 else math.clamp(roomForRows, 1, if compact then 2 else 4)
+	local expanded = if self.override == nil then not touch else self.override
 	self.expanded = expanded
 	self.scale.Scale = scale
 	local rows = math.min(self.count, maxRows)
@@ -117,6 +116,6 @@ function Roster:layout(scale, top, compact, availableHeight)
 	self.list.Visible, self.headers.Visible = expanded, expanded
 	self.caption.Text = self.count .. (if expanded then "   ▲" else "   ▼")
 	W.anchor(self.panel, 1, 0, UDim2.new(1, -10, 0, top))
-	return height * scale, compact and expanded
+	return height * scale, expanded and (touch or (not compact and roomForRows < 1))
 end
 return Roster

@@ -2,17 +2,37 @@ local Run = game:GetService("RunService")
 local Lighting = game:GetService("Lighting")
 local Config = require(game.ReplicatedStorage.Shared.GameConfig)
 local View = {}
-function View.start(player, origin)
+local galleryBounce = Color3.fromRGB(131, 117, 104)
+local palettes = {
+	["Sunstone Hollow"] = {Color3.fromHex("635646"), Color3.fromHex("FFF3DF")},
+	["Iron Shelf"] = {Color3.fromHex("4E5967"), Color3.fromHex("E6F0FF")},
+	["Prism Grotto"] = {Color3.fromHex("545977"), Color3.fromHex("EAEBFF")},
+	["Emerald Deep"] = {Color3.fromHex("425D59"), Color3.fromHex("DBF9ED")},
+	["Midnight Fault"] = {Color3.fromHex("514760"), Color3.fromHex("F2E4FF")},
+	["Frostglass Reach"] = {Color3.fromHex("435971"), Color3.fromHex("DEFAFF")},
+}
+function View.start(player, origin, hud)
 	local daylight = Lighting.Ambient
-	local cave = Color3.fromRGB(31, 30, 43)
+	local outdoor = Lighting.OutdoorAmbient
 	local grade = Instance.new("ColorCorrectionEffect")
 	grade.Name, grade.Parent = "Underground light", Lighting
 	local overlap = OverlapParams.new()
 	overlap.FilterType, overlap.MaxParts = Enum.RaycastFilterType.Include, 1
 	local ray = RaycastParams.new()
 	ray.FilterType = Enum.RaycastFilterType.Include
-	local grid, shade = nil, 0
+	local grid, shade, lastTarget, lastRegion, lastBounce = nil, 0, 0, nil, nil
+	local blendTime = 0
 	local previousEye, previousChar
+	local faded, bodyParts, nextScan = {}, {}, 0
+	-- Give Roblox its own first-person transparency back before its camera update.
+	Run:BindToRenderStep("Restore miner opacity", Enum.RenderPriority.Camera.Value - 1, function()
+		for part, state in faded do
+			if part.Parent and part.LocalTransparencyModifier == state.applied then
+				part.LocalTransparencyModifier = state.base
+			end
+		end
+		table.clear(faded)
+	end)
 	local function clearance(eye, radius)
 		local block = workspace:GetPartBoundsInBox(CFrame.new(eye), Vector3.one * (2 * radius), overlap)[1]
 		if not block then
@@ -50,22 +70,36 @@ function View.start(player, origin)
 		local char = player.Character
 		local root = char and char:FindFirstChild("HumanoidRootPart")
 		local camera = workspace.CurrentCamera
-		local pos = if root then root.Position - origin else Vector3.zero
+		local watching = hud.inOpening and camera ~= nil
+		local pos = if watching then camera.CFrame.Position - origin elseif root then root.Position - origin else Vector3.zero
 		local inside = root ~= nil and Config.inMine(pos)
-		local target = if inside then math.clamp(math.max((-pos.Z - 3) / 20, -pos.Y / 12), 0, 1) else 0
-		if shade ~= target then
-			shade += (target - shade) * (1 - math.exp(-dt * 5))
-			if math.abs(shade - target) < 0.002 then
-				shade = target
-			end
-			Lighting.Ambient = daylight:Lerp(cave, shade)
-			grade.Brightness = -0.075 * shade
-			grade.TintColor = Color3.new(1, 1, 1):Lerp(Color3.fromRGB(229, 230, 245), shade)
+		local target = if inside then math.clamp(.55 + math.max(0,-pos.Y)/85,.55,1)
+			elseif root and pos.Z >= Config.HallFront and math.abs(pos.X)<10 and pos.Y < 12
+			then .55*math.clamp((10-pos.Z)/16,0,1) else 0
+		local region = Config.layer(Config.FloorY-pos.Y).name
+		-- Reflected light from the work lamps fades over the first two dirt layers.
+		local bounce = if inside and Config.inHall(pos)
+			then math.clamp(1 + (pos.Y - Config.FloorY) / (Config.Cell * Config.DirtLayers), 0, 1) else 0
+		if target ~= lastTarget or region ~= lastRegion or bounce ~= lastBounce then
+			blendTime, lastTarget, lastRegion, lastBounce = 1.6, target, region, bounce
+		end
+		if blendTime > 0 then
+			blendTime -= dt
+			local alpha = if blendTime <= 0 then 1 else 1-math.exp(-dt*5)
+			shade += (target-shade)*alpha
+			local palette = palettes[region] or palettes["Sunstone Hollow"]
+			local ambient = daylight:Lerp(palette[1], target):Lerp(galleryBounce, bounce * 0.64)
+			Lighting.Ambient = Lighting.Ambient:Lerp(ambient, alpha)
+			Lighting.OutdoorAmbient = outdoor:Lerp(Color3.fromHex("666879"),shade)
+			grade.Brightness = .012 * shade
+			grade.Contrast += ((.065 - .055 * bounce) * shade - grade.Contrast) * alpha
+			grade.TintColor = grade.TintColor:Lerp(Color3.new(1,1,1):Lerp(palette[2],target*.66),alpha)
 		end
 		if char ~= previousChar then
 			previousEye, previousChar = nil, char
+			bodyParts, nextScan = {}, 0
 		end
-		if not root or not camera or not inside then
+		if watching or not root or not camera or not inside then
 			previousEye = nil
 			return
 		end
@@ -105,6 +139,25 @@ function View.start(player, origin)
 			else clearance(view.Position, radius)
 		if (point - view.Position).Magnitude > 0.005 then
 			camera.CFrame = view.Rotation + point
+		end
+		local opacity = math.clamp((4.4 - (point - head.Position).Magnitude) / 2.8, 0, 1)
+		if opacity > 0 then
+			if os.clock() >= nextScan then
+				table.clear(bodyParts)
+				for _, part in char:GetDescendants() do
+					if part:IsA("BasePart") or part:IsA("Decal") then
+						table.insert(bodyParts, part)
+					end
+				end
+				nextScan = os.clock() + 0.5
+			end
+			for _, part in bodyParts do
+				if part.Parent and part.LocalTransparencyModifier < opacity then
+					local base = part.LocalTransparencyModifier
+					part.LocalTransparencyModifier = opacity
+					faded[part] = { base = base, applied = part.LocalTransparencyModifier }
+				end
+			end
 		end
 	end)
 end

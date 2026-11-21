@@ -1,21 +1,8 @@
 local E = require(script.Parent.Expeditions)
 local Ores = require(script.Parent.Ores)
 local Guide = {}
--- One point per earned level. Links and positions are shared by the map and server.
-Guide.skills = {
-	{ id = "Reach", name = "Long Arm", detail = "+5 studs of pick reach", x = -154, y = -36 },
-	{ id = "Stride", name = "Quick Feet", detail = "+3 walk speed", x = 38, y = 108 },
-	{ id = "Lamp", name = "Lantern Wick", detail = "+8 studs of light", x = 150, y = -46 },
-	{ id = "ReachII", name = "Far Reach", detail = "+5 more studs of reach", parent = "Reach", x = -278, y = -148 },
-	{ id = "Spring", name = "Spring Step", detail = "Jump 25% higher", parent = "Stride", x = -85, y = 177 },
-	{ id = "Lantern", name = "Afterglow", detail = "+8 more studs of light", parent = "Lamp", x = 286, y = -155 },
-	{ id = "Tempo", name = "Steady Hands", detail = "Cut blocks 10% faster", parent = "ReachII", x = -424, y = -78 },
-	{ id = "Scout", name = "Trail Runner", detail = "+3 more walk speed", parent = "Spring", x = 41, y = 254 },
-}
-Guide.byId = {}
-for _, node in Guide.skills do
-	Guide.byId[node.id] = node
-end
+local Skills = require(script.Parent.Skills)
+Guide.skills, Guide.byId = Skills.nodes, Skills.byId
 Guide.petNames = { Pebble = true, Chips = true, Granite = true, Chip = true, Pip = true, Flint = true }
 Guide.achievements = {
 	{ id = "PocketChange", name = "Pocket Change", ore = "Coal", goal = 1 },
@@ -44,7 +31,7 @@ Guide.achievements = {
 		id = "Branch",
 		name = "Branch Manager",
 		goal = 3,
-		detail = "Learn all three skills along one skill-tree branch.",
+		detail = "Learn three linked skills along a single path.",
 	},
 	{ id = "Shifts", name = "Timecard Complete", goal = #E.jobs, detail = "Collect the reward for every shift job." },
 	{ id = "PayDirt", name = "Certified Dirt Person", ore = "Dirt", goal = 1000 },
@@ -98,13 +85,21 @@ function Guide.progress(p, award)
 	elseif award.id == "Shifts" then
 		return p.jobs
 	elseif award.id == "Branch" then
-		if p.skills.Tempo or p.skills.Scout then
-			return 3
-		elseif p.skills.ReachII or p.skills.Spring then
-			return 2
-		elseif p.skills.Reach or p.skills.Stride then
-			return 1
+		local lengths, best = {}, 0
+		for _, node in Guide.skills do
+			if p.skills[node.id] then
+				local length = 1
+				for _, parent in node.requires do
+					length = math.max(length, (lengths[parent] or 0) + 1)
+				end
+				lengths[node.id] = length
+				best = math.max(best, length)
+				if best >= award.goal then
+					return award.goal
+				end
+			end
 		end
+		return best
 	end
 	if not award.sequence then
 		return 0

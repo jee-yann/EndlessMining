@@ -7,7 +7,7 @@ function Receipt.new(hud)
 	return setmetatable({ hud = hud, serial = 0 }, Receipt)
 end
 
-function Receipt:show(amount, quantity, balance)
+function Receipt:show(amount, quantity, balance, ore)
 	self.serial += 1
 	local serial = self.serial
 	local hud = self.hud
@@ -26,7 +26,7 @@ function Receipt:show(amount, quantity, balance)
 	W.enamel(face, Color3.fromRGB(133, 76, 43), W.panel)
 	W.text(
 		face,
-		string.format("%d %s sold", quantity, if quantity == 1 then "block" else "blocks"),
+		string.format("Sold %s %s", W.goldAmount(quantity), ore or (if quantity == 1 then "block" else "blocks")),
 		5,
 		4,
 		238,

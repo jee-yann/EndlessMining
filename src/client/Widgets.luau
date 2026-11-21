@@ -66,10 +66,20 @@ end
 local function animateButton(button)
 	local scale = Instance.new("UIScale")
 	scale.Name, scale.Parent = "Interaction scale", button
+	local isClose = button.Name == "Close"
+	local restingColor = button.BackgroundColor3
 	local over, pressed, focused, tween = false, false, false, nil
 	local function update()
 		local enabled = button.Interactable and game.Players.LocalPlayer:GetAttribute("MenuMotion") ~= false
-		local target = if not enabled then 1 elseif pressed then 0.94 elseif over or focused then 1.045 else 1
+		local highlighted = over or focused
+		if isClose then
+			button.BackgroundColor3 = if highlighted
+					and button.Interactable
+					and not pressed
+				then restingColor:Lerp(W.white, 0.08)
+				else restingColor
+		end
+		local target = if not enabled then 1 elseif pressed then 0.94 elseif highlighted and not isClose then 1.045 else 1
 		if tween then
 			tween:Cancel()
 		end
@@ -121,6 +131,17 @@ function W.dot(parent, x, y)
 	dot.Visible = false
 	return dot
 end
+function W.pointBadge(parent, x, y)
+	local count = W.title(parent, "", 0, 0, 26, 19, 14, W.ink)
+	count.Name, count.ZIndex, count.Visible = "Skill points", 3, false
+	W.anchor(count, 1, 0, UDim2.new(1, x, 0, y))
+	count.BackgroundTransparency, count.BackgroundColor3, count.TextScaled = 0, W.gold, true
+	W.round(count, 9)
+	W.stroke(count, W.ink, 1.8)
+	local font = Instance.new("UITextSizeConstraint")
+	font.MinTextSize, font.MaxTextSize, font.Parent = 8, 14, count
+	return count
+end
 function W.clearButton(parent, name, x, y, w, h, cue)
 	local b = Instance.new("TextButton")
 	b.Name, b.Text, b.BackgroundTransparency = name, "", 1
@@ -142,6 +163,16 @@ function W.button(parent, name, x, y, w, h, tint, label, cue)
 	animateButton(b)
 	Audio.bind(b, cue)
 	return b
+end
+function W.closeButton(parent, x, y, size)
+	local button = W.button(parent, "Close", x, y, size, size, rgb(225, 64, 76), "×", "Close")
+	button.AutoButtonColor = false
+	button.TextColor3, button.TextSize = W.white, 28
+	local gleam = button["Enamel highlight"]
+	gleam.AnchorPoint, gleam.Position = Vector2.new(0.5, 0), UDim2.new(0.5, 0, 0, 4)
+	gleam.Size, gleam.BackgroundTransparency = UDim2.new(0.32, 0, 0, 2), 0.68
+	W.outlineText(button, 1.3)
+	return button
 end
 function W.scale(obj)
 	local s = Instance.new("UIScale")
@@ -168,5 +199,11 @@ function W.number(n)
 		return string.format("%.1fk", n / 1000)
 	end
 	return tostring(n)
+end
+function W.colored(text, color)
+	return string.format('<font color="#%s">%s</font>', color:ToHex(), text)
+end
+function W.unitPrice(value)
+	return W.colored(W.number(value) .. " G each", W.gold)
 end
 return W

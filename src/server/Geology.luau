@@ -84,6 +84,33 @@ function Geology:material(p)
 	end
 	return layer.material
 end
+-- Sample one centreline cell near the end of a natural passage. The small
+-- lava channel in some deep passages leaves the other side safe to walk.
+function Geology:feature(p)
+	if not self:isCave(p) or self:isCave(p - Vector3.yAxis) then
+		return nil
+	end
+	local row = -1 - p.Y
+	local along, across, phase, length, h
+	if row < 12 and math.abs(p.X) < 12 and p.Z >= -41 and p.Z <= 2 then
+		along, across, phase, length, h = -p.Z - 7, p.X, 0, 30, 0
+	else
+		h = hash(self.seed, math.floor(p.X / 40), math.floor(row / 16), math.floor(p.Z / 40))
+		local x, z = p.X % 40, p.Z % 40
+		if bit32.btest(h, 8) then
+			x, z = z, x
+		end
+		along, across, phase, length = z - 3, x - 18, bit32.extract(h, 8, 5) * 0.2, 32
+	end
+	local t = along / length
+	local middle = math.round(3.2 * math.sin(t * 7 + phase) + 1.6 * math.sin(t * 12 + phase))
+	if along == length - 3 and across == middle and h % 3 ~= 1 then
+		return if row >= 185 and h % 7 == 0 then "Egg" else "Cache"
+	elseif row >= 90 and row < 340 and h % 3 == 0 and along >= 12 and along <= 16 and across == middle - 1 then
+		return "Lava"
+	end
+	return nil
+end
 -- Coordinates are relative to the entrance in studs, as in a Studio map probe.
 function Geology:sample(x, y, z)
 	return self:material((Vector3.new(x, y - Config.FloorY, z) / Config.Cell):Floor())

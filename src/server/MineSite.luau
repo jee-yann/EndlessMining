@@ -5,6 +5,7 @@ local counterStyles = {
 	Jobs = { "JOBS", Color3.fromRGB(216, 155, 253) },
 	Store = { "OUTFITTERS", Color3.fromRGB(255, 154, 184) },
 	Book = { "ORE INDEX", Color3.fromRGB(148, 237, 156) },
+	Supplies = { "SUPPLIES", Color3.fromRGB(255, 194, 108) },
 }
 local function markCounter(pad, style)
 	local gui = Instance.new("SurfaceGui")
@@ -17,26 +18,14 @@ local function markCounter(pad, style)
 	panel.ClipsDescendants, panel.Parent = true, gui
 	local edge = Instance.new("UIStroke")
 	edge.Thickness, edge.Color, edge.Parent = 3, style[2], panel
-	local shine = Instance.new("Frame")
-	shine.Name, shine.Size, shine.BorderSizePixel = "Shine", UDim2.fromScale(1, 1), 0
-	shine.BackgroundColor3, shine.Parent = style[2], panel
-	local sweep = Instance.new("UIGradient")
-	sweep.Rotation = 24
-	sweep.Transparency = NumberSequence.new({
-		NumberSequenceKeypoint.new(0, 1),
-		NumberSequenceKeypoint.new(0.40, 1),
-		NumberSequenceKeypoint.new(0.52, 0.36),
-		NumberSequenceKeypoint.new(0.65, 1),
-		NumberSequenceKeypoint.new(1, 1),
-	})
-	sweep.Offset, sweep.Parent = Vector2.new(-1, 0), shine
-	sweep:AddTag("MiningPadShine")
 	local label = Instance.new("TextLabel")
 	label.Text, label.Font, label.TextScaled = style[1], Enum.Font.FredokaOne, true
 	label.Rotation, label.AnchorPoint = 90, Vector2.new(0.5, 0.5)
 	label.Size, label.Position = UDim2.fromOffset(180, 54), UDim2.fromScale(0.5, 0.5)
 	label.BackgroundTransparency, label.TextColor3, label.TextStrokeTransparency, label.Parent =
 		1, Color3.fromRGB(255, 251, 228), 0.42, panel
+	pad:SetAttribute("AuraColor", style[2])
+	pad:AddTag("MiningInteractionPad")
 end
 
 function MineSite.bind(map, world)
@@ -48,9 +37,13 @@ function MineSite.bind(map, world)
 		Sell = market.Sell["Service mat"].Service,
 		Shop = market.Upgrades["Service mat"].Service,
 	}
-	for _, name in { "Jobs", "Store", "Book" } do
+	for _, name in { "Jobs", "Store", "Book", "Supplies" } do
 		stations[name] = harbor[name].Counter.Service
 	end
+	local sell = stations.Sell
+	sell:AddTag("OreSellPrompt")
+	sell.ActionText, sell.ObjectText = "Tap to choose ores", "Hold to sell whole pack"
+	sell.HoldDuration, sell.ClickablePrompt = 0.85, true
 	for key, prompt in stations do
 		markCounter(prompt.Parent, counterStyles[key])
 	end

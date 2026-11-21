@@ -1,17 +1,24 @@
 local Shared = game:GetService("ReplicatedStorage").Shared
 local Ores = require(Shared.Ores)
 local Upgrades = require(Shared.Upgrades)
+local Materials = require(Shared.Materials)
 local Expeditions = require(Shared.Expeditions)
 local Preferences = require(Shared.Preferences)
 local Guide = require(Shared.FieldGuide)
+local Skills = require(Shared.Skills)
 local Profile = {}
 
 function Profile.new()
 	return {
 		version = 1,
+		introSeen = false,
+		firstTrip = {},
 		gold = 0,
 		levels = { Speed = 1, Power = 1, Capacity = 1 },
 		bag = {},
+		flares = 0,
+		temper = 0,
+		dailyClaim = 0,
 		mined = 0,
 		xp = 0,
 		counts = {},
@@ -42,13 +49,67 @@ function Profile.used(p)
 end
 
 function Profile.stat(p, key)
-	return Upgrades.items[key].values[p.levels[key]]
+	local base = Upgrades.items[key].values[p.levels[key]]
+	return if key == "Capacity" then Skills.capacity(base, p.skills) else base
+end
+
+local function ownsUpgrade(p)
+	return p.levels.Speed > 1 or p.levels.Power > 1 or p.levels.Capacity > 1
+end
+
+function Profile.expeditionStep(p)
+	local trip = p.firstTrip
+	if trip.skipped then return "Skipped" end
+	if p.mined == 0 then return "Dig" end
+	if p.xp == 0 then return "Ore" end
+	if not trip.sold then return "Sell" end
+	if not ownsUpgrade(p) then return "Upgrade" end
+	return if trip.tried then "Done" else "Return"
+end
+
+-- Existing profiles store five units per depth record block, including saves
+-- written by older servers. Keep that storage unit independent of the physical grid.
+local savedUnitsPerBlock = 5
+function Profile.depthRecord(p)
+	return math.floor(p.bestDepth / savedUnitsPerBlock)
+end
+
+function Profile.recordDepth(p, blocks)
+	if blocks > Profile.depthRecord(p) then
+		p.bestDepth = blocks * savedUnitsPerBlock
+		return true
+	end
+	return false
+end
+
+function Profile.spill(p)
+	local used = Profile.used(p)
+	local loss = math.floor(used / 10)
+	local left = loss
+	for _, ore in Ores.list do
+		if left == 0 then
+			break
+		end
+		local stock = p.bag[ore.name] or 0
+		local removed = math.min(stock, left)
+		if removed > 0 then
+			p.bag[ore.name] = if stock > removed then stock - removed else nil
+			left -= removed
+		end
+	end
+	return loss
 end
 
 -- Refuse incompatible records instead of silently replacing them with defaults.
 function Profile.valid(p)
 	if type(p) ~= "table" or p.version ~= 1 or type(p.levels) ~= "table" or type(p.bag) ~= "table" then
 		return false
+	end
+	if p.firstTrip ~= nil then
+		if type(p.firstTrip) ~= "table" then return false end
+		for _, key in { "sold", "tried", "skipped" } do
+			if p.firstTrip[key] ~= nil and type(p.firstTrip[key]) ~= "boolean" then return false end
+		end
 	end
 	for _, n in { "gold", "mined", "bestDepth" } do
 		if not integer(p[n], 9e15) then
@@ -71,10 +132,18 @@ function Profile.valid(p)
 	if p.xp ~= nil and not integer(p.xp, 9e15) then
 		return false
 	end
+	for _, key in { "flares", "dailyClaim" } do
+		if p[key] ~= nil and not integer(p[key], 9e15) then
+			return false
+		end
+	end
 	if p.title ~= nil and not (integer(p.title, #Expeditions.ranks) and p.title >= 1) then
 		return false
 	end
-	if p.pet ~= nil and p.pet ~= "" and p.pet ~= "Rock" then
+	if p.drake ~= nil and type(p.drake) ~= "boolean" then
+		return false
+	end
+	if p.pet ~= nil and p.pet ~= "" and p.pet ~= "Rock" and not (p.pet == "Drake" and p.drake) then
 		return false
 	end
 	if p.petName ~= nil and (type(p.petName) ~= "string" or #p.petName > 100 or not utf8.len(p.petName)) then
@@ -161,10 +230,16 @@ function Profile.valid(p)
 			end
 		end
 	end
-	return Profile.used(p) <= Profile.stat(p, "Capacity")
+	return (p.temper == nil or integer(p.temper, Materials.temperCharges + Skills.bonus(p.skills, "charges")))
+		and Profile.used(p) <= Profile.stat(p, "Capacity")
 end
 
 function Profile.upgradeSave(p)
+	-- Profiles predating the opening belong to returning players.
+	if p.introSeen == nil then p.introSeen = true end
+	if p.firstTrip == nil then p.firstTrip = { skipped = true } end
+	local beforeSupplies = p.flares == nil
+	p.flares, p.temper, p.dailyClaim = p.flares or 0, p.temper or 0, p.dailyClaim or 0
 	-- Repay retired area upgrades once, using their original workshop prices.
 	for level = 1, (p.levels.Radius or 1) - 1 do
 		p.gold += math.floor(24 * 2.5 ^ (level - 1) + 0.5)
@@ -180,7 +255,7 @@ function Profile.upgradeSave(p)
 	p.skills = p.skills or {}
 	if p.counts == nil then
 		-- Earlier fields measured records in four-stud blocks.
-		p.bestDepth = math.floor(p.bestDepth / 4) * 5
+		p.bestDepth = math.floor(p.bestDepth / 4) * savedUnitsPerBlock
 		p.counts = table.clone(p.bag)
 	end
 	p.pet, p.petName = p.pet or "", p.petName or "Pebble"
@@ -209,9 +284,11 @@ function Profile.upgradeSave(p)
 			p.discoveries[name] = true
 		end
 	end
-	for name, amount in p.bag do
-		if amount > 0 then
-			p.discoveries[name] = true
+	if beforeSupplies then
+		for name, amount in p.bag do
+			if amount > 0 then
+				p.discoveries[name] = true
+			end
 		end
 	end
 	return p
@@ -250,7 +327,7 @@ function Profile.unlock(p, id)
 end
 function Profile.learn(p, id)
 	local node = Guide.byId[id]
-	if not node or p.skills[id] or (node.parent and not p.skills[node.parent]) or Guide.points(p.xp, p.skills) < 1 then
+	if not node or p.skills[id] or not Skills.ready(node, p.skills) or Guide.points(p.xp, p.skills) < 1 then
 		return false
 	end
 	p.skills[id] = true
@@ -264,13 +341,15 @@ function Profile.equipTitle(p, id)
 	p.title = id
 	return true
 end
-function Profile.recordCut(p, name)
+function Profile.recordCut(p, name, depth)
 	local ore = Ores.byName[name]
+	local xp = Skills.oreXP(ore, p.skills, not p.discoveries[name], depth or 0)
 	p.discoveries[name] = true
 	p.bag[name] = (p.bag[name] or 0) + 1
 	p.counts[name] = (p.counts[name] or 0) + 1
 	p.mined += 1
-	p.xp += ore.xp
+	if ownsUpgrade(p) then p.firstTrip.tried = true end
+	p.xp += xp
 	if #p.recentCuts == Guide.cutWindow then
 		table.remove(p.recentCuts, 1)
 	end
@@ -311,18 +390,38 @@ function Profile.value(bag)
 	return amount
 end
 
-function Profile.sell(p, multiplier)
-	local oreOnly = next(p.bag) ~= nil
-	for name, count in p.bag do
-		if count > 0 and Ores.byName[name].host then
-			oreOnly = false
-			break
+function Profile.sell(p, multiplier, selectedOre, portion)
+	if selectedOre ~= nil or portion ~= nil then
+		if type(selectedOre) ~= "string" or not Ores.byName[selectedOre] then
+			return nil
+		end
+		if portion ~= "Stack" then
+			if type(portion) ~= "number" or portion < 1 or portion % 1 ~= 0 then
+				return nil
+			end
+			if portion > (p.bag[selectedOre] or 0) then
+				return 0, nil, 0
+			end
 		end
 	end
-	local amount = Profile.value(p.bag) * (multiplier or 1)
+	local value, quantity, oreOnly = 0, 0, true
+	for name, count in p.bag do
+		if selectedOre == nil or selectedOre == name then
+			local sold = if type(portion) == "number" then portion else count
+			local ore = Ores.byName[name]
+			value += sold * ore.value
+			quantity += sold
+			if sold > 0 and ore.host then
+				oreOnly = false
+			end
+			p.bag[name] = if count > sold then count - sold else nil
+		end
+	end
+	local amount = value * (multiplier or 1)
+	if quantity > 0 then p.firstTrip.sold = true end
 	p.gold += amount
-	p.bag = {}
-	return amount, if amount > 0 and oreOnly then Profile.unlock(p, "CleanSale") else nil
+	local award = if quantity > 0 and oreOnly and Profile.used(p) == 0 then Profile.unlock(p, "CleanSale") else nil
+	return amount, award, quantity
 end
 
 function Profile.buy(p, key)
@@ -337,8 +436,51 @@ function Profile.buy(p, key)
 	if p.gold < price then
 		return false, "Need " .. (price - p.gold) .. " more gold"
 	end
+	local tiers = Materials.upgrades[key]
+	if tiers then
+		local recipe = tiers[p.levels[key]]
+		local name, short = Materials.missing(recipe, p.bag)
+		if name then
+			return false, string.format("Bring %d more %s to the Workshop", short, name)
+		end
+		Materials.consume(recipe, p.bag)
+	end
 	p.gold -= price
 	p.levels[key] += 1
 	return true, (item.label or key) .. " upgraded!", if key == "Power" then Profile.unlock(p, "PickUpgrade") else nil
+end
+function Profile.buySupply(p, key)
+	local item = Materials.supplies[key]
+	if not item then
+		return false, "Unknown supply"
+	end
+	if key == "Temper" and p.temper > 0 then
+		return false, "Your pick is already tempered"
+	end
+	local name, count = Materials.missing(item.recipe, p.bag)
+	if name then
+		return false, string.format("Bring %d more %s to Field Supplies", count, name)
+	end
+	Materials.consume(item.recipe, p.bag)
+	if key == "Flare" then
+		p.flares += 1
+		return true, "Flare packed • use it from Inventory → Supplies"
+	end
+	p.temper = Materials.temperCharges + Skills.bonus(p.skills, "charges")
+	return true, string.format("Pick tempered for %d hard blocks", p.temper)
+end
+function Profile.deliver(p, day, requestedDay)
+	if day ~= requestedDay or p.dailyClaim >= day then
+		return false
+	end
+	local order = Materials.daily(day)
+	if Materials.missing(order.recipe, p.bag) then
+		return false
+	end
+	Materials.consume(order.recipe, p.bag)
+	p.dailyClaim = day
+	p.gold += order.gold
+	p.flares += if p.skills.SupplyRunner then 2 else 1
+	return true
 end
 return Profile

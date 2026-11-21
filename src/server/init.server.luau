@@ -4,6 +4,9 @@ local Config, Upgrades = require(Rep.Shared.GameConfig), require(Rep.Shared.Upgr
 local World, MineSite = require(script.MineWorld), require(script.MineSite)
 local E, Guide = require(Rep.Shared.Expeditions), require(Rep.Shared.FieldGuide)
 local Ores = require(Rep.Shared.Ores)
+local Materials = require(Rep.Shared.Materials)
+local Skills = require(Rep.Shared.Skills)
+local Flare = require(script.SurveyFlare)
 local Preferences = require(Rep.Shared.Preferences)
 local Passes = require(script.Passes)
 local equipKit = require(script.ProspectorKit)
@@ -17,7 +20,7 @@ local studioSeed = if game:GetService("RunService"):IsStudio() then script:GetAt
 local world = World.new(studioSeed or seeds:NextInteger(1, 2147483646), surface)
 local site = MineSite.bind(surface, world)
 local landing = site.spawn.Position + Vector3.yAxis * 4
-local minePath = surface["Sand path and bridge"]["Mine path"]
+local minePath = surface["Sand path and bridge"]["Portal paving"]
 local entrance = minePath.Position + Vector3.yAxis * (minePath.Size.Y / 2 + 3.5)
 local net = Instance.new("Folder")
 net.Name = "EndlessMiningNet"
@@ -27,7 +30,8 @@ net:SetAttribute("Entrance", entrance)
 net:SetAttribute("DigFloor", world.origin + Vector3.new(0, Config.FloorY, (Config.HallFront + Config.HallBack) / 2))
 net:SetAttribute("DigFloorSize", Vector3.new(2 * Config.HallHalfWidth, Config.Cell, Config.HallFront - Config.HallBack))
 net:SetAttribute("Ready", false)
-for _, name in { "Mine", "Action", "Feedback", "Dust", "FriendsBoard", "Swing" } do
+net:SetAttribute("OrderDay", math.floor(os.time() / 86400))
+for _, name in { "Mine", "Action", "Feedback", "Dust", "Swing" } do
 	local event = Instance.new(if name == "Dust" then "UnreliableRemoteEvent" else "RemoteEvent")
 	event.Name, event.Parent = name, net
 end
@@ -44,32 +48,37 @@ local function applySkills(player, p)
 	if not human then
 		return
 	end
-	char:SetAttribute(
-		"PickReach",
-		Config.Reach + (if p.skills.Reach then 5 else 0) + (if p.skills.ReachII then 5 else 0)
-	)
-	human.WalkSpeed = 16 + (if p.skills.Stride then 3 else 0) + (if p.skills.Scout then 3 else 0)
-	human.JumpHeight = game.StarterPlayer.CharacterJumpHeight * (if p.skills.Spring then 1.25 else 1)
-	human.JumpPower = game.StarterPlayer.CharacterJumpPower * (if p.skills.Spring then math.sqrt(1.25) else 1)
+	local owned = p.skills
+	char:SetAttribute("PickReach", Config.Reach + Skills.bonus(owned, "reach"))
+	human.WalkSpeed = Skills.walkSpeed(owned, p.bag, Profile.used(p), Profile.stat(p, "Capacity"))
+	local jump = 1 + (Skills.bonus(owned, "jump") + (if owned.Summit then 10 else 0)) / 100
+	human.JumpHeight = game.StarterPlayer.CharacterJumpHeight * jump
+	human.JumpPower = game.StarterPlayer.CharacterJumpPower * math.sqrt(jump)
 	local lamp = char:FindFirstChild("Mining lamp", true)
 	if lamp then
-		lamp.Range = 20 + (if p.skills.Lamp then 8 else 0) + (if p.skills.Lantern then 8 else 0)
+		lamp.Range = 25 + Skills.bonus(owned, "lamp")
 	end
 end
 local function sync(player, p, awardName)
 	player:SetAttribute("Level", E.level(p.xp))
 	player:SetAttribute("EquippedTitle", Guide.selectedTitle(p))
 	player:SetAttribute("Pet", p.pet)
+	player:SetAttribute("DrakeUnlocked", p.drake == true)
 	player:SetAttribute("PetName", p.petName)
 	player:SetAttribute("SkillPoints", Guide.points(p.xp, p.skills))
-	for _, node in Guide.skills do
-		player:SetAttribute("Skill" .. node.id, p.skills[node.id] == true)
-	end
 	player.leaderstats.Level.Value = E.level(p.xp)
 	player:SetAttribute("Gold", p.gold)
 	player:SetAttribute("Used", Profile.used(p))
+	player:SetAttribute("PackSlots", Profile.stat(p, "Capacity"))
+	if p.skills.PackMule or p.skills.Rockhound then
+		applySkills(player, p)
+	end
 	player:SetAttribute("BagValue", Profile.value(p.bag))
+	player:SetAttribute("Flares", p.flares)
+	player:SetAttribute("TemperCharges", p.temper)
+	player:SetAttribute("DailyClaim", p.dailyClaim)
 	player:SetAttribute("Mined", p.mined)
+	player:SetAttribute("ExpeditionStep", Profile.expeditionStep(p))
 	player:SetAttribute("MiningXP", p.xp)
 	player:SetAttribute("Jobs", p.jobs)
 	player:SetAttribute("ClaimedJobs", p.claimedJobs)
@@ -85,7 +94,7 @@ local function sync(player, p, awardName)
 		player:SetAttribute(key, p.levels[key])
 	end
 	player.leaderstats.Gold.Value = p.gold
-	player.leaderstats.Depth.Value = Config.depthInBlocks(p.bestDepth)
+	player.leaderstats.Depth.Value = Profile.depthRecord(p)
 	if awardName then
 		net.Feedback:FireClient(player, "achievement", awardName)
 	end
@@ -112,7 +121,8 @@ local function mineFit(char, inside)
 		if head and foot then
 			local height = head.Position.Y + head.Size.Y / 2 - foot.Position.Y + foot.Size.Y / 2
 			char:SetAttribute("SurfaceScale", base)
-			char:ScaleTo(base * math.min(1, 4.50 / math.max(height, 4.5)))
+			local clearance = Config.Cell - 0.5
+			char:ScaleTo(base * math.min(1, clearance / math.max(height, clearance)))
 		end
 	elseif not inside and base then
 		char:ScaleTo(base)
@@ -132,7 +142,7 @@ local function onCharacter(player, character)
 		mount.Name = "Lamp mount"
 		mount.Position = if head then root.CFrame:PointToObjectSpace(head.Position) else Vector3.new(0, 1.5, 0)
 		local lamp = Instance.new("PointLight")
-		lamp.Name, lamp.Color, lamp.Range, lamp.Brightness = "Mining lamp", Color3.fromRGB(255, 232, 198), 20, 0.75
+		lamp.Name, lamp.Color, lamp.Range, lamp.Brightness = "Mining lamp", Color3.fromRGB(255, 236, 213), 25, 0.8
 		lamp.Shadows = true
 		lamp.Parent, mount.Parent = mount, root
 	end
@@ -179,8 +189,12 @@ local function join(player)
 	for entry in session.profile.viewed do
 		player:SetAttribute("Seen" .. entry, true)
 	end
+	for _, node in Skills.nodes do
+		player:SetAttribute("Skill" .. node.id, session.profile.skills[node.id] == true)
+	end
 	sync(player, session.profile)
 	applySkills(player, session.profile)
+	player:SetAttribute("IntroSeen", session.profile.introSeen)
 	player:SetAttribute("ProfileReady", true)
 	if player.UserId == PIXELII_USER_ID then
 		local gui = Instance.new("ScreenGui")
@@ -188,6 +202,60 @@ local function join(player)
 		script.OwnerOreVision:Clone().Parent = gui
 		gui.Parent = player:WaitForChild("PlayerGui")
 	end
+end
+world.grid.onFeature = function(player, kind, item)
+	local s, char = sessions[player], player.Character
+	local root = char and char:FindFirstChild("HumanoidRootPart")
+	local human = char and char:FindFirstChildOfClass("Humanoid")
+	if
+		not s
+		or s.resetting
+		or s.travel
+		or not world.ready
+		or not human
+		or human.Health <= 0
+		or not root
+		or not item:IsDescendantOf(world.grid.folder)
+	then
+		return false
+	end
+	local delta = root.Position - item.Position
+	if kind == "Lava" then
+		if
+			math.abs(delta.X) > item.Size.X / 2 + 1.55
+			or math.abs(delta.Z) > item.Size.Z / 2 + 1.55
+			or math.abs(delta.Y) > 5
+			or os.clock() < (s.lavaUntil or 0)
+		then
+			return false
+		end
+		s.lavaUntil = os.clock() + 2
+		local lost = Profile.spill(s.profile)
+		moveCharacter(char, CFrame.lookAt(entrance, entrance - Vector3.zAxis))
+		sync(player, s.profile)
+		net.Feedback:FireClient(
+			player,
+			"hint",
+			if lost == 0
+				then "Lava rescue · Your pack is safe"
+				else string.format("Lava rescue · Lost %d carried block%s", lost, if lost == 1 then "" else "s")
+		)
+		return true
+	end
+	if delta.Magnitude > 10 then
+		return false
+	end
+	local depth = Config.depthInBlocks(world.origin.Y - item.Position.Y)
+	local gold = 25 + 5 * math.floor(depth / 10)
+	s.profile.gold += gold
+	s.profile.flares += 1
+	local hatched = kind == "Egg" and not s.profile.drake
+	if hatched then
+		s.profile.drake = true
+	end
+	sync(player, s.profile)
+	net.Feedback:FireClient(player, "caveCache", gold, hatched)
+	return true
 end
 local function leave(player)
 	local session = sessions[player]
@@ -209,10 +277,61 @@ local function atCounter(player, prompt)
 		and (root.Position - prompt.Parent.Position).Magnitude <= prompt.MaxActivationDistance + 1
 end
 
-local counterFor = { Sell = "Sell", Buy = "Shop", PreviewPass = "Store", Pass = "Store" }
+local counterFor =
+	{ Sell = "Sell", Buy = "Shop", PreviewPass = "Store", Pass = "Store", Supply = "Supplies", Deliver = "Jobs" }
 local function action(player, key, option, value)
 	local s = sessions[player]
 	if not s or type(key) ~= "string" then
+		return
+	end
+	if key == "ResetProgress" then
+		if not Config.AllowProgressReset or s.resetting then
+			return
+		end
+		if option ~= (s.resetCount or 0) or shuttingDown or s.travel then
+			net.Feedback:FireClient(player, "progressReset", false, "Reopen Settings and try again.")
+			return
+		end
+		local previous = s.profile
+		local ok, message = Data.resetProgress(player, s)
+		if sessions[player] ~= s or player.Parent ~= Players then
+			return
+		end
+		if ok then
+			s.resetCount = (s.resetCount or 0) + 1
+			player:SetAttribute("ProgressResets", s.resetCount)
+			for entry in previous.viewed do
+				player:SetAttribute("Seen" .. entry, nil)
+			end
+			for id in previous.skills do
+				player:SetAttribute("Skill" .. id, false)
+			end
+			local char = player.Character
+			if char then
+				char:SetAttribute("MiningSwing", nil)
+				mineFit(char, false)
+				moveCharacter(char, CFrame.new(landing))
+			end
+			s.climb, s.lavaUntil = nil, nil
+			sync(player, s.profile)
+			applySkills(player, s.profile)
+		end
+		net.Feedback:FireClient(player, "progressReset", ok, message)
+		return
+	end
+	if s.resetting then
+		return
+	end
+	if key == "IntroSeen" then
+		s.profile.introSeen = true
+		player:SetAttribute("IntroSeen", true)
+		return
+	end
+	if key == "SkipExpedition" then
+		if Profile.expeditionStep(s.profile) ~= "Done" then
+			s.profile.firstTrip.skipped = true
+			player:SetAttribute("ExpeditionStep", "Skipped")
+		end
 		return
 	end
 	if key == "ReturnReady" then
@@ -250,6 +369,9 @@ local function action(player, key, option, value)
 		and key ~= "Sell"
 		and key ~= "Buy"
 		and key ~= "Job"
+		and key ~= "Supply"
+		and key ~= "Flare"
+		and key ~= "Deliver"
 		and key ~= "PreviewPass"
 		and key ~= "Title"
 		and key ~= "Skill"
@@ -281,7 +403,34 @@ local function action(player, key, option, value)
 		return
 	end
 	local p = s.profile
-	if key == "Title" then
+	if key == "Supply" and type(option) == "string" then
+		local ok, message = Profile.buySupply(p, option)
+		if ok then
+			sync(player, p)
+		end
+		net.Feedback:FireClient(player, "hint", message)
+	elseif key == "Deliver" then
+		local day = math.floor(os.time() / 86400)
+		if Profile.deliver(p, day, option) then
+			sync(player, p)
+			local order = Materials.daily(day)
+			net.Feedback:FireClient(
+				player,
+				"job",
+				order.name .. (if p.skills.SupplyRunner then " (+2 survey flares)" else " (+1 survey flare)"),
+				order.gold
+			)
+		end
+	elseif key == "Flare" and p.flares > 0 and not s.travel then
+		local ok, message = Flare.place(world, player.Character, p.skills)
+		if ok then
+			times.Flare = now + 2
+			p.flares -= 1
+			sync(player, p)
+			net.Feedback:FireClient(player, "close")
+		end
+		net.Feedback:FireClient(player, "hint", message)
+	elseif key == "Title" then
 		if Profile.equipTitle(p, option) then
 			sync(player, p)
 		end
@@ -289,12 +438,14 @@ local function action(player, key, option, value)
 		if type(option) == "string" then
 			local learned, award = Profile.learn(p, option)
 			if learned then
+				player:SetAttribute("Skill" .. option, true)
 				sync(player, p, award)
 				applySkills(player, p)
+				net.Feedback:FireClient(player, "skillLearned", option)
 			end
 		end
 	elseif key == "Pet" then
-		if option == "Rock" or option == "" then
+		if option == "Rock" or option == "" or (option == "Drake" and p.drake) then
 			p.pet = option
 			sync(player, p)
 		end
@@ -318,7 +469,7 @@ local function action(player, key, option, value)
 				return result:GetNonChatStringForBroadcastAsync()
 			end)
 			s.filteringPetName = nil
-			if sessions[player] ~= s then
+			if sessions[player] ~= s or s.profile ~= p or s.resetting then
 				return
 			end
 			if not ok or not filtered or filtered == "" or filtered:find("#", 1, true) then
@@ -350,10 +501,14 @@ local function action(player, key, option, value)
 			end
 		end)
 	elseif key == "Sell" then
-		local quantity = Profile.used(p)
-		local gold, award = Profile.sell(p, if player:GetAttribute("DoubleGold") then 2 else 1)
-		sync(player, p, award)
-		net.Feedback:FireClient(player, "sale", gold, quantity, p.gold)
+		local gold, award, quantity = Profile.sell(p, if player:GetAttribute("DoubleGold") then 2 else 1, option, value)
+		if gold == nil then
+			return
+		end
+		if quantity > 0 then
+			sync(player, p, award)
+		end
+		net.Feedback:FireClient(player, "sale", gold, quantity, p.gold, option)
 	elseif key == "Buy" and type(option) == "string" and Upgrades.items[option] then
 		local ok, msg, award = Profile.buy(p, option)
 		sync(player, p, award)
@@ -372,7 +527,7 @@ local function action(player, key, option, value)
 end
 net.Action.OnServerEvent:Connect(action)
 for name, prompt in site.stations do
-	if name == "Shop" or name == "Store" then
+	if name == "Sell" or name == "Shop" or name == "Store" or name == "Supplies" then
 		net:SetAttribute(name .. "Position", prompt.Parent.Position)
 		net:SetAttribute(name .. "Range", prompt.MaxActivationDistance + 1)
 	end
@@ -390,7 +545,7 @@ for name, prompt in site.stations do
 	end)
 end
 Mining.start(world, net, sessions, sync)
-require(script.Standings).start(site.court, net.FriendsBoard)
+require(script.Standings).start(site.court)
 Players.PlayerAdded:Connect(join)
 Players.PlayerRemoving:Connect(leave)
 for _, player in Players:GetPlayers() do
@@ -400,10 +555,21 @@ end
 task.spawn(function()
 	while true do
 		world:generate()
+		local renewAt = os.clock() + Config.ResetSeconds
 		net:SetAttribute("Ready", true)
 		repeat
 			task.wait(1)
-		until world.removed >= Config.ResetAfter
+			if next(world.grid.starterCuts) then
+				local miners = {}
+				for _, player in Players:GetPlayers() do
+					local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+					if root then
+						table.insert(miners, root.Position)
+					end
+				end
+				world.grid:refreshStarter(os.clock(), miners)
+			end
+		until world.removed >= Config.ResetAfter or os.clock() >= renewAt
 		net.Feedback:FireAllClients("resetSoon", Config.ResetWarning)
 		task.wait(Config.ResetWarning)
 		world.ready = false
@@ -424,7 +590,14 @@ task.spawn(function()
 end)
 task.spawn(function()
 	while task.wait(0.5) do
+		local day = math.floor(os.time() / 86400)
+		if net:GetAttribute("OrderDay") ~= day then
+			net:SetAttribute("OrderDay", day)
+		end
 		for player, s in sessions do
+			if s.resetting then
+				continue
+			end
 			local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
 			if not root then
 				s.climb = nil
@@ -449,10 +622,9 @@ task.spawn(function()
 				applySkills(player, s.profile)
 			end
 			if mining then
-				local depthStuds = math.floor(Config.FloorY - localPos.Y)
-				if depthStuds > s.profile.bestDepth then
-					s.profile.bestDepth = depthStuds
-					player.leaderstats.Depth.Value = Config.depthInBlocks(depthStuds)
+				local blocks = Config.depthInBlocks(Config.FloorY - localPos.Y)
+				if Profile.recordDepth(s.profile, blocks) then
+					player.leaderstats.Depth.Value = blocks
 				end
 			elseif
 				localPos.Y < -35

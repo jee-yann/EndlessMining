@@ -20,6 +20,26 @@ function Pattern.visiblePart(eye, center, normal, params, reach)
 	return nil
 end
 
+-- A third-person camera can see the top while the miner is beside the brick.
+-- Accept a reachable side of that same brick when its top is actually exposed.
+function Pattern.reachablePart(eye, center, normal, params, reach)
+	local direct = Pattern.visiblePart(eye, center, normal, params, reach)
+	if direct or normal ~= Vector3.yAxis then
+		return direct
+	end
+	for _, side in { Vector3.xAxis, -Vector3.xAxis, Vector3.zAxis, -Vector3.zAxis, -Vector3.yAxis } do
+		local part = Pattern.visiblePart(eye, center, side, params, reach)
+		if
+			part
+			and (part.Position - center).Magnitude < 0.03
+			and bit32.btest(part:GetAttribute("OpenFaces") or 0, 2 ^ Enum.NormalId.Top.Value)
+		then
+			return part
+		end
+	end
+	return nil
+end
+
 function Pattern.select(origin, center, ore, power, space)
 	if space < 1 or not ore or center.Y >= origin.Y + Config.FloorY then
 		return {}, nil

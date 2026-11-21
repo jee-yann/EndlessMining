@@ -40,12 +40,11 @@ local function makeFigure(id)
 	end
 	human.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
 	human.EvaluateStateMachine = false
-	model:ScaleTo(0.76)
+	model:ScaleTo(1.45)
 	model.Name = "Podium miner"
 	return model
 end
-function Podiums.new(viewer)
-	local self = { friends = {} }
+function Podiums.start(viewer)
 	local slots = {}
 	local function clear(slot)
 		if slot.model then
@@ -79,14 +78,14 @@ function Podiums.new(viewer)
 			local foot = model:FindFirstChild("LeftFoot") or model:FindFirstChild("Left Leg")
 			local cf, sz = model:GetBoundingBox()
 			local bottom = if foot then foot.Position.Y - foot.Size.Y / 2 else cf.Y - sz.Y / 2
-			model:PivotTo(model:GetPivot() + Vector3.yAxis * (base.Position.Y + base.Size.Y / 2 + 0.16 - bottom))
+			model:PivotTo(model:GetPivot() + Vector3.yAxis * (base.Position.Y + base.Size.Y / 2 + 0.14 - bottom))
 			model.Parent = base
 			local arm = model:FindFirstChild("RightShoulder", true) or model:FindFirstChild("Right Shoulder", true)
 			slot.arm = if arm and (arm:IsA("Motor6D") or arm:IsA("AnimationConstraint")) then arm else nil
 			slot.model = model
 			local tag = Instance.new("BillboardGui")
 			tag.Name, tag.Adornee, tag.Size, tag.StudsOffsetWorldSpace, tag.MaxDistance =
-				"Record", model.Head, UDim2.fromOffset(138, 31), Vector3.yAxis * 1.25, 40
+				"Record", model.Head, UDim2.fromOffset(150, 32), Vector3.yAxis * (model.Head.Size.Y / 2 + 0.7), 48
 			local label = Instance.new("TextLabel")
 			label.Size, label.BackgroundTransparency, label.TextScaled, label.Font =
 				UDim2.fromScale(1, 1), 1, true, Enum.Font.FredokaOne
@@ -103,7 +102,7 @@ function Podiums.new(viewer)
 			local island = workspace:FindFirstChild("CitrineCove")
 			local court = island and island:FindFirstChild("Miners Court", true)
 			local root = viewer.Character and viewer.Character:FindFirstChild("HumanoidRootPart")
-			for _, key in { "Server", "Friends" } do
+			for _, key in { "Server", "Global" } do
 				local board = court and court:FindFirstChild(key)
 				for rank = 1, 3 do
 					local k = key .. rank
@@ -119,8 +118,7 @@ function Podiums.new(viewer)
 							slot = { base = base, rank = rank, token = 0 }
 							slots[k] = slot
 						end
-						local row = if key == "Friends" then self.friends[rank] else nil
-						local id = if key == "Friends" then row and row.id else base:GetAttribute("StandingId")
+						local id = base:GetAttribute("StandingId")
 						if not root or (root.Position - base.Position).Magnitude > 125 then
 							id = nil
 						end
@@ -135,12 +133,14 @@ function Podiums.new(viewer)
 							clear(slot)
 						end
 						if slot.model and slot.label then
-							local name = if row then row.name else base:GetAttribute("StandingName")
-							local depth = if row then row.score else base:GetAttribute("StandingLevel")
+							local name = base:GetAttribute("StandingName") or ""
+							local score = base:GetAttribute(
+								if key == "Global" then "StandingDepth" else "StandingLevel"
+							) or 0
 							slot.label.Text = string.format(
-								if row then "%s  ·  %d blocks" else "%s  ·  Lv %d",
-								name or "",
-								depth or 0
+								if key == "Global" then "%s  ·  %d blocks" else "%s  ·  Lv %d",
+								name,
+								score
 							)
 						end
 					end
@@ -157,6 +157,5 @@ function Podiums.new(viewer)
 			end
 		end
 	end)
-	return self
 end
 return Podiums
