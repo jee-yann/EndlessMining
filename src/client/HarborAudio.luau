@@ -146,35 +146,57 @@ for i = 1, 5 do
 	notes[i] = voice
 end
 function Audio.origins(parent)
-	if music.IsPlaying then music:Stop() end
-	local air = sound("Upper air", "rbxasset://sounds/action_falling.ogg", 0, 0.64, parent)
+	local beats = require(script.Parent.MineOrigins.Beats)
+	if music.IsPlaying then
+		music:Stop()
+	end
+	local air = sound("Entry roar", "rbxasset://sounds/action_falling.ogg", 0, 0.64, parent)
 	air.Looped = true
 	air:Play()
-	local impact = sound("Landfall", "rbxasset://sounds/impact_explosion_03.mp3", 0.34, 0.68, parent)
-	local surf = sound("Incoming tide", "rbxasset://sounds/impact_water.mp3", 0.18, 0.66, parent)
-	local bell = sound("Wick resonance", oreVoices.Starfall.SoundId, 0.26, 0.83, parent)
-	bell.PlaybackRegionsEnabled, bell.PlaybackRegion = true, NumberRange.new(0.08, 1.36)
-	local tail = Instance.new("ReverbSoundEffect")
-	tail.DecayTime, tail.WetLevel, tail.Parent = 2.5, -8, bell
-	local iron = sound("Cold lamp", oreVoices.Iron.SoundId, 0.18, 0.72, parent)
-	local crack = sound("Core fracture", oreVoices.Stone.SoundId, 0.20, 0.82, parent)
-	crack.PlaybackRegionsEnabled, crack.PlaybackRegion = true, NumberRange.new(0.025, 0.18)
-	local spindle = sound("Drill teeth", grit.SoundId, 0.14, 0.85, parent)
-	spindle.PlaybackRegionsEnabled, spindle.PlaybackRegion = true, NumberRange.new(0.04, 0.19)
+	local impact = sound("Landfall", "rbxasset://sounds/impact_explosion_03.mp3", 0.51, 0.78, parent)
+	local boom = sound("Pressure wave", impact.SoundId, 0.29, 0.49, parent)
+	local spray = sound("Water thrown ashore", "rbxasset://sounds/impact_water.mp3", 0.23, 0.70, parent)
+	local ping = sound("Starfall resonance", oreVoices.Starfall.SoundId, 0.26, 0.91, parent)
+	ping.PlaybackRegionsEnabled, ping.PlaybackRegion = true, NumberRange.new(0.08, 1.36)
+	local echo = Instance.new("ReverbSoundEffect")
+	echo.DecayTime, echo.WetLevel, echo.Parent = 2.35, -7, ping
+	local hammer = sound("Survey knock", oreVoices.Iron.SoundId, 0.23, 1.04, parent)
+	hammer.PlaybackRegionsEnabled, hammer.PlaybackRegion = true, NumberRange.new(0.012, 0.21)
+	local reply = sound("Returned knock", hammer.SoundId, 0.21, 0.80, parent)
+	reply.PlaybackRegionsEnabled, reply.PlaybackRegion = true, hammer.PlaybackRegion
+	echo:Clone().Parent = reply
+	local split = sound("Split basalt", oreVoices.Stone.SoundId, 0.29, 0.83, parent)
+	split.PlaybackRegionsEnabled, split.PlaybackRegion = true, NumberRange.new(0.015, 0.32)
 	local cues = {
-		{0.65,bell,0.67}, {1.65,crack,0.61}, {8.4,impact,0.68}, {11.2,surf,0.66}, {16.75,surf,0.84},
-		{19.05,bell,1.12}, {23.4,bell,0.93}, {28.85,iron,0.72}, {30.3,surf,0.71},
-		{32.62,spindle,0.79}, {32.92,spindle,0.93}, {33.17,spindle,1.08}, {33.40,spindle,1.17},
-		{33.63,spindle,1.01}, {33.93,spindle,0.82}, {34.39,iron,0.85},
-		{36.22,crack,0.86}, {36.86,bell,1.22}, {40.25,surf,0.74},
+		{ 0.18, ping, 0.69 },
+		{ 6.90, split, 0.67 },
+		{ beats.impact, impact, 0.84 },
+		{ 10.20, boom, 0.49 },
+		{ 11.07, spray, 0.67 },
+		{ 13.52, split, 0.61 },
+		{ 15.10, ping, 0.67 },
+		{ beats.outbound[1], hammer, 1.04 },
+		{ beats.outbound[2], hammer, 1.04 },
+		{ beats.outbound[3], hammer, 1.04 },
+		{ beats.returned[1], reply, 0.82 },
+		{ beats.returned[2], reply, 0.82 },
+		{ beats.returned[3], reply, 0.82 },
+		{ beats.pick, split, 0.86 },
+		{ beats.answer, ping, 1.15 },
+		{ 31.68, reply, 0.64 },
+		{ 32.30, ping, 0.72 },
 	}
 	local nextCue = 1
 	return function(t)
-		local fall = math.clamp((t-5.3)/3.1,0,1)
-		air.Volume = if t<8.4 then 0.012+0.18*fall*fall elseif t<28.85 then 0.026 elseif t<39.2 then 0 else 0.018
-		while cues[nextCue] and cues[nextCue][1]<=t do
+		local rush = math.clamp(t / 9.9, 0, 1)
+		air.Volume = if t < 9.9
+			then 0.012 + 0.26 * rush ^ 1.7
+			elseif t < 13.2 then 0.060 * (1 - math.clamp((t - 9.9) / 3.3, 0, 1))
+			else 0
+		air.PlaybackSpeed = 0.58 + 0.57 * rush
+		while cues[nextCue] and cues[nextCue][1] <= t do
 			local cue = cues[nextCue]
-			if t-cue[1]<0.7 then
+			if t - cue[1] < 0.55 then
 				local voice = cue[2]
 				voice.PlaybackSpeed = cue[3]
 				voice.TimePosition = if voice.PlaybackRegionsEnabled then voice.PlaybackRegion.Min else 0

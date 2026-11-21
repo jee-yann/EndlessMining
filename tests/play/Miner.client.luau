@@ -76,57 +76,100 @@ local function test()
 	assert(not p.Character.HumanoidRootPart.Anchored, "free to move at spawn")
 	do
 		local opening = p.PlayerGui:WaitForChild("Mine origins", 6)
-		local titles = p.PlayerGui:WaitForChild("Keeper subtitles", 2)
+		local titles = p.PlayerGui:WaitForChild("Mine subtitles", 2)
 		assert(opening and titles.Skip and not gui.SafeArea.Visible, "skippable first visit")
 		local camera = workspace.CurrentCamera
 		local stage = camera:WaitForChild("Mine origins set", 4)
-		local wick = opening:WaitForChild("Wick resonance", 4)
+		local resonance = opening:WaitForChild("Starfall resonance", 4)
 		assert(stage and camera.CameraType == Enum.CameraType.Scriptable and not p:GetAttribute("IntroSeen"))
-		assert(wick.SoundGroup == harbor["Stone break"].SoundGroup and wick.SoundId == harbor["Starfall break"].SoundId)
-		assert(not song.IsPlaying and wick:FindFirstChildOfClass("ReverbSoundEffect"))
+		assert(
+			resonance.SoundGroup == harbor["Stone break"].SoundGroup
+				and resonance.SoundId == harbor["Starfall break"].SoundId
+		)
+		assert(not song.IsPlaying and resonance:FindFirstChildOfClass("ReverbSoundEffect"))
 		if r:GetAttribute("CheckSwing") then
 			-- Exercise the live music handoff with its output muted for the entire check.
 			local mix = song.SoundGroup.Volume
 			song.SoundGroup.Volume = 0
 			rep:SetAttribute("MuteTestMusic", false)
-			local input=game.UserInputService:CreateVirtualInput()
-			input:SendKey(true,Enum.KeyCode.Return)
-			task.wait(.08)
-			input:SendKey(false,Enum.KeyCode.Return)
-			waitFor(function() return not opening.Parent end,2,"skip immediately")
-			waitFor(function() return song.IsPlaying and song.Volume > 0.06 end,3,"music fades up after skip")
+			local input = game.UserInputService:CreateVirtualInput()
+			input:SendKey(true, Enum.KeyCode.Return)
+			task.wait(0.08)
+			input:SendKey(false, Enum.KeyCode.Return)
+			waitFor(function()
+				return not opening.Parent
+			end, 2, "skip immediately")
+			waitFor(function()
+				return song.IsPlaying and song.Volume > 0.06
+			end, 3, "music fades up after skip")
 			assert(song.SoundGroup.Volume == 0)
 			rep:SetAttribute("MuteTestMusic", true)
 			song:Stop()
 			song.SoundGroup.Volume = mix
 		else
-			local coast, landed
-			opening.Landfall.Played:Once(function() landed = not song.IsPlaying end)
+			local landed, outbound, returned = false, 0, 0
+			opening.Landfall.Played:Once(function()
+				landed = not song.IsPlaying
+			end)
+			opening["Survey knock"].Played:Connect(function()
+				outbound += 1
+			end)
+			opening["Returned knock"].Played:Connect(function()
+				returned += 1
+			end)
+			local coast = stage:WaitForChild("Primordial cove", 3)
+			local meteor = coast:WaitForChild("Starfall meteor", 3)
+			assert(coast:FindFirstChild("Plasma wake") and #coast["Plasma wake"]:GetChildren() > 5)
+			local initial = meteor:GetPivot().Position
 			waitFor(function()
-				coast = stage:FindFirstChild("Beacon Point through time")
-				return coast and coast:FindFirstChild("Falling ember")
-			end, 8, "landfall at the future mine")
-			waitFor(function() return landed and coast:FindFirstChild("Buried heart") end, 5, "impact leaves the fragment")
-			local water = coast["Open sea"]
-			local low = water.Position.Y
-			waitFor(function() return water.Position.Y > low + 6 end, 7, "rising tide covers the crater")
-			waitFor(function() return water.Position.Y < low + 4 and coast:FindFirstChild("Shore pine") end, 6, "tide recedes and trees grow")
-			waitFor(function() return coast:FindFirstChild("Beach chip") and coast:FindFirstChild("Beachcomber") end, 4, "fisher finds a chip")
-			local chip = coast["Beach chip"]
-			local sand = chip:GetPivot().Y
-			waitFor(function() return chip:GetPivot().Y > sand + 1.5 end, 6, "fisher lifts the chip into frame")
-			waitFor(function() return coast:FindFirstChild("Rotating lantern") and coast["Rotating lantern"].Lens.Beam.Enabled end, 7, "settlement lights the beacon")
-			waitFor(function() return coast:FindFirstChild("Beacon keeper") and not coast["Rotating lantern"].Lens.Beam.Enabled end, 9, "keeper reaches the failing beacon")
-			waitFor(function() return stage:FindFirstChild("Core shed") and titles.Caption.Text:find("drill crew") end, 8, "core sample evidence")
-			local spindle = stage["Core shed"]["Drill spindle"]
-			local bearing = spindle:GetPivot()
-			waitFor(function() return spindle:GetPivot() ~= bearing end, 2, "drill runs on camera")
-			waitFor(function() return #stage:GetChildren() == 0 and titles.Caption.Text:find("dusk") end, 12, "handoff at the playable mine")
+				return (meteor:GetPivot().Position - initial).Magnitude > 10
+			end, 5, "meteor physically crosses the cove")
+			waitFor(function()
+				return landed and coast:FindFirstChild("Impact crown") and meteor.Parent ~= coast
+			end, 12, "impact opens the crater")
+			assert(coast:FindFirstChild("Buried Starfall"))
+			waitFor(function()
+				return titles.Intertitle.Text == "8 MILLION YEARS LATER"
+					and opening.Dissolve.BackgroundTransparency < 0.05
+			end, 9, "black time cut")
+			local crew = stage:WaitForChild("The knocking crew", 4)
+			local actor = crew["Expedition miner"]
+			assert(actor:FindFirstChildOfClass("Humanoid") and actor:FindFirstChild("Head"))
+			assert(
+				crew["Survey operator"]:FindFirstChild("Right Arm")
+					and crew["Survey operator"]:FindFirstChildOfClass("Humanoid")
+			)
+			waitFor(function()
+				return outbound == 3 and returned == 3
+			end, 12, "matched three-knock call and answer")
+			local gate = n:GetAttribute("Entrance")
+			assert(
+				(actor.Head.Position - gate).Magnitude < 16 and not stage:FindFirstChild("Survey bay"),
+				"actors use the actual streamed mine entrance"
+			)
+			local pick = crew["Harbor pick"]
+			local rest = pick:GetPivot()
+			waitFor(function()
+				return (pick:GetPivot().Position - rest.Position).Magnitude > 1
+			end, 6, "avatar lifts pick")
+			local jewel = crew["Signal stone"]["Starfall inclusion"]
+			local light = jewel:FindFirstChildWhichIsA("PointLight", true)
+			waitFor(function()
+				return light.Brightness > 0.8
+			end, 8, "the ore answers the player's hit")
+			waitFor(function()
+				return actor.Head.Position.Z < gate.Z and titles.Intertitle.Text == "IT KNOCKED BACK"
+			end, 9, "player crosses the actual portal before title")
 		end
 		waitFor(function()
-			return not opening.Parent and not stage.Parent and not titles.Parent and p:GetAttribute("IntroSeen") and gui.SafeArea.Visible
-				and workspace.CurrentCamera.CameraType~=Enum.CameraType.Scriptable
-		end,16,"opening returns camera and HUD")
+			return not opening.Parent
+				and not stage.Parent
+				and not titles.Parent
+				and p:GetAttribute("IntroSeen")
+				and gui.SafeArea.Visible
+				and workspace.CurrentCamera.CameraType ~= Enum.CameraType.Scriptable
+				and not camera:FindFirstChild("Mine origins focus")
+		end, 16, "opening returns camera and HUD")
 	end
 	local ownerVision
 	do
@@ -1092,11 +1135,11 @@ local function test()
 			assert(p:GetAttribute("ExpeditionStep") == "Dig" and p:GetAttribute("IntroSeen"))
 			assert(p:GetAttribute("SfxMuted") and p:GetAttribute("SfxVolume") == 80 and not row.Erase.Visible)
 			assert(menu.Listings["Sound effects"].Mute["Mute slash"].Visible)
-			local replay = menu.Listings["The First Wick"].Action
+			local replay = menu.Listings["It Knocked Back"].Action
 			menu.Listings.CanvasPosition = Vector2.new(0,menu.Listings.AbsoluteCanvasSize.Y)
 			task.wait(.2)
 			clickButton(replay)
-			local subs = p.PlayerGui:WaitForChild("Keeper subtitles",3)
+			local subs = p.PlayerGui:WaitForChild("Mine subtitles",3)
 			assert(subs and not gui.SafeArea.Visible and p:GetAttribute("IntroSeen"), "returning miner can replay")
 			clickButton(subs.Skip)
 			waitFor(function() return not subs.Parent and gui.SafeArea.Visible end,2,"on-screen skip restores play")

@@ -271,7 +271,7 @@ net.Feedback.OnClientEvent:Connect(function(kind, a, point, spread, finds, norma
 			W.gold
 		)
 	elseif kind == "milestone" then
-		local heading = if a == "ORE DISCOVERED" and point == "Starfall" then "A WICK FOR BEACON POINT" else a
+		local heading = if a == "ORE DISCOVERED" and point == "Starfall" then "IT KNOCKED BACK" else a
 		hud:milestone(heading, point, spread)
 	elseif kind == "depart" then
 		release()

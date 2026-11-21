@@ -149,8 +149,8 @@ function Settings:build(menu)
 	skip.Activated:Connect(function()
 		if skip.Interactable then self.net.Action:FireServer("SkipExpedition") end
 	end)
-	local _, filmDetail, replay = menu:row(index + 1, "The First Wick", "Book", W.violet)
-	filmDetail.Text, replay.Text = "The story of Beacon Point.", "Replay intro"
+	local _, filmDetail, replay = menu:row(index + 1, "It Knocked Back", "Book", W.violet)
+	filmDetail.Text, replay.Text = "The signal beneath Citrine Cove.", "Replay intro"
 	table.insert(menu.updates, function()
 		replay.Interactable = self.player:GetAttribute("IntroSeen") == true and not self.resetPending
 	end)

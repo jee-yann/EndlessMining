@@ -48,8 +48,7 @@ local function face(parent, a, b, c, color)
 	end
 end
 
--- The pale gold edge and lavender fracture recur in orbit, in the lamp and
--- in the drill sample. These are asymmetric splinters, with a broken base.
+-- The sample exposes an asymmetric splinter with the meteor's pale gold edge.
 local function crystal(parent, at, size)
 	local m = model(parent, "Star heart")
 	local top, foot = V(0.23, 1.4, -0.06) * size, V(-0.17, -0.86, 0.04) * size
