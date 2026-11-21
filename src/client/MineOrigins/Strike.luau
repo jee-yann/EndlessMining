@@ -80,10 +80,51 @@ local function sprite(parent, name, asset, brightness)
 	return gui, image
 end
 
+-- Follow the seven peaks north of today's cableway, at their younger heights.
+-- All faces share the same vertices, including the far side visible during the dive.
+local function buildHeadlands(shore)
+	local peaks = {
+		V(-246, -9, -90),
+		V(-201, 16, -111),
+		V(-157, 23, -167),
+		V(-79, 24, -154),
+		V(-39, 22, -185),
+		V(53, 29, -173),
+		V(113, 24, -157),
+		V(201, 16, -99),
+		V(252, -9, -73),
+	}
+	local crest = { peaks[1] }
+	for i = 2, #peaks do
+		local previous, peak = peaks[i - 1], peaks[i]
+		local saddle = previous:Lerp(peak, if i % 2 == 0 then 0.39 else 0.64)
+		table.insert(crest, saddle - V(0, math.max(0, saddle.Y + 9) * 0.37, 3))
+		table.insert(crest, peak)
+	end
+	local last
+	for i, top in crest do
+		local section = {
+			V(top.X, -12, top.Z + 34),
+			V(top.X + 2 * math.sin(i), (top.Y + 9) * 0.44 - 9, top.Z + 15 + 3 * math.cos(i)),
+			top,
+			V(top.X, -12, top.Z - 31),
+		}
+		if last then
+			for j, hue in { "827A7F", "93868A", "797986" } do
+				local color = rgb(hue):Lerp(rgb("9C8E95"), 0.12 * (i % 3))
+				P.face(shore, last[j], section[j], section[j + 1], color)
+				P.face(shore, last[j], section[j + 1], last[j + 1], color)
+			end
+		end
+		last = section
+	end
+end
+
 local function buildCoast(root, rng)
 	-- The impact falls below the back of today's gallery. The lagoon and
 	-- smaller landing island lie to its south (+Z), just as they do at spawn.
 	local shore = P.model(root, "Ancient mine headland")
+	buildHeadlands(shore)
 	local sea = P.box(shore, "Open ocean", V(0, -8.6, 0), V(1900, 1, 1900), "31586F")
 	sea.Reflectance = 0.09
 	for i = 1, 52 do

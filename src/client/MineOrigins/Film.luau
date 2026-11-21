@@ -37,64 +37,24 @@ function Film.card(t)
 	return "", 0
 end
 
--- Use the silhouettes of the actual cove on the approach. The ancient shoreline
--- has its own foreground so the meteor can cut a crater right through it.
-local function ancientRim(root, site)
-	local cove = workspace:FindFirstChild("CitrineCove")
-	local highlands = cove and cove:FindFirstChild("Citrine Highlands")
-	if not highlands then
-		return
-	end
-	local formations = {
-		["Coastal escarpment"] = true,
-		["Slate crown"] = true,
-		["Mountain flank"] = true,
-		["Far slope"] = true,
-		["Summit facet"] = true,
-	}
-	local ridge = P.model(root, "Citrine headlands")
-	for _, groupName in { "Rock rim", "Cableway ridge" } do
-		local group = highlands:FindFirstChild(groupName)
-		if group then
-			for _, p in group:GetChildren() do
-				if p:IsA("BasePart") and formations[p.Name] then
-					local rock = p:Clone()
-					rock:ClearAllChildren()
-					rock.Anchored, rock.CanCollide, rock.CanTouch, rock.CanQuery = true, false, false, false
-					local localCF = p.CFrame - site
-					local stretch = if p.Name == "Coastal escarpment" or p.Name == "Slate crown" then 0.36 else 0.66
-					rock.Size = V(p.Size.X, p.Size.Y * stretch, p.Size.Z)
-					rock.CFrame = CF(localCF.X, localCF.Y * stretch - 4, localCF.Z) * localCF.Rotation
-					rock.Color = p.Color:Lerp(Color3.fromHex("776A78"), 0.78)
-					rock.Parent = ridge
-				end
-			end
-		end
-	end
-end
-
 function Film.new(shelf, stage, camera, site, gate, motion, clock, character)
 	local base = CF(site + V(0, 3200, 0))
 	local ancientStorage = Instance.new("Folder")
 	ancientStorage.Parent = shelf
 	local strike = Strike.new(ancientStorage)
-	ancientRim(strike.root, site)
 	strike.root:PivotTo(base)
 	strike.root.Parent = stage
-	return setmetatable(
-		{
-			stage = stage,
-			shelf = shelf,
-			camera = camera,
-			base = base,
-			gateBase = CF(gate - V(0, 3.5, 0)),
-			motion = motion,
-			clock = clock,
-			character = character,
-			strike = strike,
-		},
-		Film
-	)
+	return setmetatable({
+		stage = stage,
+		shelf = shelf,
+		camera = camera,
+		base = base,
+		gateBase = CF(gate - V(0, 3.5, 0)),
+		motion = motion,
+		clock = clock,
+		character = character,
+		strike = strike,
+	}, Film)
 end
 
 function Film:frame(base, eye, look, fov, roll)
