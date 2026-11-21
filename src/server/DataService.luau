@@ -12,15 +12,62 @@ local function getStore()
 	return store
 end
 
-local function copy(p)
+local function depthStore()
+	return DSS:GetOrderedDataStore(
+		Config.StoreName .. "_DepthBlocks",
+		if RunService:IsStudio() then "studio" else "live"
+	)
+end
+
+function Data.snapshot(p)
 	return {
 		version = p.version,
+		introSeen = p.introSeen,
+		firstTrip = table.clone(p.firstTrip),
 		gold = p.gold,
 		mined = p.mined,
+		xp = p.xp,
+		title = p.title,
+		skills = table.clone(p.skills),
+		counts = table.clone(p.counts),
+		recentCuts = table.clone(p.recentCuts),
+		earned = table.clone(p.earned),
+		claimedJobs = p.claimedJobs,
+		pet = p.pet,
+		drake = p.drake,
+		petName = p.petName,
 		bestDepth = p.bestDepth,
 		levels = table.clone(p.levels),
+		preferences = table.clone(p.preferences),
 		bag = table.clone(p.bag),
+		flares = p.flares,
+		temper = p.temper,
+		dailyClaim = p.dailyClaim,
+		jobs = p.jobs,
+		discoveries = table.clone(p.discoveries),
+		viewed = table.clone(p.viewed),
 	}
+end
+
+function Data.globalDepths()
+	return depthStore():GetSortedAsync(false, 5, 1):GetCurrentPage()
+end
+
+local function indexDepth(session, userId, blocks)
+	if blocks == session.indexedDepth then
+		return
+	end
+	local ok, result = pcall(function()
+		return depthStore():UpdateAsync(tostring(userId), function(previous)
+			-- The saved profile is authoritative, including a miner who started over.
+			return if (previous or 0) == blocks then nil else blocks
+		end)
+	end)
+	if ok then
+		session.indexedDepth = blocks
+	else
+		warn("Could not update global depth for", userId, result)
+	end
 end
 
 function Data.claim(old, token, now)
@@ -35,7 +82,7 @@ function Data.claim(old, token, now)
 		end
 	end
 	return {
-		profile = if old then old.profile else Profile.new(),
+		profile = if old then Profile.upgradeSave(old.profile) else Profile.new(),
 		owner = token,
 		expires = now + Config.LeaseSeconds,
 	}
@@ -62,6 +109,7 @@ function Data.open(player)
 	local detail = "Saving unavailable"
 	-- Unpublished local places cannot use DataStores. Skip the network wait.
 	if RunService:IsStudio() and (game.GameId == 0 or player.UserId <= 0) then
+		session.practice = true
 		player:SetAttribute("SaveStatus", "Practice session")
 		return session
 	end
@@ -91,20 +139,7 @@ function Data.open(player)
 	return session
 end
 
-function Data.save(player, session, release)
-	if release then
-		session.closing = true
-		while session.busy do
-			task.wait()
-		end
-	elseif session.closing or session.busy then
-		return
-	end
-	if not session.writable then
-		return
-	end
-	session.busy = true
-	local snapshot = copy(session.profile)
+local function writeSnapshot(player, session, snapshot, release)
 	for attempt = 1, 3 do
 		local ok, result = pcall(function()
 			return getStore():UpdateAsync(session.key, function(record)
@@ -120,7 +155,7 @@ function Data.save(player, session, release)
 				session.writable = not release
 				player:SetAttribute("SaveStatus", "Saving enabled")
 			end
-			break
+			return result ~= nil
 		end
 		warn("Endless Mining save failed", player.UserId, result)
 		player:SetAttribute("SaveStatus", "Save delayed")
@@ -128,6 +163,58 @@ function Data.save(player, session, release)
 			task.wait(attempt)
 		end
 	end
+	return false
+end
+
+function Data.save(player, session, release)
+	if release then
+		session.closing = true
+		while session.busy or session.resetting do
+			task.wait()
+		end
+	elseif session.closing or session.busy or session.resetting then
+		return
+	end
+	if not session.writable then
+		return
+	end
+	session.busy = true
+	local snapshot = Data.snapshot(session.profile)
+	local depth = Profile.depthRecord(snapshot)
+	if not release or depth ~= session.indexedDepth then
+		if writeSnapshot(player, session, snapshot, false) then
+			-- Finish the ranking update while we still own the profile.
+			indexDepth(session, player.UserId, depth)
+		end
+	end
+	if release and session.writable then
+		writeSnapshot(player, session, snapshot, true)
+	end
 	session.busy = false
+end
+
+function Data.resetProgress(player, session)
+	if not Config.AllowProgressReset or session.resetting or session.closing then
+		return false, "Reset unavailable right now."
+	end
+	session.resetting = true
+	while session.busy do
+		task.wait()
+	end
+	local fresh = Profile.new()
+	fresh.introSeen = session.profile.introSeen
+	fresh.preferences = table.clone(session.profile.preferences)
+	local ok = session.practice or (session.writable and writeSnapshot(player, session, Data.snapshot(fresh), false))
+	if ok then
+		session.profile = fresh
+		if session.writable then
+			indexDepth(session, player.UserId, 0)
+		end
+	end
+	session.resetting = nil
+	if not ok then
+		return false, "Couldn’t save the reset. Try again when saving is available."
+	end
+	return true, if session.practice then "Practice progress reset." else "Progress reset."
 end
 return Data

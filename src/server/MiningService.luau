@@ -2,41 +2,50 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local Shared = game:GetService("ReplicatedStorage").Shared
 local Config, Ores = require(Shared.GameConfig), require(Shared.Ores)
+local Pattern = require(Shared.BlockPattern)
 local Profile = require(script.Parent.Profile)
+local Expeditions = require(Shared.Expeditions)
+local Skills = require(Shared.Skills)
 local Mining = {}
 
 function Mining.validPoint(v)
 	return typeof(v) == "Vector3" and v.Magnitude < 1e6
 end
 
-function Mining.target(world, character, point)
-	if not Mining.validPoint(point) or not character then
+function Mining.target(world, character, point, normal)
+	if not Mining.validPoint(point) or typeof(normal) ~= "Vector3" or not character then
+		return nil
+	end
+	if normal:Abs() ~= Vector3.xAxis and normal:Abs() ~= Vector3.yAxis and normal:Abs() ~= Vector3.zAxis then
 		return nil
 	end
 	local head, human = character:FindFirstChild("Head"), character:FindFirstChildOfClass("Humanoid")
 	if not head or not human or human.Health <= 0 then
 		return nil
 	end
-	local delta = point - head.Position
-	if delta.Magnitude < 0.1 or delta.Magnitude > Config.Reach then
+	local anchor = world.origin + (((point - world.origin) / Config.Cell):Floor() + Vector3.one * 0.5) * Config.Cell
+	if (anchor - point).Magnitude > 0.03 or anchor.Y >= world.origin.Y + Config.FloorY then
 		return nil
 	end
 	local params = RaycastParams.new()
 	params.FilterDescendantsInstances = { character }
-	params.FilterType = Enum.RaycastFilterType.Exclude
-	local hit = workspace:Raycast(head.Position, delta.Unit * (delta.Magnitude + 4), params)
-	if not hit or hit.Instance ~= workspace.Terrain or (hit.Position - point).Magnitude > 5 then
+	local part = Pattern.reachablePart(head.Position, anchor, normal, params, character:GetAttribute("PickReach"))
+	if not part or part.Parent ~= world.grid.folder then
 		return nil
 	end
-	local center = Config.brushCenter(world.origin, hit.Position, hit.Normal)
-	if Config.inside(center - world.origin) then
-		return center
+	return anchor
+end
+
+function Mining.selection(world, character, point, normal, power, space)
+	local center = Mining.target(world, character, point, normal)
+	if not center then
+		return {}
 	end
-	return nil
+	return Pattern.select(world.origin, center, world:oreAt(center), power, space)
 end
 
 function Mining.start(world, net, sessions, sync)
-	local pending, nextPulse, nextInput, lastHint, queue = {}, {}, {}, {}, {}
+	local strokes, pending, nextInput, stagedSwing, nextSwing, lastHint, queue = {}, {}, {}, {}, {}, {}, {}
 	local credit = Config.BurstCells
 	local function hint(player, message, now)
 		if now >= (lastHint[player] or 0) then
@@ -45,91 +54,195 @@ function Mining.start(world, net, sessions, sync)
 		end
 	end
 
-	net.Mine.OnServerEvent:Connect(function(player, point)
+	local function beginStroke(player, character, point, normal, now)
+		nextSwing[player] = now + 0.035
+		local session = sessions[player]
+		if not session or session.resetting or not world.ready then
+			return
+		end
+		local p = session.profile
+		local selected = Mining.selection(
+			world,
+			character,
+			point,
+			normal,
+			Profile.stat(p, "Power"),
+			Profile.stat(p, "Capacity") - Profile.used(p)
+		)
+		if #selected ~= 1 then
+			strokes[player] = nil
+			return
+		end
+		local ore = world:oreAt(point)
+		local duration, tempered = Skills.cutTime(
+			Profile.stat(p, "Speed"),
+			ore,
+			Config.strength(point.Y - world.origin.Y),
+			p.temper,
+			p.skills
+		)
+		strokes[player] = {
+			profile = p,
+			point = point,
+			normal = normal,
+			due = now + duration,
+			tempered = tempered,
+			character = character,
+			generation = world.generation,
+		}
+		character:SetAttribute("MiningTarget", point)
+		character:SetAttribute("MiningOre", ore.name)
+		character:SetAttribute("MiningSwing", duration)
+	end
+	net.Swing.OnServerEvent:Connect(function(player, active, point, normal)
+		local character = player.Character
+		if not character or type(active) ~= "boolean" then
+			return
+		end
+		strokes[player], stagedSwing[player] = nil, nil
+		if not active then
+			character:SetAttribute("MiningSwing", nil)
+			return
+		end
+		local now = os.clock()
+		if now < (nextSwing[player] or 0) then
+			-- A quick change of aim keeps the most recent face for the next check.
+			stagedSwing[player] = { character = character, point = point, normal = normal }
+		else
+			beginStroke(player, character, point, normal, now)
+		end
+	end)
+	net.Mine.OnServerEvent:Connect(function(player, point, normal, count, mask)
 		local now = os.clock()
 		if now < (nextInput[player] or 0) then
 			return
 		end
-		nextInput[player] = now + 0.055
-		if not world.ready or not sessions[player] or not Mining.validPoint(point) then
+		nextInput[player] = now + 0.05
+		local cut = strokes[player]
+		if
+			not cut
+			or not world.ready
+			or count ~= 1
+			or mask ~= 1
+			or pending[player]
+			or cut.character ~= player.Character
+			or cut.generation ~= world.generation
+			or point ~= cut.point
+			or typeof(normal) ~= "Vector3"
+			or now + 0.18 < cut.due
+		then
 			return
 		end
-		if now < (nextPulse[player] or 0) or pending[player] then
-			return
-		end
-		local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-		if not root or (point - root.Position).Magnitude > Config.Reach + 3 then
-			return
-		end
-		pending[player] = { point = point, time = now }
+		strokes[player] = nil
+		cut.character:SetAttribute("MiningSwing", nil)
+		cut.time, cut.normal = now, normal
+		pending[player] = cut
 		table.insert(queue, player)
 	end)
 
-	local function pulse(player, profile, point, now)
+	local function pulse(player, profile, request, now)
 		local space = Profile.stat(profile, "Capacity") - Profile.used(profile)
 		if space <= 0 then
 			hint(player, "Pack full • sell your ore", now)
 			return
 		end
-		local center = Mining.target(world, player.Character, point)
-		if not center then
+		local selected = Mining.selection(
+			world,
+			player.Character,
+			request.point,
+			request.normal,
+			Profile.stat(profile, "Power"),
+			space
+		)
+		if #selected ~= 1 then
 			return
 		end
-		local radius = Profile.stat(profile, "Radius")
-		local loot, locked = world:excavate(center, radius, Profile.stat(profile, "Power"), space)
-		if not next(loot) then
-			hint(
-				player,
-				if locked
-					then locked.name .. " needs Power " .. locked.hardness
-					else "Try another part of the seam",
-				now
-			)
+		local loot, finds = world:excavate(selected)
+		local name = next(loot)
+		if not name then
 			return
 		end
-		local best = Ores.byName.Stone
-		for name, count in loot do
-			profile.bag[name] = (profile.bag[name] or 0) + count
-			profile.mined += count
-			if Ores.byName[name].value > best.value then
-				best = Ores.byName[name]
-			end
+		local center = selected[1]
+		local spread = Config.Cell
+		local ore = Ores.byName[name]
+		local discovery = not ore.host and not profile.discoveries[name]
+		local oldLevel = Expeditions.level(profile.xp)
+		local awards = Profile.recordCut(profile, name, Config.depthInBlocks(Config.FloorY + world.origin.Y - center.Y))
+		if request.tempered then
+			profile.temper = math.max(0, profile.temper - 1)
 		end
 		sync(player, profile)
-		net.Feedback:FireClient(player, "loot", loot, center, radius)
+		for _, award in awards do
+			net.Feedback:FireClient(player, "achievement", award)
+		end
+		local level = Expeditions.level(profile.xp)
+		for _, rank in Expeditions.ranks do
+			if oldLevel < rank.level and level >= rank.level then
+				net.Feedback:FireClient(player, "titleUnlocked", rank.name)
+			end
+		end
+		net.Feedback:FireClient(player, "loot", loot, center, spread, finds, request.normal)
+		if discovery then
+			net.Feedback:FireClient(player, "milestone", "ORE DISCOVERED", ore.name, ore.color)
+		end
 		for _, other in Players:GetPlayers() do
 			local root = other.Character and other.Character:FindFirstChild("HumanoidRootPart")
 			if other ~= player and root and (root.Position - center).Magnitude < 72 then
-				net.Dust:FireClient(other, center, radius, best.name)
+				net.Dust:FireClient(other, center, spread, ore.name, finds, request.normal, loot)
 			end
 		end
 	end
 
 	RunService.Heartbeat:Connect(function(dt)
+		local tickTime = os.clock()
+		for player, swing in stagedSwing do
+			if tickTime >= nextSwing[player] then
+				stagedSwing[player] = nil
+				if swing.character == player.Character then
+					beginStroke(player, swing.character, swing.point, swing.normal, tickTime)
+				end
+			end
+		end
 		credit = math.min(Config.BurstCells, credit + Config.CellBudget * dt)
-		for _ = 1, 2 do
+		for _ = 1, math.min(2, #queue) do
 			local player = queue[1]
 			if not player then
 				break
 			end
 			local session, request = sessions[player], pending[player]
 			local now = os.clock()
-			if session and request and now - request.time < 1 then
+			if request and now < request.due then
+				-- Allow a slightly early packet to wait for the same server cooldown.
+				table.remove(queue, 1)
+				table.insert(queue, player)
+				continue
+			end
+			if
+				world.ready
+				and session
+				and not session.resetting
+				and request
+				and request.profile == session.profile
+				and request.generation == world.generation
+				and request.character == player.Character
+				and now - request.time < 1
+			then
 				local p = session.profile
-				local cost = (math.floor(Profile.stat(p, "Radius") / Config.Cell) * 2 + 1) ^ 3
-				if credit < cost then
+				if credit < 1 then
 					break
 				end
-				credit -= cost
-				nextPulse[player] = now + Profile.stat(p, "Speed")
-				pulse(player, p, request.point, now)
+				credit -= 1
+
+				pulse(player, p, request, now)
 			end
 			pending[player] = nil
 			table.remove(queue, 1)
 		end
 	end)
 	Players.PlayerRemoving:Connect(function(player)
-		pending[player], nextPulse[player], nextInput[player], lastHint[player] = nil, nil, nil, nil
+		stagedSwing[player] = nil
+		pending[player], strokes[player], nextInput[player], nextSwing[player], lastHint[player] =
+			nil, nil, nil, nil, nil
 	end)
 end
 return Mining

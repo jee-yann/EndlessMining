@@ -1,90 +1,118 @@
 local Shared = game:GetService("ReplicatedStorage").Shared
-local Config = require(Shared.GameConfig)
-local Ores = require(Shared.Ores)
+local Config, Ores = require(Shared.GameConfig), require(Shared.Ores)
 local Geology = {}
 Geology.__index = Geology
-local air = Enum.Material.Air
-
+local thresholds = {}
+for _, layer in Config.Layers do
+	local list, total = {}, 0
+	for _, ore in Ores.list do
+		local chance = layer.oreChances[ore.name]
+		if chance then
+			total += chance
+			table.insert(list, { limit = total, material = ore.material })
+		end
+	end
+	thresholds[layer] = list
+end
+local function hash(seed, x, y, z)
+	local n = bit32.bxor(seed, x * 73856093, y * 19349663, z * 83492791)
+	n = bit32.bxor(n, bit32.rshift(n, 16))
+	n = bit32.band(n * 1664525, 0xffffffff)
+	n = bit32.bxor(n, bit32.rshift(n, 15))
+	n = bit32.band(n * 1597333, 0xffffffff)
+	return bit32.bxor(n, bit32.rshift(n, 16))
+end
 function Geology.new(seed)
-	return setmetatable({ seed = seed, veins = {} }, Geology)
+	return setmetatable({ seed = seed }, Geology)
 end
-
--- One seeded, tilted vein per 32-stud region. A few deeper regions grow a
--- wider gem lode with a hollow pocket through its centre.
-function Geology:vein(a, b, c)
-	local key = (a + 16) * 4096 + (b + 32) * 64 + c + 16
-	if self.veins[key] then
-		return self.veins[key]
+-- Finite winding passages turn through their own rock tile. Their closed ends
+-- keep opening one cave from instantiating a whole underground network.
+local function passage(along, across, row, length, middle, phase)
+	if along < 0 or along > length then
+		return false
 	end
-	local rng = Random.new((self.seed + a * 73856093 + b * 19349663 + c * 83492791) % 2147483647)
-	local x, y, z =
-		a * 32 + rng:NextNumber(10, 22), b * 32 + rng:NextNumber(10, 22), c * 32 + rng:NextNumber(10, 22)
-	local depth = math.max(0, -y)
-	local lode = depth >= 104 and rng:NextNumber() < 0.075
-	local total, ore = 0, Ores.byName.Coal
-	for i = 2, #Ores.list do
-		local candidate = Ores.list[i]
-		if depth >= candidate.min and (not lode or candidate.hardness >= 4) then
-			local weight = candidate.weight / (1 + ((depth - candidate.preferred) / 58) ^ 2)
-			total += weight
-			if rng:NextNumber() * total < weight then
-				ore = candidate
-			end
+	local t = along / length
+	local bend = 3.2 * math.sin(t * 7 + phase) + 1.6 * math.sin(t * 12 + phase)
+	local floor = middle + 1.2 * math.sin(t * 5 + phase)
+	local width = 1.7 + 1.05 * math.sin(t * 8 + phase) ^ 2
+	local taper = math.min(1, (along + 0.6) / 2, (length - along + 0.6) / 2)
+	return ((across - bend) / width) ^ 2 + ((row - floor) / 1.85) ^ 2 < taper
+end
+function Geology:isCave(p)
+	local row = -1 - p.Y
+	if row < 3 then
+		return false
+	end
+	local y = Config.FloorY - (row + 0.5) * Config.Cell
+	if Config.strength(y + Config.Cell) ~= Config.strength(y - Config.Cell) then
+		return false
+	end
+	if row < 12 and math.abs(p.X) < 12 and p.Z >= -41 and p.Z <= 2 then
+		return passage(-p.Z - 7, p.X, row, 30, 4.8, 0)
+	end
+	local tx, tz, ty = math.floor(p.X / 40), math.floor(p.Z / 40), math.floor(row / 16)
+	local h = hash(self.seed, tx, ty, tz)
+	if h % 5 == 0 then
+		return false
+	end
+	local x, z = p.X % 40, p.Z % 40
+	if bit32.btest(h, 8) then
+		x, z = z, x
+	end
+	return passage(z - 3, x - 18, row % 16, 32, 7 + bit32.extract(h, 4, 2), bit32.extract(h, 8, 5) * 0.2)
+end
+function Geology:material(p)
+	if p.Y >= 0 then
+		return Enum.Material.Cobblestone
+	end
+	if -p.Y <= Config.DirtLayers then
+		-- The island foundation encloses the shallow dirt. Below it, headings
+		-- can run under any part of the island without opening its surface.
+		return if Config.inHall((p + Vector3.one * 0.5) * Config.Cell)
+			then Ores.byName.Dirt.material
+			else Enum.Material.Cobblestone
+	end
+	if self:isCave(p) then
+		return Enum.Material.Air
+	end
+	local layer = Config.layer((-p.Y - 0.5) * Config.Cell)
+	local roll = (hash(self.seed, p.X, p.Y, p.Z) % 100000) / 1000
+	for _, entry in thresholds[layer] do
+		if roll < entry.limit then
+			return entry.material
 		end
 	end
-	local v = {
-		x = x,
-		y = y,
-		z = z,
-		ore = ore,
-		lode = lode,
-		tilt = rng:NextNumber(-0.45, 0.45),
-		rx = if lode then 13 else rng:NextNumber(7, 11),
-		ry = if lode then 12 else rng:NextNumber(4, 7),
-		rz = if lode then 14 else rng:NextNumber(6, 10),
-	}
-	self.veins[key] = v
-	return v
+	return layer.material
 end
-
+-- Sample one centreline cell near the end of a natural passage. The small
+-- lava channel in some deep passages leaves the other side safe to walk.
+function Geology:feature(p)
+	if not self:isCave(p) or self:isCave(p - Vector3.yAxis) then
+		return nil
+	end
+	local row = -1 - p.Y
+	local along, across, phase, length, h
+	if row < 12 and math.abs(p.X) < 12 and p.Z >= -41 and p.Z <= 2 then
+		along, across, phase, length, h = -p.Z - 7, p.X, 0, 30, 0
+	else
+		h = hash(self.seed, math.floor(p.X / 40), math.floor(row / 16), math.floor(p.Z / 40))
+		local x, z = p.X % 40, p.Z % 40
+		if bit32.btest(h, 8) then
+			x, z = z, x
+		end
+		along, across, phase, length = z - 3, x - 18, bit32.extract(h, 8, 5) * 0.2, 32
+	end
+	local t = along / length
+	local middle = math.round(3.2 * math.sin(t * 7 + phase) + 1.6 * math.sin(t * 12 + phase))
+	if along == length - 3 and across == middle and h % 3 ~= 1 then
+		return if row >= 185 and h % 7 == 0 then "Egg" else "Cache"
+	elseif row >= 90 and row < 340 and h % 3 == 0 and along >= 12 and along <= 16 and across == middle - 1 then
+		return "Lava"
+	end
+	return nil
+end
+-- Coordinates are relative to the entrance in studs, as in a Studio map probe.
 function Geology:sample(x, y, z)
-	local top = Config.ridgeHeight(self.seed, x, z)
-	if y > top then
-		return air, 0
-	end
-	-- Scallop the face beyond the tram entrance and expose a darker rock band.
-	local shoulder = math.clamp((math.abs(x) - 15) / 16, 0, 1)
-	local face = -shoulder * (4 + math.sin(x / 9) * 2 + math.max(0, y) * 0.14)
-	if y >= 0 and z > face then
-		return air, 0
-	end
-	if y >= 0 and z > -23 and (x / 13) ^ 2 + (y / 15) ^ 2 < 1 then
-		return air, 0
-	end
-	if y > top - 3 then
-		return Enum.Material.Grass, math.clamp((top + 2 - y) / 4, 0.3, 1)
-	end
-	if shoulder > 0.4 and z > face - 8 and math.abs(y - 12 - math.sin(x / 14) * 3) < 2 then
-		return Enum.Material.Rock, 1
-	end
-
-	-- A visible, accessible coal seam and copper pocket at the first face.
-	if ((x + 1) / 8) ^ 2 + ((y - 6) / 4.5) ^ 2 + ((z + 25) / 7) ^ 2 < 1 then
-		return Ores.byName.Coal.material, 1
-	end
-	if ((x - 9) / 5) ^ 2 + ((y - 5) / 5) ^ 2 + ((z + 28) / 6) ^ 2 < 1 then
-		return Ores.byName.Copper.material, 1
-	end
-
-	local v = self:vein(math.floor(x / 32), math.floor(y / 32), math.floor(z / 32))
-	local dx, dz = x - v.x, z - v.z
-	local d = (dx / v.rx) ^ 2 + ((y - v.y - dx * v.tilt) / v.ry) ^ 2 + (dz / v.rz) ^ 2
-	if d < 1 and math.max(0, -y) >= v.ore.min then
-		if v.lode and d < 0.20 then
-			return air, 0
-		end
-		return v.ore.material, 1
-	end
-	return Config.layer(-y).material, 1
+	return self:material((Vector3.new(x, y - Config.FloorY, z) / Config.Cell):Floor())
 end
 return Geology

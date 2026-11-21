@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="index">
+<g transform="rotate(-8 32 32)">
+<path d="M16 7 H46 Q49 7 50 10 L52 50 Q52 54 47 55 L20 58 Q14 58 13 54 L10 14 Q10 9 16 7 Z" fill="#357474" stroke="#202936" stroke-width="2.7" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M18 47 L49 44 L51 49 Q53 54 48 56 L20 58 Q16 58 15 54 Z" fill="#FFF0BD" stroke="#202936" stroke-width="2.3" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M48 15 H53 Q55 15 55 18 V23 H47 Z" fill="#E7A347" stroke="#202936" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M49 26 H55 Q57 26 57 29 V34 H49 Z" fill="#7FC6B0" stroke="#202936" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M14 7 H45 Q48 7 48 11 L50 46 Q50 49 46 49 L18 52 Q12 53 12 48 L10 14 Q10 9 14 7 Z" fill="#398C91" stroke="#202936" stroke-width="2.7" stroke-linejoin="round" stroke-linecap="round"/>
+<path fill="#28636E" d="M14 11 H19 L21 48 L16 49 Z"/>
+<path d="M23 17 L43 16 L44 38 L24 40 Z" fill="#FFF0CB" stroke="#202936" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<path fill="#4F8E83" d="M25 30 L30 25 L32 25 L36 19 L41 23 L42 28 L37 27 L33 31 L29 30 L25 33 Z"/>
+<path fill="#C98A48" d="M26 35 L31 32 L35 33 L40 29 L42 30 L42.5 34 L37 36 L32 35 L26 38 Z"/>
+<path d="M10 19 L15 19 M11 31 L16 31 M12 43 L17 43" fill="none" stroke="#202936" stroke-width="4.7" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M10 18.5 L13 18.5 M11 30.5 L14 30.5 M12 42.5 L15 42.5" fill="none" stroke="#C5CCB9" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+</svg>

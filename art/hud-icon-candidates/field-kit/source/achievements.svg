@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="achievements">
+<g transform="rotate(7 32 31)">
+<path d="M14 6 H31 L43 26 L29 32 Z" fill="#D56851" stroke="#202936" stroke-width="2.7" stroke-linejoin="round" stroke-linecap="round"/>
+<path fill="#FFB17E" d="M20 8 H25 L35 25 L31 27 Z"/>
+<path d="M37 6 H51 L38 30 L30 27 Z" fill="#B34F49" stroke="#202936" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path fill="#EF8A68" d="M42 8 H47 L37 26 L34 25 Z"/>
+<path d="M26 24 H39 Q41 24 41 27 V30 H24 V27 Q24 24 26 24 Z" fill="#ECB356" stroke="#202936" stroke-width="2.3" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M24 29 L38 28 L48 36 L50 46 L44 56 L31 60 L19 55 L13 46 L15 36 Z" fill="#D78C38" stroke="#202936" stroke-width="2.7" stroke-linejoin="round" stroke-linecap="round"/>
+<path fill="#FFCC66" d="M24 32 L37 31 L45 37 L46 45 L41 52 L31 55 L22 52 L17 44 L18 37 Z"/>
+<path d="M19 40 L20 37 L25 33" fill="none" stroke="#FFE6A0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path fill="#202936" d="M20.5 40 Q28 33.5 35 36.4 Q40.5 37.8 43.5 43.1 L41.8 44 Q36.8 40.3 33.6 40.1 L28.9 52 L24.8 50.3 L30 39.6 Q26.3 39.4 21 42.4 Z"/>
+</g>
+</svg>

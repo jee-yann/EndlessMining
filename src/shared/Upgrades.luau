@@ -1,12 +1,5 @@
 local rgb = Color3.fromRGB
 local upgrades = {
-	Radius = {
-		values = { 5, 7, 9, 12, 15, 19, 23, 28 },
-		base = 24,
-		growth = 2.5,
-		icon = "◎",
-		color = rgb(93, 224, 252),
-	},
 	Speed = {
 		values = { 0.80, 0.64, 0.51, 0.40, 0.32, 0.25, 0.20 },
 		base = 30,
@@ -29,7 +22,11 @@ local upgrades = {
 		color = rgb(137, 231, 142),
 	},
 }
-local api = { items = upgrades, order = { "Radius", "Speed", "Power", "Capacity" } }
+local api = {
+	pickNames = { "Field Pick", "Copper Pick", "Iron Pick", "Gilded Pick", "Starfrost Pick", "Prismheart Pick" },
+	items = upgrades,
+	order = { "Speed", "Power", "Capacity" },
+}
 function api.price(key, level)
 	local item = upgrades[key]
 	if level >= #item.values then
@@ -39,11 +36,8 @@ function api.price(key, level)
 end
 function api.describe(key, level)
 	local v = upgrades[key].values[level]
-	if key == "Radius" then
-		return v .. " studs"
-	end
 	if key == "Speed" then
-		return string.format("%.2fs / pulse", v)
+		return string.format("%.2fs / stone", v)
 	end
 	if key == "Capacity" then
 		return v .. " ore"

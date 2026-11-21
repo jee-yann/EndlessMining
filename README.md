@@ -1,71 +1,141 @@
-# Endless Mining
+# Mine EVERYTHING!
 
 ![Citrine Cove in Roblox Studio](map/CitrineCove-preview.jpg)
 
-Citrine Cove is a multiplayer Roblox mining simulator. Cross the inlet on the wooden bridge and follow the sand path to the crystal cave, hold to carve a sphere out of the rock, sell the contents of your pack, and spend the proceeds at the workshop. The first radius upgrade costs 24 gold. It takes the brush from 5 to 7 studs. A starter pack holds 36 ore.
+Citrine Cove is a multiplayer Roblox mining simulator. Aim at a cave wall or floor to highlight a single block, hold through the pickaxe swing, and bring the ore to the harbor. Each block face measures 6 × 6 studs. Every pick takes one block per cut. Speed shortens the cut and Power unlocks harder ore. A starter pack holds 36 blocks. Ore grants XP. Each level after the first awards one skill point. [Watch the opening in Roblox Studio](art/origins/It-Knocked-Back.mp4).
 
 ## Play locally
 
-1. Open `EndlessMining.rbxlx` from this folder in Roblox Studio, or use the existing **Endless Mining** Studio place connected to this project's Rojo server.
-2. Press **F5**. The island is already visible in edit mode. Play generates the excavatable rock behind the cave mouth. Cross the bridge and walk beneath the golden crystal marked **MINE**. Aim at the dark starter seam and hold the left mouse button. On a touch device, aim with the center dot and hold **HOLD MINE**.
-3. Select **SELL**, then **UPGRADES → Radius**. The backpack and price are visible before purchase. The ore exchange and workshop also have proximity prompts. Both HUD actions work underground.
-4. Use **↑ SURFACE** to return from the mine. Falling outside the quarry also recalls the character. Press **Shift+F5** to end the session.
+1. Open `build/Mine-Everything.rbxlx` in Roblox Studio, or use the existing **Endless Mining** Studio place connected to this project's Rojo server. To create the build from a fresh checkout, use the commands below.
+2. Press **F5**. A fresh save opens with *It Knocked Back*, a 49-second animated introduction. Pebbles lift as the meteor races overhead. A single ink-and-light frame marks contact. The blast clears to reveal a violet fissure that draws its light inward and closes. From above the same headland, three sun and moon crossings follow the forest, the first survey boat, and the workers building Citrine Cove. On the real footbridge, three taps into the shaft get three replies. Your own strike draws one last answer before the camera releases at the spawn compass. Use **Skip**, **Enter**, or gamepad **B** to start immediately. Replay the film from **Settings → It Knocked Back**. Follow the gold marker through the arch. Hold the left mouse button on the dirt floor, or aim the center dot and hold **Mine** on touch.
+3. Dig through the two dirt layers and look for black coal in the stone. Bring your haul to the amber **Sell** pad, then visit **Upgrades**. Speed costs 30 gold and shortens each swing. Buying a different upgrade also counts. Break another block with your new gear to finish the expedition. The guide remembers progress across visits and can be skipped in **Settings → First expedition**.
+4. The depth display counts blocks below the gallery. At 27 blocks deep you enter Iron Shelf. **Index** lists ore chances by depth, and **↑ Surface** brings you to the path outside the mine. The trip takes longer from greater depths. After eight blocks, **Jobs → First strike** awards 25 gold. A larger backpack costs 24 gold, 2 dirt and 1 coal.
+
+The place uses each player’s equipped Roblox avatar. If Studio Output reports an authentication error for a missing head or clothing texture, refresh the Studio sign-in and start another play session.
+
+The opening has its own score. The meteor's approach falls silent before the first strike. Bowed strings and percussion carry the construction sequence, and the underground reply echoes the interval first heard at the crater. The score, hammer, underground replies and character murmurs use sounds bundled with Roblox. Music and effects follow their respective volume controls. Settings’ motion preference also selects steadier camera shots.
+
+![Music, sound effects and menu motion in Settings](map/Settings-preview.jpg)
 
 To rebuild the local place after editing, run the following command in the project directory.
 
 ```powershell
-rojo build default.project.json -o EndlessMining.rbxlx
+New-Item -ItemType Directory -Force build | Out-Null
+rojo build default.project.json -o build/Mine-Everything.rbxlx
 ```
 
 For live editing, run `rojo serve default.project.json` here if this project's server is stopped. In Studio, use **Plugins → Rojo → Connect** and select **EndlessMining** at `localhost:34872`. A built place can be played directly without connecting the plugin.
 
+## Saving your work
+
+- **On your PC** press **Ctrl+S** in VS Code to save a script. If you edit the island directly in Studio, stop Play before editing and save the `Workspace.CitrineCove` model to `map/CitrineCove.rbxmx`. The build command above bundles those files into a place you can reopen.
+- **On GitHub** commit your saved source files, then push your feature branch. In VS Code these actions are under **Source Control**. A pull request lets you merge the work into `main`.
+- **On Roblox** open the built place in Studio and choose **File → Publish**. A new experience starts private. Open the published experience in the Roblox app to keep your miner’s gold, inventory, upgrades and best depth. The game autosaves every 45 seconds and on exit. In a local playtest, **Settings** shows **Practice session**. Its progress resets when you stop it. [Roblox publishing guide](https://create.roblox.com/docs/production/publishing/publish-games-and-places)
+
+During testing, **Settings → Reset progress** returns a miner to level 1. The player must confirm with **Erase progress**. Personal settings and owned passes carry over. Set `AllowProgressReset` to `false` in `src/shared/GameConfig.luau` to remove the button and disable the server action for release.
+
 ## World and balance
 
-The 192 × 224 stud mine extends 352 studs below the entrance. Sunstone Hollow gives way to the Iron Shelf, Prism Grotto, and Emerald Deep. Each 32-stud geological region receives a seeded, tilted ore deposit. Minimum and preferred depths control its composition. Some deep regions contain an oversized precious-metal or gem lode around a hollow pocket. A fixed coal seam makes the opening reproducible.
+The harbor spans roughly 268 × 229 studs inside a continuous rock rim. Outside the rim, tilted tidal ledges run down into the strait. A broken ridge and its low western islet form the skyline beyond the mine. The spawn compass opens onto a 95-stud-wide court. Follow the central bridge to the mine, the amber bullion sign to Sell, or the cyan pickaxe to Upgrades. Side paths pass ore wagons, gardens and the stepped waterfall. Both hillside paths climb to the rear cableway trail, where four grounded towers carry three moving ore cars.
 
-The server generates native Roblox smooth Terrain in batches of at most 16 × 16 × 16 cells. Terrain provides the collision mesh, replication and material grid. Every server starts with a fresh copy of the configured seed. Excavations are shared for that server's lifetime. The material at each occupied cell identifies its yield, so a second miner can collect only what remains.
+Music and sound effects each have a volume slider and a mute button in **Settings**. Unmute restores the level shown on the slider. Volume, mute and menu-motion preferences are saved with player progress. The track plays quietly beneath the mining cues. The music slider sets the volume of Anthony Mawer’s *Prima Bossa Nova*. The buttons use short bubble pops. Each ore has its own break sound, and gold, diamond and emerald add progressively longer rising notes. [Prima Bossa Nova](https://create.roblox.com/store/asset/1837070127) · [UI Cute Pop](https://create.roblox.com/store/asset/15675055424) · [UI Cute Goodbye](https://create.roblox.com/store/asset/15675081158)
 
-A pulse reads and writes one clipped region. Precomputed sphere offsets visit the closest cells first when a pack is nearly full. The largest brush is 28 studs, with 1,419 candidate cells inside a 15³ bounding box. A FIFO queue, one pending request per player, server cooldowns, and a shared cell budget bound per-frame work. The server checks reach, line of sight, material hardness and inventory space. Clients supply an aim point and render effects. All prices, yields and balances come from the server.
+On phones, tablets and small desktop windows, **Pack** shows how much you are carrying. Tap it for quantities and sell values, sorted by rarity. **Menu** opens skills, jobs, the ore index, settings and the server leaderboard. Gold, the three equipment levels and the level ring float over the world. The ring fills as you earn XP. Tap it to open Skills and see the exact count. The region, depth and surface return use the space beside the Roblox controls when it fits. On touch screens, hold **Mine** beside the jump control.
+
+![Landscape phone HUD inside Sunstone Hollow](map/Harbor-HUD.jpg)
+
+The leaderboard court behind spawn has two boards. **Server Miners** ranks the five highest-level players in the server. **Global Miners** ranks the five deepest personal bests across servers, measured in blocks, and keeps offline miners on the board. The global board refreshes every minute. Returning miners enter with their existing best depth on their next successful save. Unpublished Studio sessions show local practice depths. The top three on each board have avatar podiums. The top-right player list shows every connected miner’s level, equipped title and current gold. Click its header or press Tab to fold or expand it.
+
+![Leaderboard court behind spawn](map/Miners-Court.jpg)
+
+Digging opens a shared route through five regions. Each eligible block independently rolls against its region’s percentages.
+
+| Region | Depth below the dig floor | Stone | Coal | Copper | Iron | Gold | Diamond | Emerald | Mystery |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Sunstone Hollow | 0–26 | 82% | 13% | 5% | – | – | – | – | – |
+| Iron Shelf | 27–89 | 78% | 6% | 7% | 8% | 1% | – | – | – |
+| Prism Grotto | 90–184 | 75% | 3% | 5% | 9% | 6% | 2% | – | – |
+| Emerald Deep | 185–259 | 72.88% | 2% | 3% | 7% | 8% | 5% | 2% | 0.12% |
+| Midnight Fault | 260+ | 74.755% | 2% | 3% | 5% | 6% | 6% | 3% | 0.22% and 0.025% |
+
+The percentages apply to solid rock beneath the two dirt layers. Cave air yields no material.
+
+At the amber Sell counter, tap **E** (or tap the prompt on mobile) to choose a material. The slider starts at one. Drag it, use **−** and **+**, or choose **Select all** for that ore. The sale button shows the quantity, ore and exact gold payout. Beside it you can see how many will remain for upgrades. Press the sale button to trade the selection. **Sell entire pack** shows the total block count and payout for everything you carry. Holding the stall prompt also quick-sells the pack for the displayed amount.
+
+Bring materials to the Workshop before selling your haul. The Copper Pick costs 36 gold, 3 stone and 1 coal. The first backpack upgrade costs 24 gold, 2 dirt and 1 coal. Each equipment tier has its own recipe, and the Workshop shows how many ingredients you have.
+
+Field Supplies crafts consumables from the materials in your bag. A survey flare costs 2 copper and 3 coal. Deploy it from **Inventory → Supplies** to light a tunnel for 30 seconds and point toward a natural cave within 10 blocks. Four coal temper the pick for 25 successful hardness-2-or-higher cuts. The Jobs board posts one material delivery each UTC day and pays gold plus a survey flare.
+
+![Backpack showing one coal worth five gold](map/Backpack-preview.jpg)
+
+The skill map has 44 skills across Pickwork, Lamplight, Footwork, Hauling and Geology. You earn one point per level after Level 1. Spend three points on Long Arm I, Lantern Wick I and Face Lantern to light the face of a block while you mine it. Follow the shared path to widen the beam, tint it near familiar ore or leave temporary lights in a tunnel. Steady Hands trades points for shorter cuts. Geology awards bonus ore XP, and Hauling adds pack space and improves field supplies. Drag the map to explore, use the zoom controls for an overview, and select a skill to see its effect and prerequisites.
+
+Each of the seven shift jobs pays once. Players can collect completed jobs in any order. The index keeps discoveries after a sale. Coal and rarer ores grant increasing XP. Dirt and stone count toward achievements. **Inventory → Titles** shows the unlock levels and equips the player’s choice. Open **Skills** to drag the full-screen map, inspect a node and spend a point. **Inventory → Passes** lets owners switch their Prism Trail on or off. A numbered badge on Skills and the level ring shows how many points you can spend. The tree marks owned skills with a green check, affordable skills with a gold plus and missing prerequisites with a padlock. Red dots mark claimable jobs and unread ore or achievement entries. Scroll an entry into view to mark it read. **Pets** equips or names one cosmetic rock. Custom names use Roblox’s broadcast text filter. Open **Achievements** from the dock or compact menu to see every goal. It covers ore-only sales, workshop upgrades, skill paths, jobs, pets and the climb back from 101+ blocks deep. Undiscovered material names appear as ???. Practicing My Scales tracks seven consecutive cuts across visits. Achievement and title unlocks queue their own center-screen celebration. Existing saves keep earned XP and start material counts with their current haul. Capacity grows the worn field pack, Power changes the pick head and its arc, and Speed shortens every cut.
+
+Walk through the arch at island height. The hut has a 10 × 10 floor of six-stud dirt blocks, flush with the entrance sill. Dig through two dirt layers to reach stone and ore, then tunnel under the island in any direction. The surrounding foundation holds up the paths and bluffs. The top HUD shows the region, current depth and a Surface button. Horizontal headings continue beneath the island and out past the shoreline. All materials gain rock hardness at depths 27, 60, 90, 140 and 185. Each step adds 45% of the base cutting time and requires the corresponding Power level. The Ore Index shows the six stone names and swatches for those tiers. All six stack as Stone in the backpack. Hard ores also retain their own Power requirement.
+
+The server privately seeds each field. An 8 × 8 × 8 chunk keeps records only for excavated cells and their exposed neighbours. Breaking into a cave opens a long, bending passage with a solid floor and ceiling. Nearby clients stream this rock as players advance. After 2,400 cuts the server gives a 20-second warning, brings miners outside, and replaces the field. Players keep their haul, level and upgrades.
+
+Each completed cut removes the highlighted block. A mint border follows its exposed faces. A pick cursor marks a valid target, a red symbol marks ore above the current Power level, and the five-stage branching crack spreads across each exposed face. The ink disappears with the block. At the same Speed level, diamond takes 2.5 times as long to cut as stone and emerald takes three times as long. Releasing early or switching targets cancels the swing. The server checks elapsed cutting time, reach, sight, power, and space before awarding a block. Returning players receive a one-time gold refund for retired mining-area purchases.
+
+![Block borders in three Studio views, exposed, flush with the wall, and covered by another rock](map/Mining-area-preview.jpg)
 
 | Change | File |
 | --- | --- |
 | Seed, site, layers, reach, save interval and work budget | `src/shared/GameConfig.luau` |
-| Ore appearance, value, hardness and depth weighting | `src/shared/Ores.luau` |
+| Material appearance, sale value and required power | `src/shared/Ores.luau` |
 | Upgrade values, level caps and cost curves | `src/shared/Upgrades.luau` |
-| Vein shapes, rich pockets and the starter seam | `src/server/Geology.luau` |
+| Equipment recipes, field supplies and daily deliveries | `src/shared/Materials.luau` |
+| Skill tree and mining bonuses | `src/shared/Skills.luau` |
+| Pets, achievement progress and skill points | `src/shared/FieldGuide.luau` |
+| Jobs and ranks | `src/shared/Expeditions.luau` |
+| Game pass IDs and perks | `src/shared/PassCatalog.luau`, `src/server/Passes.luau` |
+| Seeded ore rolls and underground caves | `src/server/Geology.luau` |
 | Editable island, signed stations, spawn and bridge | `map/CitrineCove.rbxmx` |
-| Station binding and terrain palette | `src/server/Quarry.luau` |
+| Studded brick geometry and visible targets | `src/server/MineBlocks.luau`, `src/shared/BlockPattern.luau` |
+| Region depths and ore percentages | `src/shared/GameConfig.luau` |
+| Station binding | `src/server/MineSite.luau` |
 | Starting editor camera and lighting | `default.project.json` |
+| Music and button sounds | `src/client/HarborAudio.luau` |
 
 ## Project and data ownership
 
 Rojo owns the scripts under `ReplicatedStorage.Shared`, `ServerScriptService.Server` and `StarterPlayer.StarterPlayerScripts.Client`, plus the authored `Workspace.CitrineCove` model and the lighting listed in `default.project.json`. To keep island edits in the source project, export the selected CitrineCove model from Studio as `map/CitrineCove.rbxmx` before rebuilding. Keep additional Studio-only models as siblings in Workspace. The server starts the mine at the island’s SiteOrigin and checks for unrelated parts and existing terrain before choosing a dig site. If the site is occupied, it relocates the island and mine together for that session. Existing terrain palettes are preserved.
 
-The edit-mode cave face gives way to mineable terrain during Play. Remotes, HUD and headlamps are created at runtime. Player profiles contain gold, ore still in the pack, upgrade levels, lifetime ore mined and best depth. The server uses DataStore `EndlessMining_v1` with separate Studio and live scopes, conditional session ownership, periodic saves, and leave/shutdown saves. A failed load or unsupported record opens an explicitly labeled temporary session with writes disabled. An unpublished local build or a simulated test user gets a practice session.
+During Play the edit-mode cave face gives way to the shared block grid. Remotes, HUD and headlamps are created at runtime. Player profiles contain gold, ore still in the pack, upgrade levels, lifetime ore mined, mining XP, best depth, completed jobs and discovered ore types. The server uses DataStore `EndlessMining_v1` with separate Studio and live scopes, conditional session ownership, periodic saves, and leave/shutdown saves. A failed load or unsupported record opens an explicitly labeled temporary session with writes disabled. An unpublished local build or a simulated test user gets a practice session.
 
 ## Visual references
 
 Three local Roblox captures in `%LOCALAPPDATA%\Roblox\tmp-capture-storage` informed the island. The beach scene ending in `1795063278721` supplied the sea, sand-path and studded-lawn palette. The grass ledges in `1795062944957` informed the layered bluffs. The striped tool stand in `1795063226069` informed the small coral and teal market stalls. The citrine outcrop and island geometry use native Studio parts.
 
+The two newer lobby captures ending in `1795070093346` and `1795070096049` informed the oversized signs, colored icon dock and visible job tracker. The harbor, pickaxe and HUD icons are built from native Roblox objects.
+
+## Outfitters and Robux
+
+**Double Gold** doubles ore-sale proceeds. **Prism Trail** equips a cosmetic rainbow trail that returns after respawn. The **Outfitters** counter’s **Try in Studio** button previews either perk in an unpublished practice session. A trial ends when the player leaves.
+
+To turn on real sales after publishing, create two passes for this experience under **Creator Dashboard → Monetization → Passes**, put them on sale, and enter their pass asset IDs in `src/shared/PassCatalog.luau`. Publish the updated build. The shop requests the player's current price from Roblox, and checkout opens after the player selects the price. The server checks ownership on join and grants successful purchases. [Roblox pass setup](https://create.roblox.com/docs/production/monetization/passes) · [Regional pricing](https://create.roblox.com/docs/production/monetization/regional-pricing)
+
 ## Reproduce the checks
 
-The two test scripts live outside the Rojo tree. Use a fresh local build. Studio's **RunScript** command runs the checks in a disposable session. With Studio open, these PowerShell commands select its installed executable.
+The tests live outside the game’s Rojo tree. Use a fresh local build for the map check. With Studio open, these PowerShell commands select its installed executable.
 
 ```powershell
 $studioExe = (Get-Process RobloxStudioBeta | Select-Object -First 1).Path
-$quarryPlace = (Resolve-Path '.\EndlessMining.rbxlx').Path
-$terrainTest = (Resolve-Path '.\tests\Quarry.spec.luau').Path
-$playTest = (Resolve-Path '.\tests\Play.spec.luau').Path
+$miningPlace = (Resolve-Path '.\build\Mine-Everything.rbxlx').Path
+$terrainTest = (Resolve-Path '.\tests\Mine.spec.luau').Path
 
-& $studioExe --task RunScript --localPlaceFile $quarryPlace --runScriptFile $terrainTest --outputFile "$env:TEMP\EndlessMining-terrain.log" --quitAfterExecution
+& $studioExe --task RunScript --localPlaceFile $miningPlace --runScriptFile $terrainTest --outputFile "$env:TEMP\EndlessMining-terrain.log" --quitAfterExecution
 ```
 
-Look for a standalone `QUARRY_TESTS_PASSED` output line. This checks save ownership, profile validation, economy, three seeds, shared depletion, server reach and obstructions, and repeated maximum-radius edits. Then run the two-client check in a signed-in Studio session.
+Look for a standalone `MINING_TESTS_PASSED` output line. The map checks cover the walk from spawn, both market counters, their lights, the outer paths, 360 directions around the rock rim and the surface threshold and the diggable hut floor. The mining checks cover save ownership, profile validation, economy, three seeds, shared depletion, server reach and obstructions, two pure dirt layers, regional stone percentages, sealed caves, depth gates and long headings across chunk boundaries. Run the same Studio command with `tests/Origins.spec.luau` for the cutscene’s two camera matches, late-streaming entrance, reduced-motion shots and final spawn view. It prints `MINING_ORIGINS_TESTS_PASSED` on success.
+
+Run the input and two-client checks with Python 3 and a signed-in Studio session. The runner builds two temporary places with the test players and music mute already configured.
 
 ```powershell
-& $studioExe --task RunScript --localPlaceFile $quarryPlace --runScriptFile $playTest --outputFile "$env:TEMP\EndlessMining-play.log" --quitAfterExecution
+python tests/run_play.py "$studioExe"
 ```
 
-The two-client check uses real client-to-server requests. Both simulated players must fill their packs, sell, upgrade, and return to the surface. Look for `QUARRY_PLAYTEST_RESULT PASS` followed by both clients' results.
+The play check first uses a virtual mouse in a solo session to verify depth-tested face borders, the pickaxe grip through repeated swings, the visible cut meter, cancellation and collection. It then uses two clients with real client-to-server requests. Each miner must check the server leaderboard, open the inventory, pet, skill, achievement and station menus, fill a pack, check its ore counts, visit the Sell counter, upgrade pack capacity, collect two completed jobs in reverse order, try both Studio passes, and return to the surface. The test checks that remote sales and out-of-range upgrades are declined, ore finds appear at the mined block, effects load and respond to their slider, the soundtrack stays muted during automated playtests, and an ore carrier moves. Look for `MINING_PLAYTEST_RESULT PASS` followed by both clients' results.
 
-For hands-on checks, choose **Server & Clients** in Studio's Test selector and start two players. Mine the same face, compare balances and verify both players see the same cavity. Use the device emulator to check the shop, hold/release control, thumbstick and jump in phone landscape and portrait. A persistence round trip requires a separate published test place with Studio API access enabled. Sell ore, buy an upgrade, stop the session and rejoin to verify the balance and level.
+For hands-on checks, choose **Server & Clients** in Studio's Test selector and start two players. Mine the same face, compare balances and verify both players see the same missing bricks. Use the device emulator to check the shop, hold/release control, thumbstick and jump in phone landscape and portrait. A persistence round trip requires a separate published test place with Studio API access enabled. Sell ore, buy an upgrade, stop the session and rejoin to verify the balance and level.

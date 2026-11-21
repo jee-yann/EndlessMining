@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="settings">
+<g transform="rotate(-5 32 32)">
+<path d="M12 12 L48 10 Q52 10 54 14 L57 46 Q57 50 53 52 L18 56 Q13 56 12 52 L7 20 Q6 16 12 12 Z" fill="#416882" stroke="#202936" stroke-width="2.7" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M12 10 L47 8 Q51 8 52 12 L55 43 Q55 47 51 48 L16 52 Q12 52 11 48 L7 17 Q6 13 12 10 Z" fill="#8DC4CC" stroke="#202936" stroke-width="2.7" stroke-linejoin="round" stroke-linecap="round"/>
+<path fill="#ACD7D3" d="M11 15 L49 11 L50 14 L12 18 Z"/>
+<path d="M15 24 L46 21 M18 39 L49 36" fill="none" stroke="#202936" stroke-width="4.8" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M19 19 L26 18 Q28 18 28 20 L29 27 Q29 29 27 29 L20 30 Q18 30 18 28 L17 22 Q17 20 19 19 Z" fill="#FFD077" stroke="#202936" stroke-width="2.3" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M38 32 L45 31 Q47 31 47 33 L48 40 Q48 42 46 42 L39 43 Q37 43 37 41 L36 35 Q36 33 38 32 Z" fill="#FFF0BD" stroke="#202936" stroke-width="2.3" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M21 23 L25 22.5 M40 36 L44 35.5" fill="none" stroke="#9A764B" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+</svg>

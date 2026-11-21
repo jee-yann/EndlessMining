@@ -1,0 +1,313 @@
+local Arrival = require(script.Parent.Arrival)
+local IslandSky = require(script.Parent.IslandSky)
+local Overlook = require(script.Parent.Overlook)
+local History = require(script.Parent.History)
+local Beats = require(script.Parent.Beats)
+local Lighting = game:GetService("Lighting")
+local P, Strike, Survey, Crew =
+	require(script.Parent.Props),
+	require(script.Parent.Strike),
+	require(script.Parent.Survey),
+	require(script.Parent.Crew)
+local V, CF, A, ease = Vector3.new, CFrame.new, CFrame.Angles, P.ease
+local Film = {}
+Film.__index = Film
+Film.duration = Beats.duration
+
+local eras = {
+	{ 0.65, 3.40, "8 MILLION YEARS AGO" },
+	{ 15.06, 18.50, "OVER MILLIONS OF YEARS" },
+	{ 19.70, 21.82, "THE FIRST SURVEY" },
+	{ 29.80, 31.70, "CITRINE COVE  /  TODAY" },
+}
+local function envelope(t, a, b, edge)
+	return ease(t, a, a + edge) * (1 - ease(t, b - edge, b))
+end
+function Film.caption(t)
+	for _, cue in Beats.dialogue do
+		if t >= cue[1] and t < cue[2] then
+			return cue[3], cue[4], envelope(t, cue[1], cue[2], 0.15)
+		end
+	end
+	return "", "", 0
+end
+function Film.era(t)
+	for _, cue in eras do
+		if t >= cue[1] and t < cue[2] then
+			return cue[3], envelope(t, cue[1], cue[2], 0.24)
+		end
+	end
+	return "", 0
+end
+
+function Film.card(t)
+	return "IT KNOCKED BACK", envelope(t, 45.95, 48.65, 0.46)
+end
+
+function Film.new(shelf, stage, camera, site, gate, motion, clock, character, handoff)
+	-- Separate sets let the island submit its geometry over several frames
+	-- while the first camera is still looking across the impact site.
+	local base = CF(site + V(0, 3200, -15000))
+	local ancientStorage = Instance.new("Folder")
+	ancientStorage.Parent = shelf
+	local historyBase = CF(gate + V(0, 3196.5, 0))
+	local strike = Strike.new(ancientStorage)
+	strike.root:PivotTo(base)
+	strike.root.Parent = stage
+	return setmetatable({
+		stage = stage,
+		shelf = shelf,
+		camera = camera,
+		base = base,
+		impactPoint = base * Strike.position(Beats.impact),
+		gateBase = CF(gate - V(0, 3.5, 0)),
+		motion = motion,
+		clock = clock,
+		character = character,
+		historyBase = historyBase,
+		history = History.new(stage, historyBase),
+		handoff = handoff,
+		strike = strike,
+	}, Film)
+end
+
+local function verticalFov(viewport, fov)
+	local aspect = viewport.X / math.max(1, viewport.Y)
+	return math.min(
+		97,
+		math.deg(2 * math.atan(math.tan(math.rad(fov / 2)) * math.max(1, 1.28 / math.max(0.35, aspect))))
+	)
+end
+
+function Film:frame(base, eye, look, fov, roll)
+	local cam = self.camera
+	cam.CFrame = base * CFrame.lookAt(eye, look) * A(0, 0, if self.motion then roll or 0 else 0)
+	cam.Focus = base * CF(look)
+	cam.FieldOfView = verticalFov(cam.ViewportSize, fov)
+end
+
+function Film:mountPresent(live)
+	local frame = if live then self.gateBase else self.historyBase
+	if not self.crew then
+		self.crew = Crew.new(self.shelf, self.character)
+		self.survey = Survey.new(self.shelf)
+	end
+	if self.modernBase ~= frame then
+		if live then
+			if self.history then
+				self.history:Destroy()
+				self.history = nil
+			end
+		else
+			self.history:draw(17)
+		end
+		self.crew.root:PivotTo(frame)
+		self.survey.root:PivotTo(frame)
+		self.crew.root.Parent, self.survey.root.Parent = self.stage, self.stage
+		self.modernBase, self.localPresent = frame, not live
+	end
+end
+
+local presentCuts = { 31.66, 33.34, 35.13, 37.26, 39.21, 41.86, 44.32 }
+local bridgeEye, bridgeLook = V(5.4, 5.55, 15.8), V(-1.15, 3.1, -2)
+
+local function recoil(t, beat)
+	local dt = t - beat
+	return if dt >= 0 and dt < 0.46 then math.sin(22 * dt) * math.exp(-9 * dt) else 0
+end
+
+function Film:present(t, shot)
+	local base = self.modernBase
+	local function travel(a, b)
+		return if self.motion then ease(t, a, b) else 0.55
+	end
+	local function localAt(point)
+		return base:PointToObjectSpace(point)
+	end
+	local rock = localAt(self.crew.seamAim)
+	if shot == 1 then
+		local u = if self.motion then ease(t, Beats.present, presentCuts[1]) else 0
+		self:frame(base, V(-32 + 16 * u, 29 - 9 * u, 66 - 13 * u), V(5, 8, 1), 57, -0.035 + 0.026 * u)
+	elseif shot == 2 then
+		local u = travel(31.66, 33.34)
+		local kick = 0
+		if self.motion then
+			for _, beat in Beats.outbound do
+				kick += recoil(t, beat)
+			end
+		end
+		self:frame(
+			base,
+			Survey.pad + V(-4.2 + 1.29 * u, 2.92 - 0.38 * u + 0.12 * kick, 7.4 - 1.2 * u + 0.30 * kick),
+			Survey.pad + V(-0.82, 2.12, 0),
+			48 - 2.3 * u + 2.2 * kick,
+			-0.028 * (1 - u) + 0.016 * kick
+		)
+	elseif shot == 3 then
+		-- Skim the bridge after the outgoing signal, straight through the market toward the arch.
+		local u = travel(33.34, 35.13)
+		self:frame(
+			base,
+			V(0.4 - 1.6 * u, 1.04 + 1.4 * u, 24.8 - 13 * u),
+			V(-2.7, 1.1 + 1.6 * u, 7.5 - 3 * u),
+			61 - 0.8 * u,
+			-0.035 * (1 - u)
+		)
+	elseif shot == 4 then
+		local at = localAt(self.crew.receiverAim)
+		-- Sit still through the silence. Push in on the *answer* to the three taps.
+		local u = travel(Beats.returned[1], Beats.returned[3] + 0.32)
+		self:frame(base, at + V(1.65 - 0.62 * u, 0.75 - 0.07 * u, 3.52 - 0.42 * u), at + V(0, 0.03, 0), 40 - 4.2 * u)
+	elseif shot == 5 then
+		local u = travel(37.26, 39.21)
+		self:frame(base, V(-2.8 + 1.1 * u, 4.15, 13.6 - 0.7 * u), V(-0.85, 3.35, 5.5), 48)
+	elseif shot == 6 then
+		local u = travel(39.21, 41.86)
+		-- Leave room for the pick's overhead arc and keep its point and the stone in frame at contact.
+		self:frame(
+			base,
+			V(-2.90 - 0.38 * u, 3.32 + 0.28 * u, 1.40 + 0.22 * u),
+			V(1.22, 3.22 - 0.82 * ease(t, 41.29, Beats.pick), 5.58),
+			55
+		)
+	elseif shot == 7 then
+		local u = travel(41.86, Beats.answer - 0.20)
+		local kick = if self.motion then recoil(t, Beats.answer) else 0
+		self:frame(
+			base,
+			rock + V(-1.22 + 0.64 * u, 3.24 - 0.60 * u + 0.16 * kick, -2.80 + 0.46 * u),
+			rock,
+			45 - 4.3 * u + 2.5 * kick,
+			0.024 * (1 - u)
+		)
+	else
+		-- See both witnesses turn toward the gallery before backing out over the bridge.
+		local u = travel(44.32, Beats.arrival)
+		self:frame(base, V(6.9, 5.8, 12.8):Lerp(bridgeEye, u), V(-0.85, 1.92, 3.3):Lerp(bridgeLook, u), 54)
+	end
+end
+
+-- Dolly back along the actual route from the mine sill to the landing compass.
+-- Both the last rendered transform and the focus match the camera the player will own.
+function Film:arrive(t)
+	local handoff = self.handoff
+	local gate = self.gateBase
+	local u = ease(t, Beats.arrival, Beats.duration - 0.22)
+	local landing = if handoff then handoff.landing else gate:PointToWorldSpace(V(0, 4, 87.75))
+	if not self.arrival then
+		self.arrival = Arrival.new(self.stage, gate, landing - V(0, 3.5, 0))
+	end
+	self.arrival:draw(t)
+
+	local root = handoff and handoff.root
+	local nearSpawn = root ~= nil and (root.Position - landing).Magnitude < 38
+	local anchor = if nearSpawn then root.Position else landing
+	local goal = if nearSpawn
+		then handoff.view + (anchor - handoff.start)
+		else CFrame.lookAt(anchor + V(0, 5, 13), anchor + V(0, 2, -5))
+	local focus = if nearSpawn then handoff.focus + (anchor - handoff.start) else CF(anchor + V(0, 2, 0))
+	local firstEye = gate:PointToWorldSpace(bridgeEye)
+	local firstLook = gate:PointToWorldSpace(bridgeLook)
+	local arc = math.sin(u * math.pi)
+	local eye = firstEye:Lerp(goal.Position, u) + V(-4.3, 8.6, 0) * arc
+	local look = firstLook:Lerp(focus.Position, u) + V(-1.2, 1.4, -5) * arc
+	local endView = ease(t, 47.4, Beats.duration - 0.22)
+	local rotation = CFrame.lookAt(eye, look).Rotation:Lerp(goal.Rotation, endView)
+	if not self.motion or self.localPresent then
+		-- A stationary landing shot lets the wave arrive without a long tracking move.
+		eye, rotation, look = goal.Position, goal.Rotation, focus.Position
+	end
+	self.camera.CFrame = rotation + eye
+	self.camera.Focus = CF(look):Lerp(focus, endView)
+	local fov = if handoff then handoff.fov else 70
+	self.camera.FieldOfView = 54 + (fov - 54) * (if self.motion and not self.localPresent then u else 1)
+	-- A replay started underground returns to its original view during a short fade.
+	return if nearSpawn or not handoff then 0 else ease(t, 48.54, 48.99)
+end
+
+function Film:draw(t, liveReady)
+	if t < Beats.surface then
+		Lighting.ClockTime = 6.55 + 1.45 * ease(t, 0.7, Beats.impact)
+		local frameTime = t - (self.previousFlightFrame or t)
+		self.history:prepare(math.clamp(math.ceil(650 * frameTime), 12, 68), t >= 10.10)
+		self.previousFlightFrame = t
+		self.strike:draw(t, self.base, self.motion)
+		self:frame(self.base, Strike.frame(t, self.motion))
+		return 1 - ease(t, 0.025, 0.22)
+	end
+	if self.strike then
+		self.strike.root:Destroy()
+		self.strike.shelf:Destroy()
+		self.strike = nil
+	end
+	if t < Beats.present then
+		local age = math.max(0, t - Beats.history)
+		self.history:draw(age)
+		local size = self.camera.ViewportSize
+		local eye, look, fov, roll = Overlook.frame(age, size.X / math.max(1, size.Y), self.motion)
+		if t < Beats.history then
+			eye, look, fov, roll = Strike.surfaceFrame(t, self.motion, eye, look, fov, roll)
+		end
+		self:frame(self.historyBase, eye, look, fov, roll)
+		if not self.sky then
+			self.sky = IslandSky.new(self.stage, self.clock)
+		end
+		local refEye, refLook, refFov = Overlook.frame(0, size.X / math.max(1, size.Y), self.motion)
+		self.sky:draw(
+			t - Beats.history,
+			self.camera,
+			self.motion,
+			self.historyBase * CFrame.lookAt(refEye, refLook),
+			verticalFov(size, refFov)
+		)
+		return 0
+	end
+	if self.sky then
+		self.sky:Destroy()
+		self.sky = nil
+	end
+	Lighting.ClockTime = self.clock
+	local shot = #presentCuts + 1
+	for i, cut in presentCuts do
+		if t < cut then
+			shot = i
+			break
+		end
+	end
+	if self.modernShot ~= shot and t < Beats.arrival then
+		self:mountPresent(liveReady or (self.modernBase ~= nil and not self.localPresent))
+		self.modernShot = shot
+	end
+	if self.crew and t < 46.55 then
+		self.crew:draw(t, self.modernBase, self.motion)
+		self.survey:draw(t, self.modernBase)
+	elseif self.crew then
+		self.crew.root:Destroy()
+		self.survey.root:Destroy()
+		if self.history then
+			self.history:Destroy()
+			self.history = nil
+		end
+		self.crew, self.survey = nil, nil
+	end
+	if t >= Beats.arrival then
+		return self:arrive(t)
+	end
+	self:present(t, shot)
+	return 0
+end
+
+function Film:Destroy()
+	if self.sky then
+		self.sky:Destroy()
+	end
+	if self.arrival then
+		self.arrival:Destroy()
+	end
+	if self.history then
+		self.history:Destroy()
+		self.history = nil
+	end
+end
+
+return Film

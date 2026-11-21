@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="skills">
+<path d="M31 50 V13 M31 38 H21 L12 29 M31 38 H41 L51 27" fill="none" stroke="#202936" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M31 50 V13 M31 38 H21 L12 29 M31 38 H41 L51 27" fill="none" stroke="#EDC98A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<g transform="translate(12 28) scale(.85)">
+<path d="M-7 -3 L-2 -8 L4 -7 L8 -2 L6 5 L0 8 L-6 5 Z" fill="#5CC99A" stroke="#202936" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path fill="#B4E6AA" d="M-5 -3 L-1 -6 L3 -5 L0 -1 L-5 0 Z"/>
+<path fill="#31967F" d="M0 -1 L6 -2 L4 4 L0 6 Z"/>
+</g>
+<g transform="translate(51 26) scale(.91)">
+<path d="M-7 -3 L-2 -8 L4 -7 L8 -2 L6 5 L0 8 L-6 5 Z" fill="#5CC99A" stroke="#202936" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path fill="#B4E6AA" d="M-5 -3 L-1 -6 L3 -5 L0 -1 L-5 0 Z"/>
+<path fill="#31967F" d="M0 -1 L6 -2 L4 4 L0 6 Z"/>
+</g>
+<path d="M22 11 L30 4 L39 10 L37 20 L30 24 L23 19 Z" fill="#50AD86" stroke="#202936" stroke-width="2.7" stroke-linejoin="round"/>
+<path d="M25 12 L30 7 L36 11 L31 14 Z" fill="#C2E9AD"/>
+<path d="M25 14 L30 16 V21 L25 18 Z" fill="#80CDA4"/>
+<path d="M22 47 L30 40 L42 47 L39 55 L31 60 L22 55 Z" fill="#378E73" stroke="#202936" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round"/>
+<path fill="#A7DC9C" d="M24 48 L31 43 L39 47 L32 51 Z"/>
+<path fill="#66BF90" d="M24 50 L30 53 L30 57 L25 54 Z"/>
+</svg>
