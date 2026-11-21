@@ -157,9 +157,16 @@ function Audio.origins(parent)
 	local tail = Instance.new("ReverbSoundEffect")
 	tail.DecayTime, tail.WetLevel, tail.Parent = 2.5, -8, bell
 	local iron = sound("Cold lamp", oreVoices.Iron.SoundId, 0.18, 0.72, parent)
+	local crack = sound("Core fracture", oreVoices.Stone.SoundId, 0.20, 0.82, parent)
+	crack.PlaybackRegionsEnabled, crack.PlaybackRegion = true, NumberRange.new(0.025, 0.18)
+	local spindle = sound("Drill teeth", grit.SoundId, 0.14, 0.85, parent)
+	spindle.PlaybackRegionsEnabled, spindle.PlaybackRegion = true, NumberRange.new(0.04, 0.19)
 	local cues = {
-		{0.65,bell,0.67}, {8.4,impact,0.68}, {11.2,surf,0.66}, {16.75,surf,0.84},
-		{23.15,bell,0.93}, {28.85,iron,0.72}, {34.4,bell,1.22}, {40.25,surf,0.74},
+		{0.65,bell,0.67}, {1.65,crack,0.61}, {8.4,impact,0.68}, {11.2,surf,0.66}, {16.75,surf,0.84},
+		{19.05,bell,1.12}, {23.4,bell,0.93}, {28.85,iron,0.72}, {30.3,surf,0.71},
+		{32.62,spindle,0.79}, {32.92,spindle,0.93}, {33.17,spindle,1.08}, {33.40,spindle,1.17},
+		{33.63,spindle,1.01}, {33.93,spindle,0.82}, {34.39,iron,0.85},
+		{36.22,crack,0.86}, {36.86,bell,1.22}, {40.25,surf,0.74},
 	}
 	local nextCue = 1
 	return function(t)

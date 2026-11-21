@@ -1,11 +1,12 @@
 local Actions = game:GetService("ContextActionService")
+local Lighting = game:GetService("Lighting")
 local Prompts = game:GetService("ProximityPromptService")
 local Run = game:GetService("RunService")
 local StarterGui = game:GetService("StarterGui")
 local Film = require(script.Film)
 local Audio = require(script.Parent.HarborAudio)
 local W = require(script.Parent.Widgets)
-local V, rgb = Vector3.new, Color3.fromHex
+local rgb = Color3.fromHex
 local Opening = {}
 
 local function layer(player, name, order, insets)
@@ -22,24 +23,11 @@ local function textLimit(label, font, maxSize)
 	constraint.MinTextSize, constraint.MaxTextSize, constraint.Parent = 10, maxSize, label
 end
 local function compose(screen, safe)
-	local matte = W.frame(screen, "Matte", 0, 0, 1, 1, rgb("10131D"))
-	matte.Size = UDim2.fromScale(1, 1)
-	local plate = W.frame(matte, "Sky", 0, 0, 1, 1, Color3.new(1, 1, 1))
-	plate.AnchorPoint, plate.Position = Vector2.new(0.5, 0.5), UDim2.fromScale(0.5, 0.5)
-	plate.ClipsDescendants = true
-	local board = W.frame(plate, "Picture plane", 0, 0, 1, 1, rgb("171B2A"))
-	board.AnchorPoint, board.Position = Vector2.new(0.5, 0.5), UDim2.fromScale(0.5, 0.5)
-	local scale = Instance.new("UIScale")
-	scale.Parent = board
-	local function fitPainting()
-		local window = plate.AbsoluteSize
-		local width = math.max(window.X, window.Y * 1.5)
-		board.Size = UDim2.fromOffset(width, width / 1.5)
-	end
-	plate:GetPropertyChangedSignal("AbsoluteSize"):Connect(fitPainting)
-	local view = Instance.new("ViewportFrame")
-	view.Name, view.Size, view.BackgroundTransparency = "Picture", UDim2.fromScale(1, 1), 1
-	view.ZIndex, view.LightDirection, view.Parent = 3, V(-0.65, -0.72, -0.36), board
+	local bars = W.frame(screen, "Letterbox", 0, 0, 1, 1, rgb("10131D"))
+	bars.Size, bars.BackgroundTransparency = UDim2.fromScale(1, 1), 1
+	local upper = W.frame(bars, "Upper", 0, 0, 1, 1, rgb("10131D"))
+	local lower = W.frame(bars, "Lower", 0, 0, 1, 1, rgb("10131D"))
+	lower.AnchorPoint, lower.Position = Vector2.new(0, 1), UDim2.fromScale(0, 1)
 	local scrim = W.frame(screen, "Subtitle shade", 0, 0, 1, 1, rgb("0D1018"))
 	scrim.AnchorPoint, scrim.Position, scrim.Size = Vector2.new(0, 1), UDim2.fromScale(0, 1), UDim2.fromScale(1, 0.31)
 	local ramp = Instance.new("UIGradient")
@@ -60,20 +48,19 @@ local function compose(screen, safe)
 	skip.BorderSizePixel, skip.Parent = 0, safe
 	W.round(skip, 7)
 	local function resize()
-		local size = matte.AbsoluteSize
+		local size = bars.AbsoluteSize
 		local narrow = size.X < size.Y
-		plate.Size = if narrow then UDim2.new(1, 0, 0, math.min(size.Y, size.X / 1.05)) else UDim2.fromScale(1, 1)
-		plate.Position = UDim2.fromScale(0.5, if narrow then 0.43 else 0.5)
+		local barHeight = if narrow then 0 else math.min(34, math.floor(size.Y * 0.038))
+		upper.Size, lower.Size = UDim2.new(1, 0, 0, barHeight), UDim2.new(1, 0, 0, barHeight)
 		caption.Size =
 			UDim2.new(if narrow then 0.90 else 0.84, 0, 0, if narrow then 85 else math.clamp(size.Y * 0.105, 38, 76))
 		caption.Position = UDim2.fromScale(0.5, if narrow then 0.82 else 0.87)
 		era.Size = UDim2.new(0.85, 0, 0, 18)
 		era.Position = caption.Position - UDim2.fromOffset(0, caption.Size.Y.Offset / 2 + 3)
 	end
-	matte:GetPropertyChangedSignal("AbsoluteSize"):Connect(resize)
+	bars:GetPropertyChangedSignal("AbsoluteSize"):Connect(resize)
 	resize()
-	fitPainting()
-	return matte, view, board, caption, era, skip, fade
+	return caption, era, skip, fade
 end
 
 function Opening.play(player, net, hud)
@@ -89,11 +76,14 @@ function Opening.play(player, net, hud)
 	local oldAim = aimGui.Enabled
 	local screen = layer(player, "Mine origins", 24, Enum.ScreenInsets.None)
 	local safe = layer(player, "Keeper subtitles", 25, Enum.ScreenInsets.CoreUISafeInsets)
-	local controls, chatEnabled, skipped, finished, film
+	local stage = Instance.new("Folder")
+	stage.Name, stage.Parent = "Mine origins set", camera
+	local oldClock = Lighting.ClockTime
+	local controls, chatEnabled, skipped, finished
 	hud.inOpening, hud.root.Visible, Prompts.Enabled = true, false, false
 	aimGui.Enabled = false
 	local function run()
-		local matte, view, board, caption, era, skip, fade = compose(screen, safe)
+		local caption, era, skip, fade = compose(screen, safe)
 		skip.Activated:Connect(function()
 			skipped = true
 		end)
@@ -122,23 +112,14 @@ function Opening.play(player, net, hud)
 			end)
 		end
 		local motion = player:GetAttribute("MenuMotion") ~= false
-		film = Film.new(screen, view, board, motion)
+		local film = Film.new(screen, stage, camera, site, motion, oldClock)
 		local sound = Audio.origins(screen)
 		local start = os.clock()
 		while not skipped and player.Character == char and root.Parent and workspace.CurrentCamera == camera do
 			local t = os.clock() - start
 			local island = workspace:FindFirstChild("CitrineCove")
 			local gallery = island and island:FindFirstChild("Working gallery")
-			local live, black = film:draw(t, gallery ~= nil and gallery:FindFirstChild("Hut back wall") ~= nil)
-			matte.Visible = not live
-			if live then
-				local u = if motion then math.clamp((t - 39.2) / 7, 0, 1) else 0.5
-				-- Look along the walk the player is about to make, with the site
-				-- of the original impact immediately behind the arch.
-				local focus = gate:Lerp(site, 0.25) + V(0, 4, 0)
-				local eye = gate + V(9 - 4 * u, 12 - 3 * u, 39 - 8 * u)
-				camera.CFrame, camera.Focus, camera.FieldOfView = CFrame.lookAt(eye, focus), CFrame.new(focus), 54
-			end
+			local black = film:draw(t, gallery ~= nil and gallery:FindFirstChild("Hut back wall") ~= nil, site, gate)
 			local date, line, opacity = Film.caption(t)
 			caption.Text, era.Text = line, date
 			caption.TextTransparency, era.TextTransparency = 1 - opacity, 1 - opacity
@@ -159,6 +140,8 @@ function Opening.play(player, net, hud)
 	local ok, result = xpcall(run, debug.traceback)
 	Actions:UnbindAction("Watch mine origins")
 	Actions:UnbindAction("Skip mine origins")
+	stage:Destroy()
+	Lighting.ClockTime = oldClock
 	if workspace.CurrentCamera == camera then
 		if player.Character == char then
 			camera.CFrame, camera.Focus = oldView, oldFocus
@@ -175,12 +158,9 @@ function Opening.play(player, net, hud)
 	aimGui.Enabled = oldAim
 	safe:Destroy()
 	if ok and finished then
-		result.Parent.Matte.Visible = false
+		result.Parent.Letterbox.Visible = false
 		result.Parent["Subtitle shade"].Visible = false
 		W.tween(result, 0.35, { BackgroundTransparency = 1 }).Completed:Wait()
-	end
-	if film then
-		film.plates:draw(nil, nil, 0)
 	end
 	screen:Destroy()
 	hud.inOpening = false

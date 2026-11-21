@@ -78,10 +78,10 @@ local function test()
 		local opening = p.PlayerGui:WaitForChild("Mine origins", 6)
 		local titles = p.PlayerGui:WaitForChild("Keeper subtitles", 2)
 		assert(opening and titles.Skip and not gui.SafeArea.Visible, "skippable first visit")
-		local board = opening.Matte.Sky["Picture plane"]
-		local frame = board.Picture
+		local camera = workspace.CurrentCamera
+		local stage = camera:WaitForChild("Mine origins set", 4)
 		local wick = opening:WaitForChild("Wick resonance", 4)
-		assert(frame.CurrentCamera and not p:GetAttribute("IntroSeen"))
+		assert(stage and camera.CameraType == Enum.CameraType.Scriptable and not p:GetAttribute("IntroSeen"))
 		assert(wick.SoundGroup == harbor["Stone break"].SoundGroup and wick.SoundId == harbor["Starfall break"].SoundId)
 		assert(not song.IsPlaying and wick:FindFirstChildOfClass("ReverbSoundEffect"))
 		if r:GetAttribute("CheckSwing") then
@@ -103,19 +103,28 @@ local function test()
 			local coast, landed
 			opening.Landfall.Played:Once(function() landed = not song.IsPlaying end)
 			waitFor(function()
-				coast = frame:FindFirstChild("Impact coast")
+				coast = stage:FindFirstChild("Beacon Point through time")
 				return coast and coast:FindFirstChild("Falling ember")
 			end, 8, "landfall at the future mine")
-			waitFor(function() return landed and coast:FindFirstChild("Star heart") end, 5, "impact leaves the fragment")
-			waitFor(function() return board:FindFirstChild("Tide") end, 5, "sea submerges the strike")
-			waitFor(function() return board:FindFirstChild("Meadow") end, 6, "sea retreats")
-			waitFor(function() return board:FindFirstChild("Find") end, 7, "the fishers find a chip")
-			waitFor(function() return board:FindFirstChild("Harbor") and board["Lantern sweep"].Visible end, 8, "settlement lights the beacon")
-			waitFor(function() return board:FindFirstChild("Workshop") and titles.Caption.Text:find("drill crew") end, 14, "core sample evidence")
-			waitFor(function() return not opening.Matte.Visible and titles.Caption.Text:find("dusk") end, 10, "handoff at the playable mine")
+			waitFor(function() return landed and coast:FindFirstChild("Buried heart") end, 5, "impact leaves the fragment")
+			local water = coast["Open sea"]
+			local low = water.Position.Y
+			waitFor(function() return water.Position.Y > low + 6 end, 7, "rising tide covers the crater")
+			waitFor(function() return water.Position.Y < low + 4 and coast:FindFirstChild("Shore pine") end, 6, "tide recedes and trees grow")
+			waitFor(function() return coast:FindFirstChild("Beach chip") and coast:FindFirstChild("Beachcomber") end, 4, "fisher finds a chip")
+			local chip = coast["Beach chip"]
+			local sand = chip:GetPivot().Y
+			waitFor(function() return chip:GetPivot().Y > sand + 1.5 end, 6, "fisher lifts the chip into frame")
+			waitFor(function() return coast:FindFirstChild("Rotating lantern") and coast["Rotating lantern"].Lens.Beam.Enabled end, 7, "settlement lights the beacon")
+			waitFor(function() return coast:FindFirstChild("Beacon keeper") and not coast["Rotating lantern"].Lens.Beam.Enabled end, 9, "keeper reaches the failing beacon")
+			waitFor(function() return stage:FindFirstChild("Core shed") and titles.Caption.Text:find("drill crew") end, 8, "core sample evidence")
+			local spindle = stage["Core shed"]["Drill spindle"]
+			local bearing = spindle:GetPivot()
+			waitFor(function() return spindle:GetPivot() ~= bearing end, 2, "drill runs on camera")
+			waitFor(function() return #stage:GetChildren() == 0 and titles.Caption.Text:find("dusk") end, 12, "handoff at the playable mine")
 		end
 		waitFor(function()
-			return not opening.Parent and not titles.Parent and p:GetAttribute("IntroSeen") and gui.SafeArea.Visible
+			return not opening.Parent and not stage.Parent and not titles.Parent and p:GetAttribute("IntroSeen") and gui.SafeArea.Visible
 				and workspace.CurrentCamera.CameraType~=Enum.CameraType.Scriptable
 		end,16,"opening returns camera and HUD")
 	end

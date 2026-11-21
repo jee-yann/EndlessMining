@@ -1,5 +1,4 @@
--- Practical foreground models for the painted prologue.
-local Scenery = {}
+local Props = {}
 local V, rgb = Vector3.new, Color3.fromHex
 local function model(parent, name)
 	local m = Instance.new("Model")
@@ -77,7 +76,7 @@ local function crystal(parent, at, size)
 		V(0.17, 0.92, 0.104),
 	}
 	for i = 2, #fracture do
-		rod(
+		local seam = rod(
 			m,
 			"Bright fracture",
 			fracture[i - 1] * size,
@@ -85,78 +84,43 @@ local function crystal(parent, at, size)
 			math.max(0.025, 0.027 * size),
 			rgb("FFF2CD")
 		)
+		seam.Material = Enum.Material.Neon
 	end
 	m:PivotTo(CFrame.new(at))
 	return m
 end
 
-local function stars(parent, rng, count, width, bottom, top, z)
-	for i = 1, count do
-		local at = V(rng:NextNumber(-width, width), rng:NextNumber(bottom, top), z - rng:NextNumber(0, 12))
-		local r = rng:NextNumber(0.10, 0.41)
-		local tint = rgb("9FAACF"):Lerp(rgb("FFE5BF"), rng:NextNumber())
-		orb(parent, "Starlight", at, Vector3.one * r, tint)
-		if i % 12 == 0 then
-			part(parent, "Diffraction", V(r * 0.3, r * 3, 0.05), CFrame.new(at), tint)
-			part(parent, "Diffraction", V(r * 2, r * 0.28, 0.05), CFrame.new(at), tint)
-		end
-	end
+local function cylinder(parent, name, pos, radius, height, tint, mat)
+	local p = part(
+		parent,
+		name,
+		V(height, radius * 2, radius * 2),
+		CFrame.new(pos) * CFrame.Angles(0, 0, math.pi / 2),
+		rgb(tint)
+	)
+	p.Shape, p.Material = Enum.PartType.Cylinder, mat or Enum.Material.SmoothPlastic
+	return p
 end
-function Scenery.space(parent)
-	local sky = model(parent, "The dying star")
-	local rng = Random.new(311)
-	stars(sky, rng, 170, 108, -55, 57, -63)
-	-- Ejecta form an inclined, broken belt behind the tumbling hero fragment.
-	for i = 1, 28 do
-		local x = rng:NextNumber(-34, 34)
-		local at = V(x, x * 0.25 + rng:NextNumber(-2.6, 2.6), -5 - rng:NextNumber(0, 18))
-		local size = rng:NextNumber(0.06, 0.33)
-		part(
-			sky,
-			"Cinder",
-			V(size * 1.6, size, size * 0.65),
-			CFrame.new(at) * CFrame.Angles(x, i, 0.3),
-			rgb("79637C"):Lerp(rgb("F6C18E"), rng:NextNumber()),
-			"WedgePart"
-		)
-	end
-	return sky, crystal(sky, Vector3.zero, 2.6)
+local function box(parent, name, pos, size, tint, rot, mat)
+	local p = part(parent, name, size, CFrame.new(pos) * (rot or CFrame.identity), rgb(tint))
+	p.Material = mat or Enum.Material.SmoothPlastic
+	return p
 end
-
-function Scenery.landfall(parent)
-	local coast = model(parent, "Impact coast")
-	local rng = Random.new(3496)
-	local stage = { root = coast }
-	stage.trail = model(coast, "Falling ember")
-	crystal(stage.trail, Vector3.zero, 1.1)
-	for i, width in { 0.81, 0.47, 0.20 } do
-		face(
-			stage.trail,
-			V(-width, 0, 0.03 * i),
-			V(width, 0, 0.03 * i),
-			V(-i * 1.9, i * 3.5, 0.03 * i),
-			rgb(({ "D794B5", "F1BAA5", "FFDFAB" })[i])
-		)
-	end
-	stage.impact = model(coast, "Ejecta")
-	stage.stones = {}
-	for i = 1, 23 do
-		local a = i * 2.4
-		local velocity =
-			V(math.sin(a) * rng:NextNumber(3, 8), rng:NextNumber(6, 18), math.cos(a) * rng:NextNumber(3, 8))
-		local size = rng:NextNumber(0.25, 0.95)
-		local stone = part(
-			stage.impact,
-			"Hot basalt",
-			V(size, size * 1.5, size * 0.72),
-			CFrame.identity,
-			if i % 3 == 0 then rgb("FFCD9A") else rgb("8D6377"),
-			"WedgePart"
-		)
-		table.insert(stage.stones, { part = stone, velocity = velocity })
-	end
-	stage.scar = crystal(coast, V(0, 0.4, 0), 1.65)
-	return stage
+local function sphere(parent, name, pos, size, tint, mat)
+	local p = orb(parent, name, pos, size, rgb(tint))
+	p.Material = mat or Enum.Material.SmoothPlastic
+	return p
 end
-
-return Scenery
+local function light(parent, tint, distance, intensity)
+	local lamp = Instance.new("PointLight")
+	lamp.Color, lamp.Range, lamp.Brightness, lamp.Parent = rgb(tint), distance, intensity, parent
+	return lamp
+end
+local function ease(t, start, finish)
+	local u = math.clamp((t - start) / (finish - start), 0, 1)
+	return u * u * (3 - 2 * u)
+end
+Props.model, Props.part, Props.face, Props.rod = model, part, face, rod
+Props.box, Props.sphere, Props.cylinder, Props.crystal, Props.light, Props.ease =
+	box, sphere, cylinder, crystal, light, ease
+return Props
