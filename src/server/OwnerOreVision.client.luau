@@ -9,12 +9,12 @@ local player, gui = Players.LocalPlayer, script.Parent
 local scan = gui:WaitForChild("Scan")
 local Display = require(player:WaitForChild("PlayerScripts"):WaitForChild("Client"):WaitForChild("OreVisionDisplay"))
 local location = gui.Parent:WaitForChild("MiningHUD"):WaitForChild("SafeArea"):WaitForChild("Location")
-gui.ScreenInsets, gui.DisplayOrder = Enum.ScreenInsets.None, 1
+gui.ScreenInsets, gui.DisplayOrder = Enum.ScreenInsets.None, 4
 
 local display, revision
 local enabled, session, epoch = false, 0, 0
 local mask = Ores.byName.Starfall.visionBit
-local markers, nearby = {}, 0
+local markers = {}
 -- A client-only reference for adornments, even when the rock has never streamed in.
 local anchor = Instance.new("Part")
 anchor.Name, anchor.Size, anchor.Transparency = "Ore vision origin", Vector3.one, 1
@@ -28,7 +28,7 @@ local function clear()
 	table.clear(markers)
 	anchor.Parent = nil
 	display:targets({})
-	revision, nearby = nil, 0
+	revision = nil
 	epoch += 1
 	display.badge.Text = if mask == 0 then "Select an ore" else "Locating ore…"
 end
@@ -36,7 +36,6 @@ end
 local function showNearby(center, hits)
 	anchor.Position, anchor.Parent = center, workspace
 	local nextMarkers = {}
-	nearby = 0
 	for i = 0, buffer.len(hits) - 1, 4 do
 		local ore = Ores.list[buffer.readu8(hits, i + 3)]
 		if not bit32.btest(mask, ore.visionBit) then
@@ -55,7 +54,6 @@ local function showNearby(center, hits)
 		box.Name, box.Color3 = ore.name, ore.color:Lerp(Color3.new(1, 1, 1), 0.18)
 		box.CFrame = CFrame.new(offset)
 		nextMarkers[at] = box
-		nearby += 1
 	end
 	for at, box in markers do
 		if not nextMarkers[at] then
@@ -81,13 +79,9 @@ local function poll(token)
 					end
 					revision = nextRevision
 					display:targets(targets)
-					local located = 0
-					for _ in targets do
-						located += 1
+					if not targets[display.primary] then
+						display.badge.Text = "Locating " .. display.primary .. "…"
 					end
-					display.badge.Text = if located > 0
-						then string.format("%d nearby · %d tracked", nearby, located)
-						else "Locating ore…"
 				elseif nextRevision == false then
 					clear()
 				end

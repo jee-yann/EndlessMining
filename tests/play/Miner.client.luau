@@ -713,7 +713,7 @@ local function test()
 			local pins = ownerVision["Ore waypoints"]
 			waitFor(function()
 				local star = pins:FindFirstChild("Starfall")
-				if not star or not star.Visible then return false end
+				if not star or not pins.Visible or not star.Visible or not visionBadge.Text:find("blocks below") then return false end
 				for _, text in star:GetChildren() do
 					local distance = tonumber(text.Text:match("Starfall · (%d+) blocks") or "")
 					if distance then return distance >= 260 end

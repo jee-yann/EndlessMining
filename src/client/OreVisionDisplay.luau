@@ -82,6 +82,12 @@ end
 
 function Display:selection(mask)
 	self.mask = mask
+	self.primary = nil
+	for _, ore in Ores.list do
+		if ore.visionBit and bit32.btest(mask, ore.visionBit) then
+			self.primary = ore.name
+		end
+	end
 	for ore, button in self.options do
 		local on = bit32.btest(mask, ore.visionBit)
 		button.Text = if on then "✓ " .. ore.name else ore.name
@@ -100,10 +106,13 @@ function Display:targets(positions)
 		local pin = self.pins[name]
 		if not pin then
 			local color = Ores.byName[name].color:Lerp(W.white, 0.25)
-			local frame = W.frame(self.overlay, name, 0, 0, 0, 0, W.ink)
+			local frame = W.frame(self.overlay, name, 0, 0, 148, 50, W.ink)
+			frame.AnchorPoint = Vector2.new(0.5, 0.26)
 			frame.BackgroundTransparency, frame.Visible = 1, false
-			local point = W.title(frame, "◇", -13, -13, 26, 26, 23, color)
-			local label = W.text(frame, "", -74, 12, 148, 20, 15, color)
+			local point = W.title(frame, "◇", 61, 0, 26, 26, 25, color)
+			local label = W.text(frame, "", 0, 26, 148, 23, 15, color)
+			label.BackgroundColor3, label.BackgroundTransparency = W.ink, 0.15
+			W.round(label, 7)
 			W.outlineText(point, 2)
 			W.outlineText(label, 1.8)
 			pin = { frame = frame, point = point, label = label }
@@ -119,21 +128,13 @@ function Display:render(root)
 		return
 	end
 	local size = camera.ViewportSize
-	local half, margin = size / 2, Vector2.new(78, 54)
+	local half, margin = size / 2, Vector2.new(80, math.clamp(size.Y * 0.24, 76, 182))
 	local bounds = (half - margin):Max(Vector2.one)
-	local primary
-	for i = #Ores.list, 1, -1 do
-		local ore = Ores.list[i]
-		if ore.visionBit and bit32.btest(self.mask, ore.visionBit) then
-			primary = ore.name
-			break
-		end
-	end
 	for name, pin in self.pins do
 		local screen = camera:WorldToViewportPoint(pin.at)
 		local offset = Vector2.new(screen.X, screen.Y) - half
 		local onScreen = screen.Z > 0 and math.abs(offset.X) <= bounds.X and math.abs(offset.Y) <= bounds.Y
-		pin.frame.Visible = onScreen or name == primary
+		pin.frame.Visible = onScreen or name == self.primary
 		if not pin.frame.Visible then
 			continue
 		end
@@ -150,10 +151,25 @@ function Display:render(root)
 			pin.point.Text, pin.point.Rotation = "▲", math.deg(math.atan2(dir.Y, dir.X)) + 90
 		end
 		pin.frame.Position = UDim2.fromOffset(pos.X, pos.Y)
+		pin.label.Position = UDim2.fromOffset(0, if not onScreen and pos.Y > half.Y then -24 else 26)
 		local distance = math.round((root.Position - pin.at).Magnitude / Config.Cell)
 		if distance ~= pin.distance then
 			pin.distance = distance
 			pin.label.Text = string.format("%s · %d blocks", name, distance)
+		end
+		if name == self.primary then
+			local down = math.round((root.Position.Y - pin.at.Y) / Config.Cell)
+			if down ~= pin.down then
+				pin.down = down
+				self.badge.Text = if down == 0
+					then name .. " · same level"
+					else string.format(
+						"%s · %d blocks %s",
+						name,
+						math.abs(down),
+						if down > 0 then "below" else "above"
+					)
+			end
 		end
 	end
 end
