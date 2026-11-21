@@ -40,13 +40,32 @@ local function check(motion, replay)
 	assert(exposure.slip.Visible == motion and not exposure.plate.Visible)
 	local core = film.strike.meteor:FindFirstChild("Starfall core")
 	assert(core and core:IsA("Model"))
+	film:draw(5.62, false)
+	local gritView = camera.CFrame
+	film:draw(6.10, false)
+	assert(gritView:FuzzyEq(camera.CFrame, 0.0001), "the lens must hold while the stones lift")
+	film:draw(6.22, false)
+	assert(gritView:FuzzyEq(camera.CFrame, 0.0001) ~= motion, "the tighter insert follows the motion preference")
 	film:draw(Beats.impact - 0.01, false)
 	film:draw(Beats.impact + 0.01, false)
 	exposure:draw(Beats.impact + 0.01, film)
 	assert(exposure.plate.Visible == motion and not exposure.slip.Visible)
+	local contactDrawing = exposure.lens.CFrame
+	exposure:draw(Beats.impact + 0.07, film)
+	assert(exposure.plate.Visible == motion and (exposure.lens.CFrame ~= contactDrawing) == motion,
+		"contact and release have separate drawings")
 	exposure:draw(Beats.impact + 0.18, film)
 	assert(not exposure.plate.Visible, "contact drawing exceeded its exposure")
 	assert(core:IsDescendantOf(film.strike.shelf) and film.strike.crown.Parent == film.strike.root)
+	film:draw(6.98, false)
+	local fire = film.strike.paint.planes[1]
+	local clod = film.strike.ejecta[4].rock
+	local heldFire, firstClod = fire.CFrame, clod:GetPivot().Position
+	film:draw(7.13, false)
+	assert(heldFire:FuzzyEq(fire.CFrame, 0.0001), "the crown holds its drawn silhouette")
+	assert((clod:GetPivot().Position - firstClod).Magnitude > 0.25, "ejecta travel during the held exposure")
+	film:draw(7.24, false)
+	assert(not heldFire:FuzzyEq(fire.CFrame, 0.0001), "the side vent breaks the hold")
 	local fault = film.strike.fissure
 	film:draw(9.60, false)
 	assert(fault.lamp.Brightness > 0.1 and not core:IsDescendantOf(stage), "light escapes the buried fault")
@@ -88,7 +107,17 @@ local function check(motion, replay)
 	assert(film.localPresent, "entrance changed halfway through a shot")
 	film:draw(31.71, true)
 	assert(not film.localPresent and not film.history, "ready entrance missed the next cut")
-	for _, t in { 33.4, 35.7, 37.4, 39.3, Beats.pick, Beats.answer, 44.4, Beats.arrival, 47.7 } do
+	for _, t in { 33.4, 35.7, 37.4, 39.3 } do
+		assert(film:draw(t, true) == 0)
+	end
+	film:draw(40.90, true)
+	local raised = film.crew.pickTip
+	film:draw(41.30, true)
+	assert((film.crew.pickTip - raised).Magnitude < 0.001, "pick holds at the top of the swing")
+	film:draw(Beats.pick, true)
+	local contact = film.modernBase * Vector3.new(0.17, 1.81, 4.79)
+	assert((film.crew.pickTip - contact).Magnitude < 0.001, "pick hits the exposed stone on the strike")
+	for _, t in { Beats.answer, 44.4, Beats.arrival, 47.7 } do
 		assert(film:draw(t, true) == 0)
 	end
 	if replay then
