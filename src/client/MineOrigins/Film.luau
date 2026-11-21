@@ -73,9 +73,7 @@ local function ancientRim(root, site)
 	end
 end
 
-function Film.new(screen, stage, camera, site, gate, motion, clock, character)
-	local shelf = Instance.new("Folder")
-	shelf.Name, shelf.Parent = "Offstage", screen
+function Film.new(shelf, stage, camera, site, gate, motion, clock, character)
 	local base = CF(site + V(0, 3200, 0))
 	local ancientStorage = Instance.new("Folder")
 	ancientStorage.Parent = shelf

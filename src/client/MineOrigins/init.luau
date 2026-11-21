@@ -129,6 +129,10 @@ function Opening.play(player, net, hud)
 	local safe = layer(player, "Mine subtitles", 25, Enum.ScreenInsets.CoreUISafeInsets)
 	local stage = Instance.new("Folder")
 	stage.Name, stage.Parent = "Mine origins set", camera
+	-- A parked BillboardGui can still draw under PlayerGui. Keep inactive props
+	-- out of both the world and the GUI until their shot starts.
+	local shelf = Instance.new("Folder")
+	shelf.Name = "Offstage"
 	local oldClock = Lighting.ClockTime
 	local controls, chatEnabled, skipped, finished, restoreSightlines
 	local lens = Instance.new("DepthOfFieldEffect")
@@ -166,7 +170,7 @@ function Opening.play(player, net, hud)
 			end)
 		end
 		local motion = player:GetAttribute("MenuMotion") ~= false
-		local film = Film.new(screen, stage, camera, site, gate, motion, oldClock, char)
+		local film = Film.new(shelf, stage, camera, site, gate, motion, oldClock, char)
 		local sound = Audio.origins(screen)
 		local start = os.clock()
 		while not skipped and player.Character == char and root.Parent and workspace.CurrentCamera == camera do
@@ -212,6 +216,7 @@ function Opening.play(player, net, hud)
 	Actions:UnbindAction("Watch mine origins")
 	Actions:UnbindAction("Skip mine origins")
 	stage:Destroy()
+	shelf:Destroy()
 	lens:Destroy()
 	if restoreSightlines then
 		restoreSightlines()
