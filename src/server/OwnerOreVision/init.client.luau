@@ -7,13 +7,12 @@ local Config = require(shared:WaitForChild("GameConfig"))
 local net = Rep:WaitForChild("EndlessMiningNet")
 local player, gui = Players.LocalPlayer, script.Parent
 local scan = gui:WaitForChild("Scan")
-local Display = require(player:WaitForChild("PlayerScripts"):WaitForChild("Client"):WaitForChild("OreVisionDisplay"))
+local Display = require(script:WaitForChild("Display"))
 local location = gui.Parent:WaitForChild("MiningHUD"):WaitForChild("SafeArea"):WaitForChild("Location")
-gui.ScreenInsets, gui.DisplayOrder = Enum.ScreenInsets.None, 4
 
 local display, revision
 local enabled, session, epoch = false, 0, 0
-local mask = Ores.byName.Starfall.visionBit
+local mask = Ores.visionMask
 local markers = {}
 -- A client-only reference for adornments, even when the rock has never streamed in.
 local anchor = Instance.new("Part")
@@ -27,15 +26,15 @@ local function clear()
 	end
 	table.clear(markers)
 	anchor.Parent = nil
-	display:targets({})
 	revision = nil
 	epoch += 1
-	display.badge.Text = if mask == 0 then "Select an ore" else "Locating ore…"
+	display.badge.Text = if mask == 0 then "Select an ore" else "Scanning nearby…"
 end
 
 local function showNearby(center, hits)
 	anchor.Position, anchor.Parent = center, workspace
 	local nextMarkers = {}
+	local count = 0
 	for i = 0, buffer.len(hits) - 1, 4 do
 		local ore = Ores.list[buffer.readu8(hits, i + 3)]
 		if not bit32.btest(mask, ore.visionBit) then
@@ -54,6 +53,7 @@ local function showNearby(center, hits)
 		box.Name, box.Color3 = ore.name, ore.color:Lerp(Color3.new(1, 1, 1), 0.18)
 		box.CFrame = CFrame.new(offset)
 		nextMarkers[at] = box
+		count += 1
 	end
 	for at, box in markers do
 		if not nextMarkers[at] then
@@ -61,6 +61,7 @@ local function showNearby(center, hits)
 		end
 	end
 	markers = nextMarkers
+	display.badge.Text = string.format("%d nearby · %d-block range", count, Config.OreVisionRadius)
 end
 
 local function poll(token)
@@ -68,20 +69,14 @@ local function poll(token)
 		local character = player.Character
 		if character and net:GetAttribute("Ready") then
 			local atRequest = epoch
-			local ok, nextRevision, center, hits, targets = pcall(scan.InvokeServer, scan, revision, mask)
+			local ok, nextRevision, center, hits = pcall(scan.InvokeServer, scan, revision)
 			if token ~= session then
 				return
 			end
 			if ok and atRequest == epoch and character == player.Character and net:GetAttribute("Ready") then
 				if nextRevision then
-					if hits then
-						showNearby(center, hits)
-					end
+					showNearby(center, hits)
 					revision = nextRevision
-					display:targets(targets)
-					if not targets[display.primary] then
-						display.badge.Text = "Locating " .. display.primary .. "…"
-					end
 				elseif nextRevision == false then
 					clear()
 				end
@@ -100,7 +95,7 @@ local function restart()
 end
 local function toggle()
 	enabled = not enabled
-	display:enable(enabled, player)
+	display:enable(enabled)
 	restart()
 end
 local function selectOres(nextMask)
@@ -111,9 +106,9 @@ local function selectOres(nextMask)
 	display:selection(mask)
 	restart()
 end
-display = Display.new(gui, location, toggle, selectOres)
+display = Display.new(location, toggle, selectOres)
 display:selection(mask)
-display:enable(false, player)
+display:enable(false)
 player.CharacterRemoving:Connect(clear)
 net:GetAttributeChangedSignal("Ready"):Connect(function()
 	if not net:GetAttribute("Ready") then

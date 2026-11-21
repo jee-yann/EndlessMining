@@ -823,31 +823,29 @@ do
 	print("PASS ten-block X-ray reads buried geology across chunks without spawning blocks")
 end
 do
-	local locator = require(Server.OreLocator).new()
-	local grid = require(Server.MineBlocks).new(Vector3.zero, game.ServerStorage)
-	grid:reset(74109)
-	local surfaceCell = Vector3.new(0, 0, -2)
-	local starfall = Ores.byName.Starfall
-	local function locate(mask, name)
-		for _ = 1, 100 do
-			local matches = locator:locate(grid, surfaceCell, mask)
-			if matches[name] then return grid:cellAt(matches[name]), matches end
-		end
-		error("No ore located from the surface: " .. name)
+	local Blocks = require(Server.MineBlocks)
+	local scanned = Blocks.new(Vector3.zero, game.ServerStorage)
+	local control = Blocks.new(Vector3.zero, game.ServerStorage)
+	for _, mine in {scanned, control} do
+		mine:reset(74109)
+		mine:openHall()
 	end
-	local first, matches = locate(starfall.visionBit, "Starfall")
-	assert(first.Y <= -261 and not next(grid.chunks) and #grid.folder:GetChildren() == 0)
-	assert(grid:oreAt(first) == starfall and not matches.Coal)
-	assert(locator:locate(grid, surfaceCell - Vector3.yAxis * 200, starfall.visionBit).Starfall == grid:center(first))
-	grid:expose(first, Enum.NormalId.Top.Value, {})
-	assert(grid:take(first) == starfall, "The buried waypoint must yield actual Starfall when opened")
-	local second = locate(starfall.visionBit, "Starfall")
-	assert(second ~= first and grid:oreAt(second) == starfall)
-	local coal, filtered = locate(Ores.byName.Coal.visionBit, "Coal")
-	assert(grid:oreAt(coal) == Ores.byName.Coal and not filtered.Starfall)
-	assert(not next(locator:locate(grid, surfaceCell, 0)))
-	grid.folder:Destroy()
-	print("PASS tracked untouched Starfall from the surface, mined it, reacquired a new deposit and filtered ores")
+	for y = -1, -12, -1 do
+		local cell = Vector3.new(0, y, -3)
+		scanned:scanOres(cell)
+		local original = control:take(cell)
+		assert(original and scanned:take(cell) == original, "Scanning changed the mined material")
+	end
+	local parts = scanned.folder:GetChildren()
+	assert(#parts == #control.folder:GetChildren(), "Scanning changed the number of exposed blocks")
+	for _, part in parts do
+		local chunk, index = control:slot(control:cellAt(part.Position), false)
+		local other = chunk and chunk[index]
+		assert(other and other.Name == part.Name and other:GetAttribute("OpenFaces") == part:GetAttribute("OpenFaces"))
+	end
+	scanned.folder:Destroy()
+	control.folder:Destroy()
+	print("PASS scanned and unscanned mines yield identical blocks, ore and exposed faces")
 end
 local function center(x, y, z)
 	return grid:center(Vector3.new(x, y, z))

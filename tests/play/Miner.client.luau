@@ -153,6 +153,7 @@ local function test()
 		assert(ownerVision and not ownerVision.ResetOnSpawn, "Pixelii receives ore vision")
 	else
 		assert(not p.PlayerGui:FindFirstChild("OwnerOreVision"), "ore vision granted to another player")
+		assert(not gui.SafeArea.Location:FindFirstChild("X-ray controls") and not n:FindFirstChild("Scan", true))
 	end
 	waitFor(function()
 		local mount = p.Character.HumanoidRootPart:FindFirstChild("Lamp mount")
@@ -706,29 +707,26 @@ local function test()
 		if ownerVision then
 			visionBadge = gui.SafeArea.Location:WaitForChild("Ore vision status", 3)
 			assert(visionBadge and not visionBadge.Visible, "ore vision starts off")
+			local reply = table.pack(ownerVision.Scan:InvokeServer(nil))
+			assert(reply.n == 3 and typeof(reply[3]) == "buffer", "owner scan returns only its local snapshot")
 			pressX()
 			waitFor(function()
 				return visionBadge.Visible
 			end, 2, "X enables ore vision")
-			local pins = ownerVision["Ore waypoints"]
-			waitFor(function()
-				local star = pins:FindFirstChild("Starfall")
-				if not star or not pins.Visible or not star.Visible or not visionBadge.Text:find("blocks below") then return false end
-				for _, text in star:GetChildren() do
-					local distance = tonumber(text.Text:match("Starfall · (%d+) blocks") or "")
-					if distance then return distance >= 260 end
-				end
-				return false
-			end, 12, "a through-rock Starfall waypoint visible from the untouched starter floor")
-			assert(#pins:GetChildren() == 1 and not ownerVision:FindFirstChildWhichIsA("BoxHandleAdornment"))
+			waitFor(function() return ownerVision:FindFirstChild("Coal") end, 3, "nearby ores shown by default")
+			assert(not ownerVision:FindFirstChild("Ore waypoints") and not ownerVision:FindFirstChild("Starfall"))
 			local filters = gui.SafeArea["X-ray ore filters"]
 			clickButton(gui.SafeArea.Location["X-ray controls"].Filters)
 			waitFor(function() return filters.Visible end, 2, "ore filters open")
+			clickButton(filters.None)
+			waitFor(function() return not ownerVision:FindFirstChildWhichIsA("BoxHandleAdornment") end, 2, "empty filter clears highlights")
 			clickButton(filters.Starfall)
-			waitFor(function() return #pins:GetChildren() == 0 end, 2, "turning off the last ore clears waypoints")
+			waitFor(function() return visionBadge.Text:find("0 nearby", 1, true) end, 3, "Starfall filter respects the local range")
+			assert(not ownerVision:FindFirstChildWhichIsA("BoxHandleAdornment"))
+			clickButton(filters.Starfall)
 			clickButton(filters.Copper)
-			waitFor(function() return pins:FindFirstChild("Copper") ~= nil end, 5, "track copper alone")
-			assert(not pins:FindFirstChild("Starfall") and not ownerVision:FindFirstChild("Coal"))
+			waitFor(function() return ownerVision:FindFirstChild("Copper") end, 3, "show nearby copper alone")
+			assert(not ownerVision:FindFirstChild("Coal"))
 			input:SendKey(true, Enum.KeyCode.LeftShift)
 			pressX()
 			input:SendKey(false, Enum.KeyCode.LeftShift)
