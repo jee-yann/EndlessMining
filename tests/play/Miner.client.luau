@@ -11,6 +11,40 @@ local function waitFor(check, seconds, msg)
 	until os.clock() - start > seconds
 	error(msg)
 end
+local function checkOreFaces()
+	local folder = Instance.new("Folder")
+	folder:AddTag(require(rep.Shared.GameConfig).MineBlockTag)
+	folder.Parent = workspace
+	local blocks = {}
+	local view = workspace.CurrentCamera.CFrame
+	for i = 0, 63 do
+		local block = Instance.new("Part")
+		block.Name, block.Anchored, block.Size = "Iron", true, Vector3.one * 6
+		block.CanCollide, block.CanTouch, block.CanQuery = false, false, false
+		block.Position = view * Vector3.new((i % 8 - 3.5) * 6, (math.floor(i / 8) % 4 - 1.5) * 6, if i < 32 then -28 else -90)
+		block:SetAttribute("OpenFaces", 1)
+		block.Parent = folder
+		table.insert(blocks, block)
+	end
+	waitFor(function()
+		for _, block in blocks do
+			if not block:FindFirstChild("Iron relief") then return false end
+		end
+		return true
+	end, 3, "nearby and distant ore faces all have their texture in a crowded cave")
+	local block = blocks[1]
+	local first = block["Iron relief"]
+	block:SetAttribute("OpenFaces", 3)
+	waitFor(function() return #block:GetChildren() == 2 end, 2, "newly exposed ore face receives art")
+	assert(first.Parent == block)
+	block:SetAttribute("OpenFaces", 2)
+	waitFor(function() return not first.Parent and #block:GetChildren() == 1 end, 2, "sealed face loses its art")
+	block.Parent = nil
+	waitFor(function() return #block:GetChildren() == 0 end, 2, "streamed-out block releases its art")
+	block.Parent = folder
+	waitFor(function() return block:FindFirstChild("Iron relief") end, 2, "restreamed ore receives art")
+	folder:Destroy()
+end
 local function test()
 	assert(not p.PlayerGui:FindFirstChild("MiningLoading"), "custom loading screen removed")
 	local n = rep:WaitForChild("EndlessMiningNet", 25)
@@ -93,6 +127,7 @@ local function test()
 		assert((marker.WorldPosition - n:GetAttribute("Entrance")).Magnitude < 6)
 		if r:GetAttribute("CheckSwing") then
 			local guide = require(p.PlayerScripts.Client.FirstExpedition).new(p, n)
+			checkOreFaces()
 			local eye = p.Character.Head
 			local _, touch = guide:objective(eye, true, 0, true, false, "Dig")
 			local _, mouse = guide:objective(eye, true, 0, false, false, "Dig")
@@ -675,7 +710,30 @@ local function test()
 			waitFor(function()
 				return visionBadge.Visible
 			end, 2, "X enables ore vision")
-			assert(not ownerVision:FindFirstChildWhichIsA("BoxHandleAdornment"), "fresh dirt floor marked as ore")
+			waitFor(function() return ownerVision:FindFirstChildWhichIsA("BoxHandleAdornment") end, 3, "buried ore visible before the first cut")
+			local top = origin + Vector3.yAxis * config.FloorY
+			local playerCell = ((p.Character.HumanoidRootPart.Position - top) / config.Cell):Floor()
+			local spawned = {}
+			for _, part in workspace.CitrineCove.MineBlocks:GetChildren() do spawned[part.Position] = true end
+			for _, box in ownerVision:GetChildren() do
+				if not box:IsA("BoxHandleAdornment") then continue end
+				local at = (box.Adornee.CFrame * box.CFrame).Position
+				local cell = ((at - top) / config.Cell):Floor()
+				assert((cell - playerCell).Magnitude <= 10 and not spawned[at] and not ores.byName[box.Name].host)
+			end
+			local old = ownerVision:FindFirstChildWhichIsA("BoxHandleAdornment")
+			r:FireServer("moveOreVision")
+			waitFor(function()
+				local box = ownerVision:FindFirstChildWhichIsA("BoxHandleAdornment")
+				if old.Parent or not box then return false end
+				local at = (box.Adornee.CFrame * box.CFrame).Position
+				local cell = ((at - top) / config.Cell):Floor()
+				return (cell - playerCell - Vector3.xAxis * 24).Magnitude <= 10
+			end, 4, "moving across chunks replaces out-of-range markers")
+			r:FireServer("position")
+			waitFor(function()
+				return ((p.Character.HumanoidRootPart.Position - top) / config.Cell):Floor() == playerCell
+			end, 3, "returned to the shaft")
 		end
 		-- Drill the two starter shafts through the real cut protocol before aiming at ore.
 		for _, x in { -0.5, 0.5 } do
@@ -700,7 +758,7 @@ local function test()
 					if
 						box:IsA("BoxHandleAdornment")
 						and box.Adornee
-						and box.Adornee.Position == aim
+						and (box.Adornee.CFrame * box.CFrame).Position == aim
 						and box.AlwaysOnTop
 					then
 						coalMarker = box
@@ -863,20 +921,6 @@ local function test()
 		hits:Disconnect()
 		assert(hitCount >= 2, "expected repeated digging sounds during the cut")
 		assert(not lamp.Enabled, "completed cut left its lamp on")
-		if ownerVision then
-			waitFor(function()
-				return not coalMarker.Parent
-			end, 2, "mined ore marker clears")
-			pressX()
-			waitFor(function()
-				return not visionBadge.Visible and not ownerVision:FindFirstChildWhichIsA("BoxHandleAdornment")
-			end, 2, "X removes remaining ore markers")
-			pressX()
-			waitFor(function()
-				return ownerVision:FindFirstChild("Copper") ~= nil
-			end, 2, "X marks already loaded ore")
-			pressX()
-		end
 		assert(not workspace.CitrineCove.MineBlocks:FindFirstChild("Fractures", true), "completed cracks lingered")
 		assert(peaks >= 2, "expected repeated swings during the first cut, saw " .. peaks)
 		assert(maxGap < 0.035, "grip drift: " .. maxGap)
@@ -894,6 +938,20 @@ local function test()
 				and popup["Ore popup"].TextLabel.Text == "+1 Coal",
 			"popup location and label"
 		)
+		if ownerVision then
+			waitFor(function()
+				return not coalMarker.Parent
+			end, 2, "mined ore marker clears")
+			pressX()
+			waitFor(function()
+				return not visionBadge.Visible and not ownerVision:FindFirstChildWhichIsA("BoxHandleAdornment")
+			end, 2, "X removes remaining ore markers")
+			pressX()
+			waitFor(function()
+				return ownerVision:FindFirstChild("Copper") ~= nil
+			end, 2, "X restores nearby ore markers")
+			pressX()
+		end
 		waitFor(function()
 			return not popup.Parent
 		end, 2, "popup fades out")

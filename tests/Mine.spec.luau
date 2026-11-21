@@ -794,6 +794,34 @@ mapCopy.EditFace:Destroy()
 local grid = world.grid
 local count = #grid.folder:GetChildren()
 assert(count == 100, "Starting shell parts: " .. count)
+do
+	local before = table.clone(grid.chunks)
+	local centerCell = Vector3.new(-8, -40, 8)
+	local hits = grid:scanOres(centerCell)
+	local found = {}
+	for i = 0, buffer.len(hits) - 1, 4 do
+		local offset = Vector3.new(buffer.readi8(hits, i), buffer.readi8(hits, i + 1), buffer.readi8(hits, i + 2))
+		assert(offset.Magnitude <= 10 and not found[offset])
+		found[offset] = Ores.list[buffer.readu8(hits, i + 3)]
+	end
+	local edgeOre
+	for x = -10, 10 do
+		for y = -10, 10 do
+			for z = -10, 10 do
+				local offset = Vector3.new(x, y, z)
+				if offset.Magnitude <= 10 then
+					local ore = grid:oreAt(centerCell + offset)
+					assert(found[offset] == (if ore and not ore.host then ore else nil), "Incomplete X-ray")
+					if found[offset] and offset.Magnitude == 10 then edgeOre = true end
+				end
+			end
+		end
+	end
+	assert(edgeOre and buffer.len(grid:scanOres(Vector3.yAxis * 10)) == 0)
+	for key, chunk in grid.chunks do assert(before[key] == chunk, "Scanning allocated a mine chunk") end
+	assert(#grid.folder:GetChildren() == count and world.removed == 0, "Scanning exposed or mined rock")
+	print("PASS ten-block X-ray reads buried geology across chunks without spawning blocks")
+end
 local function center(x, y, z)
 	return grid:center(Vector3.new(x, y, z))
 end

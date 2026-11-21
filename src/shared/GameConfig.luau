@@ -7,6 +7,7 @@ local Config = {
 	-- The gallery begins one cell behind the entrance and spans ten cells on each axis.
 	Cell = cell,
 	Chunk = 8,
+	OreVisionRadius = 10, -- In mine cells, measured from the owner's cell.
 	FloorY = 0,
 	DirtLayers = 2,
 	HallHalfWidth = 5 * cell,

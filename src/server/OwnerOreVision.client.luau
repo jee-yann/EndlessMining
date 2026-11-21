@@ -1,19 +1,21 @@
 local Players = game:GetService("Players")
-local Tags = game:GetService("CollectionService")
 local Input = game:GetService("UserInputService")
-local shared = game:GetService("ReplicatedStorage"):WaitForChild("Shared")
+local Rep = game:GetService("ReplicatedStorage")
+local shared = Rep:WaitForChild("Shared")
 local Ores = require(shared:WaitForChild("Ores"))
-local folderTag = require(shared:WaitForChild("GameConfig")).MineBlockTag
+local Config = require(shared:WaitForChild("GameConfig"))
+local net = Rep:WaitForChild("EndlessMiningNet")
 local player = Players.LocalPlayer
 local gui = script.Parent
+local scan = gui:WaitForChild("Scan")
 local playerGui = gui.Parent
 local widgets = require(player:WaitForChild("PlayerScripts"):WaitForChild("Client"):WaitForChild("Widgets"))
 local location = playerGui:WaitForChild("MiningHUD"):WaitForChild("SafeArea"):WaitForChild("Location")
 local surface = location:WaitForChild("Surface")
-local badge = widgets.frame(location, "Ore vision status", 50, 52, 160, 23, widgets.ink, 8)
+local badge = widgets.frame(location, "Ore vision status", 50, 52, 200, 23, widgets.ink, 8)
 badge.BackgroundTransparency = 1
 badge.Visible = false
-local label = widgets.title(badge, "", 0, 0, 160, 23, 13, widgets.aqua)
+local label = widgets.title(badge, "", 0, 0, 200, 23, 13, widgets.aqua)
 widgets.outlineText(label, 1.5)
 local function placeBadge()
 	badge.AnchorPoint = Vector2.new(1, 0)
@@ -23,61 +25,93 @@ surface:GetPropertyChangedSignal("Visible"):Connect(placeBadge)
 placeBadge()
 
 local markers = {}
-local count = 0
-local added, removing
-local function updateCount()
-	label.Text = string.format("X-RAY  ·  %d %s loaded", count, if count == 1 then "ore" else "ores")
+local revision, session, lastClear = nil, 0, 0
+local function updateCount(count)
+	label.Text = string.format(
+		"X-RAY  ·  %d blocks  ·  %d %s",
+		Config.OreVisionRadius,
+		count,
+		if count == 1 then "ore" else "ores"
+	)
 end
-local function mark(part)
-	local ore = Ores.byName[part.Name]
-	if not ore or ore.host or markers[part] or not part:IsA("BasePart") then
-		return
-	end
-	if not badge.Visible or not part:IsDescendantOf(workspace) or not part.Parent:HasTag(folderTag) then
-		return
-	end
-	local box = Instance.new("BoxHandleAdornment")
-	box.Name, box.Adornee, box.Size = ore.name, part, part.Size * 0.88
-	box.AlwaysOnTop, box.ZIndex, box.Transparency = true, 1, 0.36
-	box.Color3 = ore.color:Lerp(Color3.new(1, 1, 1), 0.18)
-	box.Parent = gui
-	markers[part] = box
-	count += 1
-	updateCount()
-end
-local function unmark(part)
-	local box = markers[part]
-	if box then
+local function clear()
+	for _, box in markers do
 		box:Destroy()
-		markers[part] = nil
-		count -= 1
-		updateCount()
+	end
+	table.clear(markers)
+	revision = nil
+	lastClear += 1
+	updateCount(0)
+end
+
+local function show(center, hits)
+	local terrain = workspace.Terrain
+	local nextMarkers = {}
+	for i = 0, buffer.len(hits) - 1, 4 do
+		local offset = Vector3.new(buffer.readi8(hits, i), buffer.readi8(hits, i + 1), buffer.readi8(hits, i + 2))
+		local at = center + offset * Config.Cell
+		local ore = Ores.list[buffer.readu8(hits, i + 3)]
+		local box = markers[at]
+		if not box then
+			box = Instance.new("BoxHandleAdornment")
+			box.Adornee, box.CFrame = terrain, terrain.CFrame:ToObjectSpace(CFrame.new(at))
+			box.Size = Vector3.one * Config.Cell * 0.55
+			box.AlwaysOnTop, box.ZIndex, box.Transparency = true, 1, 0.48
+			box.Parent = gui
+		end
+		if box.Name ~= ore.name then
+			box.Name, box.Color3 = ore.name, ore.color:Lerp(Color3.new(1, 1, 1), 0.18)
+		end
+		nextMarkers[at] = box
+	end
+	for at, box in markers do
+		if not nextMarkers[at] then
+			box:Destroy()
+		end
+	end
+	markers = nextMarkers
+	updateCount(buffer.len(hits) / 4)
+end
+
+local function poll(token)
+	while token == session and badge.Visible do
+		local character = player.Character
+		if character and net:GetAttribute("Ready") then
+			local clearAtRequest = lastClear
+			local ok, nextRevision, center, hits = pcall(scan.InvokeServer, scan, revision)
+			if token ~= session then
+				return
+			end
+			if
+				ok
+				and nextRevision
+				and lastClear == clearAtRequest
+				and player.Character == character
+				and net:GetAttribute("Ready")
+			then
+				show(center, hits)
+				revision = nextRevision
+			elseif ok and nextRevision == false then
+				clear()
+			end
+		end
+		task.wait(0.4)
 	end
 end
+player.CharacterRemoving:Connect(clear)
+net:GetAttributeChangedSignal("Ready"):Connect(function()
+	if not net:GetAttribute("Ready") then
+		clear()
+	end
+end)
 Input.InputBegan:Connect(function(key, processed)
 	if processed or key.KeyCode ~= Enum.KeyCode.X or Input:GetFocusedTextBox() then
 		return
 	end
+	session += 1
+	badge.Visible = not badge.Visible
+	clear()
 	if badge.Visible then
-		added:Disconnect()
-		removing:Disconnect()
-		badge.Visible = false
-		for _, box in markers do
-			box:Destroy()
-		end
-		table.clear(markers)
-		count = 0
-	else
-		badge.Visible = true
-		added = workspace.DescendantAdded:Connect(mark)
-		removing = workspace.DescendantRemoving:Connect(unmark)
-		for _, folder in Tags:GetTagged(folderTag) do
-			if folder:IsDescendantOf(workspace) then
-				for _, part in folder:GetChildren() do
-					mark(part)
-				end
-			end
-		end
-		updateCount()
+		task.spawn(poll, session)
 	end
 end)

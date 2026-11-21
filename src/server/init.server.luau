@@ -199,6 +199,7 @@ local function join(player)
 	if player.UserId == PIXELII_USER_ID then
 		local gui = Instance.new("ScreenGui")
 		gui.Name, gui.ResetOnSpawn = "OwnerOreVision", false
+		require(script.OreVision)(gui, player, world)
 		script.OwnerOreVision:Clone().Parent = gui
 		gui.Parent = player:WaitForChild("PlayerGui")
 	end

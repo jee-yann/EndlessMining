@@ -60,6 +60,40 @@ function Blocks:oreAt(p)
 	end
 	return Ores.byMaterial[self.geology:material(p)]
 end
+
+local oreIds = {}
+for index, ore in Ores.list do
+	if not ore.host then oreIds[ore] = index end
+end
+
+-- One four-byte record per ore: signed offsets in cells, followed by its Ores.list index.
+function Blocks:scanOres(center)
+	local radius = Config.OreVisionRadius
+	if center.Y >= radius then return buffer.create(0) end
+	local hits = buffer.create((2 * radius + 1) ^ 3 * 4)
+	local length = 0
+	for y = -radius, math.min(radius, -1 - center.Y) do
+		local slice = radius ^ 2 - y ^ 2
+		local zLimit = math.floor(math.sqrt(slice))
+		for z = -zLimit, zLimit do
+			local xLimit = math.floor(math.sqrt(slice - z ^ 2))
+			for x = -xLimit, xLimit do
+				local id = oreIds[self:oreAt(center + Vector3.new(x, y, z))]
+				if id then
+					buffer.writei8(hits, length, x)
+					buffer.writei8(hits, length + 1, y)
+					buffer.writei8(hits, length + 2, z)
+					buffer.writeu8(hits, length + 3, id)
+					length += 4
+				end
+			end
+		end
+	end
+	local result = buffer.create(length)
+	buffer.copy(result, 0, hits, 0, length)
+	return result
+end
+
 local function brick(self, p, material)
 	local ore = Ores.byMaterial[material]
 	local part = Instance.new("Part")
