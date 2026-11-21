@@ -122,11 +122,19 @@ local function pose(g, u)
 			local height = 1 - loaded
 			p.CFrame = cf + V(0, height * 2, distance)
 			p.Size = size * (0.78 + 0.22 * loaded)
+		elseif g.mode == "hoist" then
+			-- The stone hangs while the rope is checked, then meets its
+			-- bedding, rocks up on one edge and seats at its final size.
+			local lower = math.clamp((u - 0.20) / 0.38, 0, 1)
+			local lift = math.max(0, 1 - math.abs((u - 0.70) / 0.12))
+			local above = 4.0 * (1 - lower * lower) + 0.28 * lift
+			local cock = -0.12 * (1 - lower) + 0.065 * lift
+			p.CFrame = (cf + Vector3.yAxis * above) * C.Angles(0, 0, cock)
+			p.Size = size
 		elseif k.index == 0 then
 			local left = 1 - s
-			local h = if g.mode == "hoist" then 3.8 elseif g.mode == "plant" then -2.2 else 1.3
-			p.CFrame = (cf + Vector3.yAxis * h * left)
-				* C.Angles(0, 0, left * (if g.mode == "hoist" then -0.13 else 0.067))
+			local h = if g.mode == "plant" then -2.2 else 1.3
+			p.CFrame = (cf + Vector3.yAxis * h * left) * C.Angles(0, 0, left * 0.067)
 			local scale = if g.mode == "plant" then math.max(0.07, s) else 0.78 + 0.22 * s
 			p.Size = size * scale
 		else

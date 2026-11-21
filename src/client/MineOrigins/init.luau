@@ -113,7 +113,7 @@ local function compose(screen, safe)
 	local function aperture(t, motion)
 		local size = bars.AbsoluteSize
 		local portrait = size.X < size.Y
-		local action = (1 - ease(t, 6.53, 6.86)) + 0.43 * ease(t, 8.46, 9.14) * (1 - ease(t, 11.62, 13.63))
+		local action = if t < 6.63 then 1 elseif t < 6.76 then 0.52 elseif t >= 8.56 and t < 12.12 then 0.43 else 0
 		local listen = ease(t, 30.54, 31.42) * (1 - ease(t, 44.98, 48.81))
 		local base = if portrait then 0.026 else 0.036
 		local opening = if portrait then 0.036 else 0.068
