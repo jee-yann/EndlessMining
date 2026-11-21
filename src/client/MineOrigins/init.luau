@@ -4,6 +4,8 @@ local Prompts = game:GetService("ProximityPromptService")
 local Run = game:GetService("RunService")
 local StarterGui = game:GetService("StarterGui")
 local Film = require(script.Film)
+local Exposure = require(script.Exposure)
+local ease = require(script.Props).ease
 local Beats = require(script.Beats)
 local Audio = require(script.Parent.HarborAudio)
 local W = require(script.Parent.Widgets)
@@ -74,6 +76,8 @@ local function compose(screen, safe)
 	bars.Size, bars.BackgroundTransparency = UDim2.fromScale(1, 1), 1
 	local upper = W.frame(bars, "Upper", 0, 0, 1, 1, rgb("10131D"))
 	local lower = W.frame(bars, "Lower", 0, 0, 1, 1, rgb("10131D"))
+	bars.ZIndex = 6
+	upper.BackgroundColor3, lower.BackgroundColor3 = rgb("06080D"), rgb("06080D")
 	lower.AnchorPoint, lower.Position = Vector2.new(0, 1), UDim2.fromScale(0, 1)
 	local scrim = W.frame(screen, "Subtitle shade", 0, 0, 1, 1, rgb("0D1018"))
 	scrim.AnchorPoint, scrim.Position, scrim.Size = Vector2.new(0, 1), UDim2.fromScale(0, 1), UDim2.fromScale(1, 0.31)
@@ -98,27 +102,42 @@ local function compose(screen, safe)
 	card.Name, card.AnchorPoint = "Intertitle", Vector2.new(0, 1)
 	card.Position, card.Size = UDim2.fromScale(0.055, 0.89), UDim2.fromScale(0.80, 0.10)
 	card.TextXAlignment, card.TextStrokeColor3 = Enum.TextXAlignment.Left, rgb("151622")
-	textLimit(card, Enum.Font.BuilderSansExtraBold, 58)
+	textLimit(card, Enum.Font.BuilderSansExtraBold, 78)
 	local skip = Instance.new("TextButton")
 	skip.Name, skip.Text, skip.Font, skip.TextSize = "Skip", "Skip  ›", Enum.Font.BuilderSansMedium, 16
 	skip.AnchorPoint, skip.Position, skip.Size = Vector2.new(1, 0), UDim2.new(1, -12, 0, 6), UDim2.fromOffset(84, 44)
 	skip.TextColor3, skip.BackgroundColor3, skip.BackgroundTransparency = rgb("FFF3DF"), rgb("151622"), 0.32
 	skip.BorderSizePixel, skip.Parent = 0, safe
 	W.round(skip, 7)
+	local lastHeight
+	local function aperture(t, motion)
+		local size = bars.AbsoluteSize
+		local portrait = size.X < size.Y
+		local action = (1 - ease(t, 6.53, 6.86)) + 0.43 * ease(t, 8.46, 9.14) * (1 - ease(t, 11.62, 13.63))
+		local listen = ease(t, 30.54, 31.42) * (1 - ease(t, 44.98, 48.81))
+		local base = if portrait then 0.026 else 0.036
+		local opening = if portrait then 0.036 else 0.068
+		local extra = if motion then opening * (action + 0.53 * listen) else opening * 0.43
+		local height = math.floor(size.Y * (base + extra) * (1 - ease(t, 47.1, 48.86)) + 0.5)
+		if lastHeight ~= height then
+			lastHeight = height
+			upper.Size, lower.Size = UDim2.new(1, 0, 0, height), UDim2.new(1, 0, 0, height)
+		end
+	end
 	local function resize()
 		local size = bars.AbsoluteSize
 		local narrow = size.X < size.Y
-		local barHeight = if narrow then 0 else math.min(34, math.floor(size.Y * 0.038))
-		upper.Size, lower.Size = UDim2.new(1, 0, 0, barHeight), UDim2.new(1, 0, 0, barHeight)
 		caption.Size =
 			UDim2.new(if narrow then 0.90 else 0.84, 0, 0, if narrow then 85 else math.clamp(size.Y * 0.105, 38, 76))
 		caption.Position = UDim2.fromScale(0.5, if narrow then 0.82 else 0.87)
 		era.Size = UDim2.new(0.85, 0, 0, 18)
 		era.Position = caption.Position - UDim2.fromOffset(0, caption.Size.Y.Offset / 2 + 3)
+		card.Size = UDim2.fromScale(if narrow then 0.90 else 0.60, if narrow then 0.09 else 0.115)
+		card.Position = UDim2.fromScale(0.055, if narrow then 0.88 else 0.90)
 	end
 	bars:GetPropertyChangedSignal("AbsoluteSize"):Connect(resize)
 	resize()
-	return caption, era, skip, fade, card, dateline, scrim
+	return caption, era, skip, fade, card, dateline, scrim, aperture
 end
 
 function Opening.play(player, net, hud)
@@ -141,14 +160,15 @@ function Opening.play(player, net, hud)
 	local shelf = Instance.new("Folder")
 	shelf.Name = "Offstage"
 	local oldClock = Lighting.ClockTime
-	local controls, chatEnabled, skipped, finished, revealAvatar, revealSigns, film
+	local controls, chatEnabled, skipped, finished, revealAvatar, revealSigns, film, exposure
 	local remoteReplay = false
 	local lens = Instance.new("DepthOfFieldEffect")
 	lens.Name, lens.Enabled, lens.Parent = "Mine origins focus", false, camera
 	hud.inOpening, hud.root.Visible, Prompts.Enabled = true, false, false
 	aimGui.Enabled = false
 	local function run()
-		local caption, era, skip, fade, card, dateline, scrim = compose(screen, safe)
+		local caption, era, skip, fade, card, dateline, scrim, aperture = compose(screen, safe)
+		exposure = Exposure.new(screen, camera)
 		skip.Activated:Connect(function()
 			skipped = true
 		end)
@@ -179,6 +199,7 @@ function Opening.play(player, net, hud)
 			end)
 		end
 		local motion = player:GetAttribute("MenuMotion") ~= false
+		aperture(0, motion)
 		local landing = net:GetAttribute("Landing") or root.Position
 		local handoff =
 			{ root = root, start = root.Position, landing = landing, view = oldView, focus = oldFocus, fov = oldFov }
@@ -199,13 +220,13 @@ function Opening.play(player, net, hud)
 				and gateModel
 				and gateModel:FindFirstChild("Mine sign")
 			local black = film:draw(t, live ~= nil)
+			aperture(t, motion)
+			exposure:draw(t, film)
 			if t >= Beats.arrival and revealAvatar then
 				revealAvatar()
 				revealAvatar = nil
 			end
-			lens.Enabled = (t >= 31.66 and t < 33.34)
-                or (t >= 35.13 and t < 37.26)
-                or (t >= 41.86 and t < 44.32)
+			lens.Enabled = (t >= 31.66 and t < 33.34) or (t >= 35.13 and t < 37.26) or (t >= 41.86 and t < 44.32)
 			if lens.Enabled then
 				lens.FocusDistance = (camera.Focus.Position - camera.CFrame.Position).Magnitude
 				lens.InFocusRadius, lens.FarIntensity, lens.NearIntensity = 2.2, 0.34, 0.08
@@ -219,7 +240,8 @@ function Opening.play(player, net, hud)
 			card.TextStrokeTransparency = 1 - 0.65 * titleOpacity
 			local period, strength = Film.era(t)
 			dateline.Position = if t >= Beats.history and t < Beats.present
-				then UDim2.fromScale(0.05, 0.845) else UDim2.fromScale(0.05, 0.105)
+				then UDim2.fromScale(0.05, 0.845)
+				else UDim2.fromScale(0.05, 0.135)
 			dateline.Text, dateline.TextTransparency = period, 1 - strength
 			dateline.TextStrokeTransparency = 1 - 0.70 * strength
 			scrim.BackgroundTransparency = 1 - 0.87 * opacity
@@ -242,6 +264,9 @@ function Opening.play(player, net, hud)
 	Actions:UnbindAction("Skip mine origins")
 	if film then
 		film:Destroy()
+	end
+	if exposure then
+		exposure:Destroy()
 	end
 	stage:Destroy()
 	shelf:Destroy()

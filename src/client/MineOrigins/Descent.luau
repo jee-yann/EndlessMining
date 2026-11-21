@@ -1,56 +1,77 @@
+-- Cues are cut on motion. All cameras see the same physical trajectory.
 local P = require(script.Parent.Props)
-local Burial = require(script.Parent.Burial)
 local V, ease = Vector3.new, P.ease
 local Shot = {}
+local cover = require(script.Parent.Crater).coverHeight
+local vent = V(0, -0.205, -37.25)
+local finishEye, finishLook = V(-28, 31, 41), V(0, -2, 0)
 
-function Shot.frame(t, motion, trajectory)
-	local at = trajectory(t)
-	if t < 3.08 then
-		local u = if motion then ease(t, 0.25, 3.08) else 0.34
-		local eye = at + V(14 - 22 * u, 8 - 6 * u, 42 - 19 * u)
-		return eye, at + V(2.1 - 3 * u, 1.4, 0), 49, if motion then 0.055 - 0.12 * u else 0
-	elseif t < 4.82 then
-		local dir = (trajectory(t + 0.035) - at).Unit
-		local u = if motion then ease(t, 3.08, 4.82) else 0.5
-		return at - dir * (17 + 13 * u) + V(9.4, 4, 10.4), at + dir * (7 + 13 * u), 62 + 4 * u, -0.045
-	elseif t < 7.58 then
-		-- Shoot across the shore. The oncoming stone, lit point of contact and
-		-- late pressure front all traverse this same wide, low frame.
-		local s = t - 6.5
-		local recoil = if motion then ease(s, 0.13, 0.52) * (1 - 0.42 * ease(s, 0.65, 1.16)) else 0
-		local dt = math.max(0, s - 0.17)
-		local shake = if motion and s > 0.17 then math.exp(-4.8 * dt) * math.sin(dt * 31) else 0
-		local flight = math.clamp(-s / 1.68, 0, 1)
-		local eye = V(-17 - 2.5 * recoil, 8.4 + 1.3 * recoil + 0.6 * shake, 55 + 3.8 * recoil)
-		local target = V(1.7, 4.6 + 6.8 * ease(s, 0.05, 0.85), 0):Lerp(at, flight * 0.64)
-		return eye, target, 53 + recoil * 3, 0.018 * shake
+function Shot.frame(t, motion, path)
+	local at = path(t)
+	if t < 1.05 then
+		-- Put the lens just off the flight path. The speck swells and passes
+		-- beneath the right side of frame before cutting out on its wake.
+		local aim = path(0.88)
+		local eye = aim + V(16.5, -5.8, 12.4)
+		local follow = at:Lerp(aim + V(-3, 1, 0), if motion then 0.24 else 0.10)
+		return eye, follow, 49 - (if motion then 5 * ease(t, 0.1, 0.89) else 0), if motion then -0.095 else 0
+	elseif t < 2.45 then
+		local u = if motion then ease(t, 1.05, 2.45) else 0.38
+		return at + V(9 + 12 * u, 3 + 6 * u, 21 + 15 * u),
+			at + V(-4 - 4 * u, 2.1 + u, -0.3),
+			49 + 7 * u,
+			if motion then -0.19 + 0.12 * u else 0
+	elseif t < 4.03 then
+		local d = (path(t + 0.015) - at).Unit
+		local u = if motion then ease(t, 2.45, 4.03) else 0.55
+		local eye = at - d * (24 + 11 * u) + V(13 + 8 * u, 12 + 5 * u, 5)
+		return eye, at + d * (18 + 22 * u) + V(2, -5 - u * 2, 0), 66 + 5 * u, if motion then 0.18 - 0.17 * u else 0
+	elseif t < 5.54 then
+		local u = ease(t, 4.03, 5.54)
+		local eye = V(40, 30, 65) + V(-5.5, 2, -7) * (if motion then u else 0)
+		return eye, at:Lerp(V(0, 5, 0), 0.28 + 0.25 * u), 60 - 9 * u, if motion then -0.065 * (1 - u) else 0
+	elseif t < 6.50 then
+		-- At ground level grit lifts into the long arriving shadow; blank sky
+		-- no longer occupies the center while sound winds down to the hit.
+		local u = if motion then ease(t, 5.54, 6.27) else 0.45
+		return V(3.1 - u * 0.8, cover + 1.65 + u * 0.18, 5.0 - u * 0.75),
+			V(0.18, cover + 1.05 + 0.62 * u, -0.07),
+			48 - 7 * u,
+			if motion then -0.055 else 0
+	elseif t < 8.56 then
+		local s = t - 6.50
+		local pull = if motion then ease(s, 0.12, 0.62) else 0.65
+		local lead = ease(s, 0.10, 1.13)
+		local roll = 0
+		local kick = V(0, 0, 0)
+		if motion then
+			local q = math.max(0, s - 0.27)
+			local amplitude = if s >= 0.27 then math.exp(-5.1 * q) else 0
+			kick = V(math.sin(q * 40) * 1.58, math.sin(q * 57) * 0.94, math.sin(q * 32) * 1.35) * amplitude
+			roll = 0.043 * math.sin(q * 43) * amplitude - 0.026
+		end
+		local elevated = (cover - 17.8) * (1 - ease(s, 0.13, 0.91))
+		return V(-13 - pull * 7, 23.5 + pull * 15 + elevated, 42 + pull * 11) + kick,
+			V(3.5 + lead * 3, 18.5 + lead * 7 + elevated, 0),
+			59 + pull * 8,
+			roll
 	else
-		local core = Burial.point(t)
-		local deep = ease(t, 7.74, 10.31)
-		local back = ease(t, 10.88, 12.10)
-		local distance = 35.5 + 12 * deep + 34 * back
-		local lead = 1.5 + 1.6 * deep + 14 * back
-		local aim = core + V(2.7 * math.sin((t - 7.58) * 2.1), lead + 0.9 * math.sin(t * 4), 0)
-		-- Arrive at the deep bed ahead of the core, so it visibly falls through
-		-- the last part of the frame and comes to rest on screen.
-		local stop = Burial.point(10.81) + V(0.4, 9.1 + 13.4 * back, 0)
-		aim = aim:Lerp(stop, ease(t, 10.17, 10.56))
-		local x = if motion then 3.3 - 5 * deep else 0
-		return aim + V(x, 2.7 + back * 2.4, distance), aim, 54 + 4 * back, if motion then -0.012 + 0.019 * deep else 0
+		local drift = if motion then ease(t, 8.56, 10.24) else 0.65
+		local exit = ease(t, 10.96, 12.12)
+		local eye = V(-9.7 - 2.2 * drift, 14.3 + 1.6 * drift, 15.1 - 2 * drift):Lerp(finishEye, exit)
+		local target = V(1.1 - 0.7 * drift, -3.25, 0.33):Lerp(finishLook, exit)
+		return eye, target, 49 + 3 * exit, if motion then -0.08 * (1 - exit) else 0
 	end
 end
 
 function Shot.surface(t, motion, eye, look, fov, roll)
-	local vent = V(0, -0.205, -37.25)
+	local u = ease(t, 12.12, 13.60)
 	if not motion then
 		return eye, look, fov, roll
 	end
-	local u = ease(t, 12.12, 13.60)
-	local start = vent + V(-41, 38, 63)
-	return start:Lerp(eye, u) + V(0, 7.4 * math.sin(math.pi * u), 0),
-		(vent + V(0, -0.3, 2)):Lerp(look, u),
+	return (vent + finishEye):Lerp(eye, u) + V(0, 7 * math.sin(math.pi * u), 0),
+		(vent + finishLook):Lerp(look, u),
 		52 + (fov - 52) * u,
 		(roll or 0) * u
 end
-
 return Shot

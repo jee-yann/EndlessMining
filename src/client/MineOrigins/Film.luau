@@ -45,10 +45,12 @@ function Film.card(t)
 end
 
 function Film.new(shelf, stage, camera, site, gate, motion, clock, character, handoff)
-	local base = CF(site + V(0, 3200, 0))
+	-- Separate sets let the island submit its geometry over several frames
+	-- while the first camera is still looking across the impact site.
+	local base = CF(site + V(0, 3200, -15000))
 	local ancientStorage = Instance.new("Folder")
 	ancientStorage.Parent = shelf
-	local historyBase = base + (gate - V(0, 3.5, 0) - site)
+	local historyBase = CF(gate + V(0, 3196.5, 0))
 	local strike = Strike.new(ancientStorage)
 	strike.root:PivotTo(base)
 	strike.root.Parent = stage
@@ -57,6 +59,7 @@ function Film.new(shelf, stage, camera, site, gate, motion, clock, character, ha
 		shelf = shelf,
 		camera = camera,
 		base = base,
+		impactPoint = base * Strike.position(Beats.impact),
 		gateBase = CF(gate - V(0, 3.5, 0)),
 		motion = motion,
 		clock = clock,
@@ -108,6 +111,11 @@ end
 local presentCuts = { 31.66, 33.34, 35.13, 37.26, 39.21, 41.86, 44.32 }
 local bridgeEye, bridgeLook = V(5.4, 5.55, 15.8), V(-1.15, 3.1, -2)
 
+local function recoil(t, beat)
+	local dt = t - beat
+	return if dt >= 0 and dt < 0.46 then math.sin(22 * dt) * math.exp(-9 * dt) else 0
+end
+
 function Film:present(t, shot)
 	local base = self.modernBase
 	local function travel(a, b)
@@ -122,11 +130,18 @@ function Film:present(t, shot)
 		self:frame(base, V(-32 + 16 * u, 29 - 9 * u, 66 - 13 * u), V(5, 8, 1), 57, -0.035 + 0.026 * u)
 	elseif shot == 2 then
 		local u = travel(31.66, 33.34)
+		local kick = 0
+		if self.motion then
+			for _, beat in Beats.outbound do
+				kick += recoil(t, beat)
+			end
+		end
 		self:frame(
 			base,
-			Survey.pad + V(-3.9 + 1.15 * u, 3.0 - 0.55 * u, 7.3 - 1.15 * u),
+			Survey.pad + V(-4.2 + 1.29 * u, 2.92 - 0.38 * u + 0.12 * kick, 7.4 - 1.2 * u + 0.30 * kick),
 			Survey.pad + V(-0.82, 2.12, 0),
-			48
+			48 - 2.3 * u + 2.2 * kick,
+			-0.028 * (1 - u) + 0.016 * kick
 		)
 	elseif shot == 3 then
 		-- Skim the bridge after the outgoing signal, straight through the market toward the arch.
@@ -140,8 +155,9 @@ function Film:present(t, shot)
 		)
 	elseif shot == 4 then
 		local at = localAt(self.crew.receiverAim)
-		local u = travel(35.13, 37.26)
-		self:frame(base, at + V(1.50 - 0.4 * u, 0.74, 3.4 - 0.4 * u), at, 37)
+		-- Sit still through the silence. Push in on the *answer* to the three taps.
+		local u = travel(Beats.returned[1], Beats.returned[3] + 0.32)
+		self:frame(base, at + V(1.65 - 0.62 * u, 0.75 - 0.07 * u, 3.52 - 0.42 * u), at + V(0, 0.03, 0), 40 - 4.2 * u)
 	elseif shot == 5 then
 		local u = travel(37.26, 39.21)
 		self:frame(base, V(-2.8 + 1.1 * u, 4.15, 13.6 - 0.7 * u), V(-0.85, 3.35, 5.5), 48)
@@ -155,8 +171,15 @@ function Film:present(t, shot)
 			55
 		)
 	elseif shot == 7 then
-		local u = travel(41.86, 44.32)
-		self:frame(base, rock + V(-1.1 + 0.69 * u, 3.12 - 0.61 * u, -2.66 + 0.48 * u), rock, 42)
+		local u = travel(41.86, Beats.answer - 0.20)
+		local kick = if self.motion then recoil(t, Beats.answer) else 0
+		self:frame(
+			base,
+			rock + V(-1.22 + 0.64 * u, 3.24 - 0.60 * u + 0.16 * kick, -2.80 + 0.46 * u),
+			rock,
+			45 - 4.3 * u + 2.5 * kick,
+			0.024 * (1 - u)
+		)
 	else
 		-- See both witnesses turn toward the gallery before backing out over the bridge.
 		local u = travel(44.32, Beats.arrival)
@@ -210,7 +233,7 @@ function Film:draw(t, liveReady)
 		self.previousFlightFrame = t
 		self.strike:draw(t, self.base, self.motion)
 		self:frame(self.base, Strike.frame(t, self.motion))
-		return 1 - ease(t, 0.08, 0.44)
+		return 1 - ease(t, 0.025, 0.22)
 	end
 	if self.strike then
 		self.strike.root:Destroy()

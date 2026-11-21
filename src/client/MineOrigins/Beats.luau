@@ -2,7 +2,6 @@
 return {
 	duration = 49.05,
 	impact = 6.50,
-	section = 7.58,
 	surface = 12.12,
 	history = 13.60,
 	present = 30.6,

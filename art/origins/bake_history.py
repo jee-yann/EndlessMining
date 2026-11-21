@@ -16,7 +16,7 @@ DEST = ROOT / "src/client/MineOrigins/HistoryAtlas.luau"
 GATE_FLOOR = (0, 24.205, 5.25)
 BASE_PARTS = {"Part", "WedgePart", "SpawnLocation"}
 IDENTITY = (1, 0, 0, 0, 1, 0, 0, 0, 1)
-FPS = 8
+FPS = 24
 
 
 def prop(item, key):
@@ -65,16 +65,16 @@ def timing(path, piece, x, y, z):
         if piece in ("Lagoon", "Shallow water", "Water glint"):
             return None  # The lagoon runs all the way to the horizon in this view.
         if piece.startswith("Distant"):
-            return "Offshore banks", 0
+            return "Outlying sandbanks", 7.18 + patch(x,z) + (0.68 if "grass" in low else 0)
         return (
             ("Terraced shore fill", 7.25 + 0.98 * patch(x, z))
             if z > 1
             else ("Bank below the terraces", shoal(x, z))
         )
     if top == "Honey bluffs":
-        return "Weathered sandstone", 3.35 + 0.8 * patch(x, z) + y * 0.006
+        return "Bluffs above the mine", 4.12 + patch(x,z)*.75
     if top == "Coastal grove":
-        return "Coastal grove", (8.36 + 0.72 * patch(x, z) if z > 0 and y < 12 else planting(x, z))
+        return "Coastal grove", 8.02 + 0.88 * patch(x,z)
     if top == "Wildflowers":
         return "Meadow in blossom", 5.50 + patch(x, z) * 0.8
     if top == "Spring falls":
@@ -96,7 +96,7 @@ def timing(path, piece, x, y, z):
             "Crystal facet",
             "Crystal point",
         ):
-            return "Citrine outcrop", 3.82 + y * 0.008
+            return ("Citrine outcrop", 11.18 + y * 0.013) if "Crystal" in piece or "keystone" in low else ("Citrine outcrop", 8.54 + y * 0.007)
         if piece in ("Portal footing", "Cut basalt pier", "Arch voussoir"):
             return "Dressed arch stones", 12.88 + y * 0.044 + (0.06 if x > 0 else 0)
         if piece in ("Mine sign", "Painted edge"):
@@ -182,21 +182,12 @@ def timing(path, piece, x, y, z):
                 return None  # Floating decorative skyline off the playable ridge.
             if piece in ("Mountain flank", "Summit facet", "Far slope"):
                 return "Offshore mountains", 0
-            if area == "Rock rim" and z > -14:
-                # The low quay walls are built from the first spoil removed
-                # from the hills. They run across the former natural beach.
-                rock = 7.61 + 1.84 * fraction(0.44 + x / 318 - z / 430)
-                if "Fir" in piece:
-                    return "Pines behind the quay", rock + 1.16
-                return "Sea wall above the new terraces", rock + (
-                    0.53 if piece in ("Slate crown", "Turf on the rim") else 0
-                )
             if piece in ("Fir trunk", "Fir boughs"):
-                return "Pines on the rim", planting(x, z) + 0.28
-            return "Rocky island rim", 3.1 + 1.40 * patch(x, z)
+                return "Pines on the rim", 8.65 + patch(x,z)*1.06
+            return "Basalt capes around the harbor", 6.91 + patch(x,z)*1.56
         if area == "Turquoise cascade":
             if piece in ("Mesa face", "Meadow cap"):
-                return "Cascade banks", 3.95
+                return "Cascade banks", 4.42
             return "Upper falls", 4.45 + fraction(-z / 46) * 0.38
         if area == "Compass gardens":
             if piece in ("Fir trunk", "Fir boughs", "Meadow flower", "Leaf tuft", "Grass bed"):
@@ -206,13 +197,17 @@ def timing(path, piece, x, y, z):
             if piece == "Sleeper":
                 return "Track sleepers", 12.45 + fraction((82 - z) / 82) * 1.26
             if piece == "Rail":
-                return "Rail into the siding", 14.15
-            return "Ore wagons", 14.25 + fraction((80 - z) / 80) * 0.52 + fraction(y / 7) * 0.2
+                return "Rail into the siding", 13.43
+            # The three wagons form one train. Start them at the forward end
+            # of the actual track, assemble the beds and load them before
+            # they roll back along those rails to their native resting places.
+            height = 0 if "wheel" in low else .10 if piece == "Wagon bed" else .23 if "wagon" in low else .36
+            return "Ore wagons", 13.88 + height + .08 * round((z - 20.75) / 10)
         if area == "Cableway trail":
             if any(w in low for w in ("slope", "wild stone", "ridgeline turf")):
                 return "Upper ridge", 3.98 + 0.5 * patch(x, z)
             if "pine" in low:
-                return "Ridge pines", planting(x, z) + 0.18
+                return "Ridge pines", 8.22 + patch(x,z)*.72
             if "footing" in low:
                 return "Tower footings", 12.60 + fraction(x + 130, 260) * 0.55
             return "Ridge trail", 12.07 + fraction(x + 130, 260) * 1.45
@@ -229,6 +224,9 @@ def timing(path, piece, x, y, z):
 def bake():
     island = ET.parse(SOURCE).getroot().find("Item")
     finishes, rotations, tracks = {}, {}, {}
+    # The same 47 cliff footings used to sculpt the live tidal shelf. Rays in
+    # the history set begin at the strike, so sort the shore around that point.
+    coast, bluffs = [], []
 
     def visit(item, path):
         cls = item.get("class")
@@ -243,6 +241,12 @@ def bake():
         if opacity >= 0.95:
             return
         at = tuple(round(v - o, 4) for v, o in zip(vector(item), GATE_FLOOR))
+        if label == "Coastal escarpment":
+            coast.append((at[0], at[2], round(at[1] + vector(item, "size")[1] / 2, 3)))
+        if cls=="Part" and label in ("Grass shelf","Meadow cap"):
+            w,h,d=vector(item,"size")
+            if min(w,d)>11 and (path[0]=="Honey bluffs" or path[1] in ("Cableway ridge","Turquoise cascade")):
+                bluffs.append((*at,round(w,2),round(d,2)))
         stage = timing(path, label, *at)
         if not stage:
             return
@@ -320,10 +324,15 @@ def bake():
     for child in island.findall("Item"):
         visit(child, [])
     lines = [
-        "-- Geometry and shot exposures baked from the playable map by art/origins/bake_history.py.",
+        "-- Geometry, surveyed shore and construction cues baked from the playable map.",
         "return {",
-        "\tfinishes = {",
+        f"\trate = {FPS},",
+        "\tcoast = {",
     ]
+    lines.extend("\t\t" + row(p) + "," for p in sorted(coast, key=lambda p: math.atan2(p[1] + 37.25, p[0])))
+    lines.extend(["\t},", "\tbluffs = {"])
+    lines.extend("\t\t" + row(p) + "," for p in bluffs)
+    lines.extend(["\t},", "\tfinishes = {"])
     lines.extend("\t\t" + row(style) + "," for style in finishes)
     lines.extend(["\t},", "\torientations = {"])
     lines.extend("\t\t" + row(rot) + "," for rot in rotations)

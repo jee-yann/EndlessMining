@@ -33,12 +33,71 @@ local function buildSkiff(shelf)
 	local tack, peak, clew, leech = V(0, 3.8, -1.1), V(0, 13.75, -1.1), V(1.5, 4.3, 5.3), V(1.3, 12.08, 5.1)
 	local billow = V(2.63, 8.35, 2.0)
 	for _, edge in
-		{ { tack, peak, "E9C688" }, { peak, leech, "FFDE9C" }, { leech, clew, "E8AD67" }, { clew, tack, "EAC184" } }
+		{ { tack, peak, "FFE9C5" }, { peak, leech, "FBE3B5" }, { leech, clew, "D8754D" }, { clew, tack, "CC6847" } }
 	do
 		P.face(hull, edge[1], edge[2], billow, rgb(edge[3]))
 	end
+	-- A triangular jib at the bow gives the approaching cutter a readable
+	-- silhouette and repeats the russet canvas of the future harbor stalls.
+	local luff, foot, sheet = V(0, 13.8, -1.3), V(0, 2.9, -8.7), V(1.4, 3.6, -2.8)
+	local seam = luff:Lerp(foot, 0.63)
+	P.face(hull, luff, seam, sheet, rgb("FCE5BB"))
+	P.face(hull, seam, foot, sheet, rgb("D26748"))
+	timber(hull, "Flying jibstay", luff, foot, 0.09, "745B4C")
 	P.face(hull, V(0, 14.75, -1), V(0.24, 14.0, 2.1), V(0, 13.75, -1), rgb("F39448"))
 	return hull
+end
+
+local function wake(shelf, register)
+	local m = P.model(shelf, "Wake of the first cutter")
+	local keel = P.box(m, "Wave path", Vector3.zero, Vector3.one, "FFFFFF")
+	keel.Transparency, keel.CastShadow = 1, false
+	local jets = {}
+	for _, side in { -1, 1 } do
+		for band = 1, 2 do
+			local a, b = Instance.new("Attachment"), Instance.new("Attachment")
+			a.Position, b.Position =
+				V(side * (1.15 + band * 0.65), 0, 4.4), V(side * (4.2 + band * 4.35), 0, 12 + band * 8.5)
+			a.Axis, b.Axis = V(side * 0.28, 0, 0.96), V(side * 0.51, 0, 0.86)
+			a.Parent, b.Parent = keel, keel
+			local beam = Instance.new("Beam")
+			beam.Name, beam.Attachment0, beam.Attachment1 = "Fold of wake", a, b
+			beam.FaceCamera, beam.Segments, beam.LightInfluence = true, 12, 0.32
+			beam.CurveSize0, beam.CurveSize1 = 5.2, 9.3
+			beam.Color = ColorSequence.new(rgb("E9F1CA"), rgb("9BDCCD"))
+			beam.Transparency = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 0.32),
+				NumberSequenceKeypoint.new(0.39, 0.13),
+				NumberSequenceKeypoint.new(1, 1),
+			})
+			beam.Parent = keel
+			table.insert(jets, beam)
+		end
+	end
+	register(m, 5.0, 8.34, false)
+	return m, jets
+end
+
+-- The first returning seabirds cross the empty gallery on the way to the
+-- headland. Long white underwings give the high camera a moving scale cue.
+local function gannets(shelf, register)
+	local flock = {}
+	for i = 1, 7 do
+		local bird = P.model(shelf, "Gannet riding the headland wind")
+		local body = P.sphere(bird, "Body", Vector3.zero, V(0.68, 0.59, 2.22), "F4E8CC")
+		local wings = {}
+		for _, side in { -1, 1 } do
+			local wing = P.model(bird, "Tapered flight feathers")
+			local root, elbow, tip = V(0, 0.1, 0), V(1.66 * side, 0.25, 0.32), V(3.44 * side, 0.03, 1.06)
+			local trailing = V(1.54 * side, 0.15, 0.99)
+			P.face(wing, root, elbow, trailing, rgb("F8EBCB"))
+			P.face(wing, elbow, tip, trailing, rgb("4D5767"))
+			table.insert(wings, { model = wing, side = side })
+		end
+		register(bird, 2.08, 6.0, false)
+		table.insert(flock, { body = body, wings = wings })
+	end
+	return flock
 end
 
 local function surveyJetty(shelf, register, dockCF)
@@ -162,37 +221,130 @@ local function quarry(shelf, register, spent)
 	register(throat, 3.45, nil, true)
 end
 
-function Worksite.build(shelf, register, spent, dock)
+-- The sailcloth that comes ashore becomes a field station. Both panels
+-- pivot around the ridgepole before the guy ropes pull them taut.
+local function fieldStation(shelf, register, bed)
+	local frame = P.model(shelf, "First camp over the future siding")
+	timber(frame, "Ridgepole", V(0, 7.4, -5.3), V(0, 7.4, 5.3), 0.35, "BC9369")
+	for _, z in { -5.1, 5.1 } do
+		for _, side in { -1, 1 } do
+			timber(frame, "Cedar split pole", V(side * 4, 0, z), V(0, 7.4, z), 0.28, "C59B70")
+		end
+	end
+	timber(frame, "Harbor pennant", V(-4.8, -0.1, -4.3), V(-4.8, 11.3, -4.3), 0.30, "AD865E")
+	P.face(frame, V(-4.8, 11.3, -4.3), V(-4.8, 8.9, -4.3), V(-10.3, 10.6, -3.4), rgb("F89B55"))
+	register(frame, 6.74, 9.79, false)
+	local wings = {}
+	for _, s in { -1, 1 } do
+		local leaf = P.model(shelf, "Sailcloth on the ridgepole")
+		local x = s * 6.2
+		for j = 0, 2 do
+			local z = -5.6 + j * 3.73
+			local a, b, c, d = V(0, 0, z), V(0, 0, z + 3.73), V(x, -6.85, z + 3.73), V(x, -6.85, z)
+			local color = rgb(if j == 1 then "FFF0C3" else "C97142")
+			P.face(leaf, a, b, c, color)
+			P.face(leaf, a, c, d, color)
+		end
+		register(leaf, 6.86, 9.72, false)
+		table.insert(wings, { m = leaf, side = s })
+	end
+	return { m = frame, bed = bed, wings = wings }
+end
+
+function Worksite.build(shelf, register, spent, dock, camp)
 	local outward = V(dock.X, 0, dock.Z - 14).Unit
 	local launch = V(dock.X, -4.03, dock.Z)
 	local dockCF = CFrame.lookAt(launch, launch - outward)
 	surveyJetty(shelf, register, dockCF)
 	local hull = buildSkiff(shelf)
-	hull:ScaleTo(1.16)
-	register(hull, 5.48, 8.08, false)
+	hull:ScaleTo(1.50)
+	register(hull, 5.0, 8.34, false)
+	local whiteWater, jets = wake(shelf, register)
 	quarry(shelf, register, spent)
 	local foreman = Rig.new(shelf, "Quarry foreman")
 	local mate = Rig.new(shelf, "Bridge carpenter")
+	local surveyor = Rig.new(shelf, "First surveyor ashore")
+	register(surveyor.model, 5.0, 7.93, false)
 	register(foreman.model, 11.47, 14.75, false)
 	register(mate.model, 9.1, 10.82, false)
-	return { hull = hull, dock = dockCF, foreman = foreman, mate = mate }
+	return {
+		hull = hull,
+		dock = dockCF,
+		foreman = foreman,
+		mate = mate,
+		surveyor = surveyor,
+		station = fieldStation(shelf, register, camp),
+		wake = whiteWater,
+		jets = jets,
+		birds = gannets(shelf, register),
+	}
 end
 
 function Worksite.expose(work, t, base)
-	if t >= 5.48 and t < 8.08 then
-		local landing = math.clamp((t - 5.48) / 0.91, 0, 1)
-		local leave = math.clamp((t - 7.48) / 0.58, 0, 1)
-		local off = 1 - landing
-		work.hull:PivotTo(
-			base
-				* work.dock
-				* CF(-6.8 - off * 21 - 13 * leave, 0, 10.5 + off * 49 + leave * 40)
-				* A(0, 0.32 - 0.48 * landing - 0.82 * leave, 0.031 * math.sin(t * 5.6))
-		)
+	if t >= 6.70 and t < 9.84 then
+		local camp = work.station
+		local bed = camp.bed
+		local at = (bed.a.pos + bed.b.pos + bed.c.pos) / 3
+		local start = math.clamp((t - 6.74) / 0.38, 0, 1)
+		local leave = math.clamp((t - 9.42) / 0.31, 0, 1)
+		local floor = base * CF(at.X, math.max(-0.08, at.Y) + 0.12, at.Z) * A(0, 0.52, 0)
+		camp.m:PivotTo(floor * CF(0, -(1 - start) * 2.6, 0))
+		local span = math.clamp((t - 6.86) / 0.48, 0, 1) * (1 - leave)
+		for _, w in camp.wings do
+			w.m:PivotTo(floor * CF(0, 7.4, 0) * A(0, 0, -w.side * 0.706 * (1 - span)))
+		end
+	end
+	if t >= 2.04 and t < 6.04 then
+		local passage = math.clamp((t - 2.08) / 3.92, 0, 1)
+		for i, b in work.birds do
+			local lane = (if i % 2 == 1 then -1 else 1) * math.floor(i / 2)
+			local at = V(
+				251 - 530 * passage + lane * 4.8,
+				27 + lane * 1.4 + 11 * math.sin(passage * math.pi) + 1.3 * math.sin(t * 2.8 + i),
+				80 - 69 * passage + math.abs(lane) * 7.3 + 4 * math.sin(t * 1.1 + i * 0.19)
+			)
+			local flight = base * CFrame.lookAt(at, at + V(-1, 0.035 * math.cos(passage * math.pi), -0.14))
+			b.body.CFrame = flight
+			local flap = 0.08 + 0.49 * math.sin(7.1 * t + i * 1.13) * (0.35 + 0.65 * math.sin(t * 0.82 + i * 0.54) ^ 2)
+			for _, w in b.wings do
+				w.model:PivotTo(flight * A(0, 0, w.side * flap))
+			end
+		end
+	end
+	if t >= 4.97 and t < 8.39 then
+		local landing = math.clamp((t - 5) / 1.48, 0, 1)
+		local leave = math.clamp((t - 7.53) / 0.81, 0, 1)
+		local off = (1 - landing) ^ 1.43
+		local planar = base
+			* work.dock
+			* CF(-8 - off * 37 - 28 * leave ^ 1.4, 0, 10.6 + off * 88 + leave ^ 1.8 * 55)
+			* A(0, 0.16 + 0.34 * off - 1.0 * leave, 0)
+		local afloat = planar
+			* CF(0, 0.13 * math.sin(t * 5.1), 0)
+			* A(0.018 * math.cos(t * 4.12), 0, 0.024 * math.sin(t * 5.4))
+		work.hull:PivotTo(afloat)
+		work.wake:PivotTo(planar * CF(0, -0.34, 0))
+		local speed = math.max(1 - landing, leave, 0.03)
+		for _, jet in work.jets do
+			jet.Width0, jet.Width1 = 0.86 * speed, 3.55 * speed
+		end
+		if t < 7.98 then
+			local rider = afloat * CF(0, 2.75, 3.7)
+			local landingSpot = base * work.dock * CF(-2.1, 1.7, 8.6 - 5.6 * math.clamp((t - 6.77) / 0.82, 0, 1))
+			local u = math.clamp((t - 6.44) / 0.35, 0, 1)
+			local walk = math.sin(t * 19) * u
+			work.surveyor:pose(rider:Lerp(landingSpot, u) + V(0, math.sin(u * math.pi) * 1.75, 0), {
+				RightShoulder = A(0.4 + walk * 0.46, 0, 0.18),
+				LeftShoulder = A(-walk * 0.42, 0, -0.13),
+				RightHip = A(-walk * 0.59, 0, 0),
+				LeftHip = A(walk * 0.59, 0, 0),
+				Neck = A(0, -0.48 + 0.4 * u, 0),
+			})
+		end
 	end
 	if t >= 9.1 and t < 10.82 then
 		local u = math.clamp((t - 9.1) / 1.64, 0, 1)
-		local bend = math.sin(math.pi * (math.floor((t - 9.10) * 8) % 4) / 4)
+		local bend = (1 - math.cos((t - 9.1) * math.pi * 4.25)) * 0.5
 		work.mate:pose(base * CF(-2.8, 0.08, 39.5 - 13.5 * u) * A(0, -0.23, 0), {
 			bob = -0.32 * bend,
 			RootJoint = A(-0.46 * bend, 0, 0),
@@ -203,7 +355,7 @@ function Worksite.expose(work, t, base)
 		})
 	end
 	if t >= 11.47 and t < 14.75 then
-		local strike = math.floor((t - 11.47) * 8) % 4 / 3
+		local strike = ((1 - math.cos((t - 11.47) * math.pi * 3.65)) * 0.5) ^ 0.62
 		local side = math.clamp((t - 12.15) / 1.62, 0, 1)
 		work.foreman:pose(base * CF(-3.2 + side * 6.1, 0.06, 8.35) * A(0, -0.18, 0), {
 			bob = -0.17 * strike,

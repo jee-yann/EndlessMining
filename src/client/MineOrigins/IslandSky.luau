@@ -43,6 +43,52 @@ local function anchor(parent, name)
 	return part
 end
 
+local function horizonLight(root)
+	local at = anchor(root, "Light beyond the strait")
+	local sky = Instance.new("BillboardGui")
+	sky.Name, sky.LightInfluence, sky.Parent = "Dusk", 0, at
+	local wash = Instance.new("Frame")
+	wash.Name, wash.Size = "Afterglow", UDim2.fromScale(1, 1)
+	wash.BorderSizePixel, wash.BackgroundColor3, wash.BackgroundTransparency = 0, rgb("FFFFFF"), 1
+	wash.Parent = sky
+	local tint = Instance.new("UIGradient")
+	tint.Rotation = 90
+	tint.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, rgb("7C82C4")),
+		ColorSequenceKeypoint.new(0.37, rgb("E7A1A7")),
+		ColorSequenceKeypoint.new(0.72, rgb("FFC984")),
+		ColorSequenceKeypoint.new(1, rgb("FFD9A4")),
+	})
+	tint.Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 1),
+		NumberSequenceKeypoint.new(0.28, 0.67),
+		NumberSequenceKeypoint.new(0.66, 0.08),
+		NumberSequenceKeypoint.new(0.94, 0.90),
+		NumberSequenceKeypoint.new(1, 1),
+	})
+	tint.Parent = wash
+	return { at = at, sky = sky, wash = wash }
+end
+
+-- Long exposures trace the last few degrees of the orbit, like a moving
+-- brushstroke behind each body. Sample the orbit analytically on every frame.
+local function orbitTrail(parent, name, color)
+	local carrier = anchor(parent, name)
+	local points, beams = {}, {}
+	for i = 1, 7 do
+		local point = Instance.new("Attachment")
+		point.Parent, points[i] = carrier, point
+		if i > 1 then
+			local beam = Instance.new("Beam")
+			beam.FaceCamera, beam.LightEmission, beam.LightInfluence = true, 0.68, 0
+			beam.Color, beam.Attachment0, beam.Attachment1 = ColorSequence.new(rgb(color)), points[i - 1], point
+			beam.Transparency = NumberSequence.new(0.36 + 0.53 * (i - 2) / 6, 0.36 + 0.53 * (i - 1) / 6)
+			beam.Parent, beams[i - 1] = carrier, beam
+		end
+	end
+	return { points = points, beams = beams }
+end
+
 function IslandSky.new(stage, originalHour)
 	local root = P.model(stage, "Sky above the headland")
 	local sun = P.sphere(root, "Sun", Vector3.zero, Vector3.one, "FFE4A4", Enum.Material.Neon)
@@ -85,6 +131,7 @@ function IslandSky.new(stage, originalHour)
 	if temporary then
 		sky.Parent = Lighting
 	end
+	local air = Lighting:FindFirstChildOfClass("Atmosphere")
 	return setmetatable({
 		root = root,
 		sun = sun,
@@ -93,6 +140,13 @@ function IslandSky.new(stage, originalHour)
 		glow = glow,
 		disc = disc,
 		face = face,
+		solarTrail = orbitTrail(root, "Sun exposure", "FFD49D"),
+		lunarTrail = orbitTrail(root, "Moon exposure", "A2C9FF"),
+		afterglow = horizonLight(root),
+		air = air,
+		airColor = air and air.Color,
+		decay = air and air.Decay,
+		haze = air and air.Haze,
 		stars = stars,
 		stage = stage,
 		sky = sky,
@@ -115,15 +169,22 @@ function IslandSky:draw(age, camera, motion, axis, referenceFov)
 	local phase = (hour - 6) / 12 * math.pi
 	local altitude = math.sin(phase)
 	local night = 1 - ease(altitude, -0.55, 0.15)
-	local sunset = (1 - ease(math.abs(altitude), 0.02, 0.42)) * 0.78
+	local sunset = 1 - ease(math.abs(altitude - 0.03), 0.03, 0.54)
 	local restore = ease(age, 13.7, 16.85)
 	Lighting.ClockTime = hour
 	Lighting.GeographicLatitude = 39 + (self.latitude - 39) * restore
-	Lighting.Ambient = self.ambient:Lerp(rgb("8586A2"), night * (1 - restore))
-	Lighting.OutdoorAmbient = self.outdoor:Lerp(rgb("95A8CA"), night * (1 - restore))
-	Lighting.ExposureCompensation = self.exposure + 0.59 * night * (1 - restore)
+	Lighting.Ambient = self.ambient:Lerp(rgb("697298"), night * (1 - restore))
+	Lighting.OutdoorAmbient =
+		self.outdoor:Lerp(rgb("93A2C5"), night * (1 - restore)):Lerp(rgb("D7B3A9"), 0.42 * sunset * (1 - restore))
+	Lighting.ExposureCompensation = self.exposure + (0.47 * night + 0.20 * sunset) * (1 - restore)
 	Lighting.ColorShift_Top = self.top:Lerp(rgb("FBA467"), sunset * (1 - restore))
 	Lighting.Brightness = self.brightness + (0.48 * (1 - night) + 0.32 * night) * (1 - restore)
+	if self.air then
+		local dusk = sunset * (1 - restore)
+		self.air.Color = self.airColor:Lerp(rgb("ACB6E4"), night * (1 - restore)):Lerp(rgb("FFD7AB"), 0.85 * dusk)
+		self.air.Decay = self.decay:Lerp(rgb("7678A7"), night * (1 - restore)):Lerp(rgb("D99698"), dusk)
+		self.air.Haze = self.haze + 0.60 * dusk
+	end
 
 	local viewport = camera.ViewportSize
 	local aspect = math.clamp(viewport.X / math.max(1, viewport.Y), 0.32, 3.8)
@@ -146,15 +207,35 @@ function IslandSky:draw(age, camera, motion, axis, referenceFov)
 		/ math.max(0.02, Vector2.new(axis.LookVector.X, axis.LookVector.Z).Magnitude)
 		* distance
 		/ halfY
-	local top = math.min(0.80, horizon + 0.36)
-	local function traverse(part, arc)
+	local top = math.min(0.77, horizon + 0.38)
+	local veil = self.afterglow
+	veil.at.Position = axis * V(0, halfY * (horizon + 0.048) * 1.8, -distance * 1.8)
+	veil.sky.Size = UDim2.fromScale(halfX * 7.4, halfY * 0.84)
+	veil.wash.BackgroundTransparency = 1 - 0.67 * sunset * stop
+	local function position(arc)
 		local height = math.sin(arc)
-		local x = math.cos(arc) * 0.83
-		part.Position = axis * V(halfX * x, halfY * (horizon - 0.095 + (top - horizon + 0.095) * height), -distance)
-		return ease(height, -0.16, 0.03) * stop
+		return axis
+			* V(halfX * math.cos(arc) * 0.79, halfY * (horizon - 0.008 + (top - horizon + 0.008) * height), -distance)
 	end
-	local daylight = traverse(self.sun, phase)
-	local moonlight = traverse(self.moon, phase + math.pi)
+	local function traverse(part, arc, trail)
+		part.Position = position(arc)
+		local visibility = ease(math.sin(arc), 0.02, 0.18) * stop
+		local trace = motion and age > 0.82 and age < 14.85 and visibility > 0.02
+		for i, beam in trail.beams do
+			local u = i / #trail.beams
+			local past = arc - 0.37 * u
+			beam.Enabled = trace and math.sin(past) > 0.02
+			if beam.Enabled then
+				trail.points[i].WorldPosition = position(arc - 0.37 * (i - 1) / #trail.beams)
+				trail.points[i + 1].WorldPosition = position(past)
+				local size = halfY * 0.019 * ease(age, 0.82, 1.8) * (1 - ease(age, 12.9, 14.85)) * visibility
+				beam.Width0, beam.Width1 = size * (1.16 - (i - 1) / #trail.beams), size * (1.16 - u)
+			end
+		end
+		return visibility
+	end
+	local daylight = traverse(self.sun, phase, self.solarTrail)
+	local moonlight = traverse(self.moon, phase + math.pi, self.lunarTrail)
 	local diameter = halfY * math.clamp(aspect * 0.115, 0.058, 0.17)
 	self.sun.Size = Vector3.one * diameter
 	self.sun.Transparency = 1 - daylight
@@ -176,6 +257,9 @@ function IslandSky:Destroy()
 	Lighting.Ambient, Lighting.OutdoorAmbient = self.ambient, self.outdoor
 	Lighting.ColorShift_Top, Lighting.Brightness = self.top, self.brightness
 	Lighting.ExposureCompensation = self.exposure
+	if self.air then
+		self.air.Color, self.air.Decay, self.air.Haze = self.airColor, self.decay, self.haze
+	end
 end
 
 return IslandSky

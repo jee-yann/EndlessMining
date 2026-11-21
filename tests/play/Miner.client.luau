@@ -138,11 +138,12 @@ local function test()
 			waitFor(function()
 				return landed and coast:FindFirstChild("Impact crown") and meteor.Parent ~= coast
 			end, 12, "impact opens the crater")
-			assert(coast:FindFirstChild("Buried Starfall"))
 			waitFor(function()
-				return core:IsDescendantOf(coast["Buried Starfall"])
-					and core:GetPivot().Position.Y < n:GetAttribute("DigFloor").Y + 3200 - 172
-			end, 6, "the original meteor core reaches deep basalt")
+				local fault = coast:FindFirstChild("Buried Starfall")
+				local reflection = fault and fault:FindFirstChild("Deep reflection", true)
+				local light = reflection and reflection:FindFirstChildOfClass("PointLight")
+				return not core:IsDescendantOf(stage) and light and light.Brightness > 0.12
+			end, 6, "the hidden source lights the broken ground")
 			waitFor(function()
 				return stage:FindFirstChild("Citrine through time") and not coast.Parent
 			end, 8, "impact site gives way to the cove under construction")

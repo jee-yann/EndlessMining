@@ -1,6 +1,7 @@
 -- Studio RunScript check for camera continuity, slow streaming and private scenery.
 local source = game.StarterPlayer.StarterPlayerScripts.Client.MineOrigins
 local Beats, Film = require(source.Beats), require(source.Film)
+local Exposure = require(source.Exposure)
 local config = require(game.ReplicatedStorage.Shared.GameConfig)
 local map = workspace.CitrineCove
 local paths = map["Sand path and bridge"]
@@ -9,6 +10,8 @@ local gate = portal.Position + Vector3.yAxis * (portal.Size.Y / 2 + 3.5)
 local site = map:GetPivot().Position + Vector3.new(0, config.FloorY, (config.HallFront + config.HallBack) / 2)
 local landing = paths.Landing.Position + Vector3.yAxis * 4
 local initialClock = game.Lighting.ClockTime
+local air = game.Lighting:FindFirstChildOfClass("Atmosphere")
+local originalAir = air and { air.Color, air.Decay, air.Haze }
 local initialMapSize = #map:GetDescendants()
 
 local function check(motion, replay)
@@ -30,20 +33,26 @@ local function check(motion, replay)
 		fov = 67,
 	})
 	assert(film:draw(0, false) == 1)
+	local screen = Instance.new("ScreenGui")
+	local exposure = Exposure.new(screen, camera)
+	film:draw(0.86, false)
+	exposure:draw(0.86, film)
+	assert(exposure.slip.Visible == motion and not exposure.plate.Visible)
 	local core = film.strike.meteor:FindFirstChild("Starfall core")
 	assert(core and core:IsA("Model"))
 	film:draw(Beats.impact - 0.01, false)
-	local contact = core:GetPivot().Position
 	film:draw(Beats.impact + 0.01, false)
-	assert(core:IsDescendantOf(film.strike.crater) and (contact - core:GetPivot().Position).Magnitude < 7)
-	local lastY = contact.Y
-	for _, t in { Beats.section, 8.39, 9.10, 10.10, 10.84 } do
-		film:draw(t, false)
-		local y = core:GetPivot().Position.Y
-		assert(y < lastY, "core must descend through the layers")
-		lastY = y
-	end
-	assert(film.base.Position.Y - lastY > 175 and film.strike.section.root.Parent == film.strike.root)
+	exposure:draw(Beats.impact + 0.01, film)
+	assert(exposure.plate.Visible == motion and not exposure.slip.Visible)
+	exposure:draw(Beats.impact + 0.18, film)
+	assert(not exposure.plate.Visible, "contact drawing exceeded its exposure")
+	assert(core:IsDescendantOf(film.strike.shelf) and film.strike.crown.Parent == film.strike.root)
+	local fault = film.strike.fissure
+	film:draw(9.60, false)
+	assert(fault.lamp.Brightness > 0.1 and not core:IsDescendantOf(stage), "light escapes the buried fault")
+	film:draw(11.75, false)
+	for _, path in fault.lightPaths do assert(path.violet.Transparency > 0.98, "fissure must seal") end
+	assert((film.historyBase.Position - film.base.Position).Magnitude > 7000, "separate the two surface sets")
 	film:draw(Beats.surface, false)
 	assert(not core.Parent and not film.history.root:FindFirstChild("Starfall core", true), "closed impact site")
 	film:draw(Beats.history - 0.001, false)
@@ -62,10 +71,14 @@ local function check(motion, replay)
 		previous = count
 		sawSun = sawSun or sky.sun.Transparency < .1
 		sawMoon = sawMoon or sky.face.ImageTransparency < .1
-		film:draw(Beats.history + age + .049, false)
-		assert(#film.history.root:GetChildren() == count, "construction changed between exposures")
+		if n == 46 then
+			local boat = film.history.work.hull
+			local firstPose = boat:GetPivot()
+			film:draw(Beats.history + age + 0.02, false)
+			assert(not boat:GetPivot():FuzzyEq(firstPose, 0.001), "the cutter moves between construction cues")
+		end
 	end
-	assert(changes >= 50 and sawSun and (not motion or sawMoon), "hold-and-build montage with orbital light")
+	assert(changes >= 45 and sawSun and (not motion or sawMoon), "continuous island construction and orbital light")
 	film:draw(Beats.present - 0.001, false)
 	local historicalView = camera.CFrame
 	film:draw(Beats.present, false)
@@ -88,7 +101,13 @@ local function check(motion, replay)
 		end
 	end
 	assert(root.Position == start and #map:GetDescendants() == initialMapSize)
+	if originalAir then
+		assert(air.Color == originalAir[1] and air.Decay == originalAir[2] and air.Haze == originalAir[3])
+	end
 	film:Destroy()
+	exposure:Destroy()
+	assert(not camera:FindFirstChild("Starfall exposure"))
+	screen:Destroy()
 	camera:Destroy()
 	shelf:Destroy()
 	root:Destroy()
